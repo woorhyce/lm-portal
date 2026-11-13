@@ -3,7 +3,8 @@
 //   PUT    /api/data/:key          -> save your value (JSON body)
 //   GET    /api/data/:key?shared=1 -> team-shared value (PUT works the same)
 //   GET    /api/me                 -> signed-in email
-//   GET    /api/data               -> all of your keys for this tool (used by lm-sync.js)
+//   GET    /api/data               -> all of your keys for this tool + your shared prefs (used by lm-sync.js)
+//   PUT    /api/prefs              -> {"theme":"light"|"dark"}, shared by every tool and the portal
 
 const json = (d, s = 200) => new Response(JSON.stringify(d), {
   status: s, headers: { "content-type": "application/json", "cache-control": "no-store" },
@@ -20,7 +21,18 @@ export default {
       const { results } = await env.DB.prepare(
         "SELECT key, value, updated FROM tool_data WHERE tool=?1 AND email=?2"
       ).bind(env.TOOL, email).all();
-      return json({ items: results.map(r => ({ key: r.key, value: JSON.parse(r.value), updated: r.updated })) });
+      const prefs = await env.DB.prepare("SELECT theme FROM prefs WHERE email=?1").bind(email).first().catch(() => null);
+      return json({ items: results.map(r => ({ key: r.key, value: JSON.parse(r.value), updated: r.updated })), prefs: prefs || {} });
+    }
+
+    if (url.pathname === "/api/prefs" && request.method === "PUT") {
+      const { theme } = await request.json();
+      if (theme !== "light" && theme !== "dark") return json({ error: "theme must be light or dark" }, 400);
+      await env.DB.prepare(
+        `INSERT INTO prefs (email, theme, updated) VALUES (?1, ?2, datetime('now'))
+         ON CONFLICT(email) DO UPDATE SET theme=?2, updated=datetime('now')`
+      ).bind(email, theme).run();
+      return json({ ok: true });
     }
 
     const raw = url.pathname.startsWith("/api/data/") ? url.pathname.slice(10) : null;
