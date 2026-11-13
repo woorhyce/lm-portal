@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/lm-sync.js"></script>
+<meta charset="UTF-8">
+<title>Roster → Vueweb CSV</title>
+<style>
+  :root{
+    --bg:#12181f;
+    --bg-alt:#1a222c;
+    --panel:#1c252f;
+    --panel-header:#232d38;
+    --line:#2f3944;
+    --ink:#e7edf3;
+    --ink-dim:#8f9aa6;
+    --field:#161d25;
+    --accent:#2b8ce0;      /* Media Suite blue */
+    --accent-dim:#1f6bb0;
+    --topbar:#0c2340;      /* deep navy header band */
+    --topbar-line:#173963;
+    --ok:#4fb477;
+    --err:#e2664f;
+    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:0 0 80px;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+  }
+
+  .topbar{
+    background:var(--topbar);
+    border-bottom:1px solid var(--topbar-line);
+    padding:14px 28px;
+    display:flex; align-items:center; gap:14px;
+  }
+  .topbar .brand{
+    display:flex; align-items:center; gap:10px;
+    font-weight:700; letter-spacing:.08em; font-size:15px; color:#fff;
+    text-transform:uppercase;
+  }
+  .brand-mark{
+    width:26px; height:26px; border-radius:6px;
+    background:linear-gradient(135deg, var(--accent), #1a4d80);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; color:#fff;
+  }
+  .topbar .divider{ width:1px; height:20px; background:var(--topbar-line); margin:0 4px; }
+  .topbar .crumb{ color:#7fa8d0; font-size:13px; font-family:var(--mono); }
+  .topbar .crumb strong{ color:#fff; font-weight:600; }
+
+  .wrap{ width:100%; max-width:960px; margin:0 auto; padding:28px 20px 0; }
+
+  /* mode tabs */
+  .modetabs{ display:flex; gap:8px; margin-bottom:22px; border-bottom:1px solid var(--line); }
+  .modetab{
+    padding:10px 4px; margin-bottom:-1px; border-bottom:2px solid transparent;
+    font-size:13px; font-weight:700; letter-spacing:.02em; color:var(--ink-dim);
+    cursor:pointer; background:none; border-top:none; border-left:none; border-right:none;
+    font-family:var(--sans);
+  }
+  .modetab.active{ color:#fff; border-bottom-color:var(--accent); }
+  .modepanel{ display:none; }
+  .modepanel.active{ display:block; }
+
+  header{ margin-bottom:22px; }
+  .kicker{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 6px;
+  }
+  h1{ font-size:22px; margin:0 0 8px; letter-spacing:-0.01em; color:#fff; font-weight:600; }
+  p.sub{ margin:0; color:var(--ink-dim); font-size:13.5px; line-height:1.55; max-width:64ch; }
+
+  .steps{
+    margin-top:16px; background:#132433; border:1px solid #21415c; border-radius:6px;
+    padding:14px 18px;
+  }
+  .steps-title{
+    font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em;
+    color:#6fb2ea; font-weight:700; margin-bottom:8px;
+  }
+  .steps ol{ margin:0; padding-left:20px; }
+  .steps li{ font-size:13px; color:#c3d3e0; line-height:1.65; }
+  .steps strong{ color:#fff; }
+
+  .sports{
+    margin-top:14px; background:#161f28; border:1px solid var(--line); border-radius:6px;
+    padding:14px 18px;
+  }
+  .sports-title{
+    font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--ink-dim); font-weight:700; margin-bottom:10px;
+  }
+  .sports-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .sports-row:last-of-type{ margin-bottom:0; }
+  .tag{
+    font-size:12px; font-weight:600; padding:5px 11px; border-radius:20px;
+    border:1px solid transparent;
+  }
+  .tag.ok{ background:#152e22; color:#5fce8f; border-color:#215c3d; }
+  .tag.partial{ background:#332a14; color:#e0b23f; border-color:#5c4d1f; }
+  .tag.no{ background:#33201c; color:#e2664f; border-color:#5c332b; }
+  .sports-note{
+    margin:10px 0 0; font-size:12px; color:var(--ink-dim); line-height:1.6;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .panel h2{
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--ink-dim); margin:0; font-weight:600;
+    background:var(--panel-header);
+    padding:11px 18px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .panel h2 .side-action{
+    text-transform:none; letter-spacing:0; font-weight:600; font-size:12px;
+    color:var(--accent); cursor:pointer; background:none; border:none; font-family:var(--sans);
+    padding:0;
+  }
+  .panel h2 .side-action:hover{ text-decoration:underline; }
+  .panel-body{ padding:18px; }
+
+  .row{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  .row:last-child{ margin-bottom:0; }
+  .field{ flex:1; min-width:180px; }
+  .field.narrow{ flex:0 0 200px; }
+  label{
+    display:block; font-size:11.5px; font-weight:600; margin-bottom:6px; color:var(--ink-dim);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  input[type=text], select{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:4px;
+    font-size:14px; font-family:var(--sans); background:var(--field); color:var(--ink);
+  }
+  input[type=text]:focus, select:focus{ outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent); }
+  input[type=text]::placeholder{ color:#556170; }
+  select{ cursor:pointer; }
+  textarea{
+    width:100%; min-height:180px; padding:10px; border:1px solid var(--line); border-radius:4px;
+    font-family:var(--mono); font-size:13px; line-height:1.5; resize:vertical;
+    background:var(--field); color:var(--ink);
+  }
+  textarea:focus{ outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent); }
+  textarea::placeholder{ color:#556170; }
+  .colhint{ font-size:11px; color:#6b7684; margin-top:6px; font-family:var(--mono); }
+
+  .format-toggle{ display:flex; gap:10px; flex-wrap:wrap; }
+  .format-opt{
+    flex:1; min-width:150px; border:1px solid var(--line); border-radius:5px; padding:12px 14px; cursor:pointer;
+    background:var(--field);
+  }
+  .format-opt.active{ border-color:var(--accent); background:#152332; }
+  .format-opt input{ margin-right:8px; accent-color:var(--accent); }
+  .format-opt .name{ font-weight:600; font-size:13px; color:#fff; }
+  .format-opt .desc{ font-size:12px; color:var(--ink-dim); margin-top:3px; }
+
+  button.primary{
+    background:var(--accent); color:#fff; border:none; border-radius:4px;
+    padding:11px 22px; font-size:13px; font-weight:700; cursor:pointer;
+    font-family:var(--sans); text-transform:uppercase; letter-spacing:.04em;
+  }
+  button.primary:hover{ background:var(--accent-dim); }
+  button.primary:disabled{ background:#374250; color:#7a8896; cursor:not-allowed; }
+  button.primary.big{ padding:14px 30px; font-size:14px; }
+
+  .msg{ font-size:12.5px; margin-top:10px; font-family:var(--mono); }
+  .msg.error{ color:var(--err); }
+  .msg.ok{ color:var(--ok); }
+
+  table.preview{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.preview th, table.preview td{
+    text-align:left; padding:8px 12px; border-bottom:1px solid var(--line);
+  }
+  table.preview th{
+    font-size:11px; text-transform:uppercase; color:var(--ink-dim); letter-spacing:.06em;
+    background:var(--panel-header);
+  }
+  table.preview tbody tr:nth-child(even){ background:#1f2934; }
+  table.preview tbody tr:hover{ background:#223140; }
+  table.preview td[contenteditable]:focus{ outline:1.5px solid var(--accent); outline-offset:-1px; background:#152332; }
+
+  /* Game setup two-column team layout */
+  .teamgrid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width: 760px){ .teamgrid{ grid-template-columns:1fr; } }
+  .teamcol .panel h2{ display:flex; align-items:center; gap:8px; }
+  .teamcol.home h2::before{ content:"HOME"; font-size:10px; letter-spacing:.08em; color:var(--accent); background:#152332; border:1px solid #1f4560; border-radius:3px; padding:2px 6px; }
+  .teamcol.away h2::before{ content:"AWAY"; font-size:10px; letter-spacing:.08em; color:#e0b23f; background:#332a14; border:1px solid #5c4d1f; border-radius:3px; padding:2px 6px; }
+  .teamcol textarea{ min-height:200px; }
+
+  .generate-bar{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    margin-top:8px;
+  }
+
+  footer{
+    text-align:center; font-size:11.5px; color:#5c6773; margin-top:30px;
+    padding:18px 20px 0; border-top:1px solid var(--line);
+  }
+  footer .disclaimer{ margin-top:6px; color:#4a545f; font-size:11px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-mark">RC</span>Roster Converter</div>
+  <div class="divider"></div>
+  <span class="crumb">Team Rosters to CSV / <strong>Upload to Metadata Management</strong></span>
+</div>
+
+<div class="wrap">
+
+  <div class="modetabs">
+    <button class="modetab active" id="tabSingle" data-mode="single">Single Roster</button>
+    <button class="modetab" id="tabGame" data-mode="game">Game Setup</button>
+  </div>
+
+  <!-- ============================= SINGLE ROSTER MODE ============================= -->
+  <div class="modepanel active" id="modeSingle">
+    <header>
+      <p class="kicker">Roster Utility</p>
+      <h1>Roster → Vueweb CSV</h1>
+      <p class="sub">Select the whole roster table on the team's site and paste it below, exactly as your browser copies it — social links, class/height/hometown clutter and all. This strips it down to Number, Name, and Position and builds a CSV in the layout your graphics system expects.</p>
+      <div class="steps">
+        <div class="steps-title">Before you paste</div>
+        <ol>
+          <li>On the team's roster page, switch the view to <strong>Grid</strong> (sometimes labeled Table) — not Card or List.</li>
+          <li>Select the whole roster table (click-drag or Ctrl/Cmd+A over it) and copy it.</li>
+          <li>Paste it into the box below, exactly as copied.</li>
+        </ol>
+      </div>
+      <div class="sports">
+        <div class="sports-title">Supported sports</div>
+        <div class="sports-row">
+          <span class="tag ok">Football</span>
+          <span class="tag ok">Basketball</span>
+          <span class="tag ok">Soccer</span>
+          <span class="tag ok">Volleyball</span>
+          <span class="tag ok">Baseball</span>
+          <span class="tag ok">Softball</span>
+          <span class="tag ok">Lacrosse</span>
+          <span class="tag ok">Field Hockey</span>
+          <span class="tag ok">Hockey</span>
+        </div>
+        <div class="sports-row">
+          <span class="tag partial">Wrestling*</span>
+          <span class="tag partial">Track &amp; Field*</span>
+          <span class="tag partial">Gymnastics*</span>
+          <span class="tag partial">Bowling*</span>
+        </div>
+        <div class="sports-row">
+          <span class="tag no">Tennis</span>
+        </div>
+        <p class="sports-note">*Wrestling works, but the Number column will show weight class, and the third column falls back to class year (Fr./So./Sr.) since there's no "position." Track & field works with the Number column left blank (no jersey numbers), and the third column shows event group (Sprints/Distance/Throws/etc.) instead of a position. Gymnastics has no number and no position, so the Number column is left blank and the third column falls back to class year. Bowling has real jersey numbers but no position, so the third column also falls back to class year. Tennis rosters usually have no number or position at all, so it isn't supported yet — send a sample paste and this can likely be extended.</p>
+      </div>
+    </header>
+
+    <div class="panel">
+      <h2>Team</h2>
+      <div class="panel-body">
+        <div class="row">
+          <div class="field">
+            <label for="teamName">Team Name (as it should appear in the CSV)</label>
+            <input type="text" id="teamName" placeholder="e.g. Virginia">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Name Format</h2>
+      <div class="panel-body">
+        <div class="format-toggle">
+          <label class="format-opt active" id="optFull">
+            <input type="radio" name="nameFmt" value="full" checked>
+            <div class="name">Full name</div>
+            <div class="desc">e.g. Caroline Williams</div>
+          </label>
+          <label class="format-opt" id="optLast">
+            <input type="radio" name="nameFmt" value="last">
+            <div class="name">Last name only</div>
+            <div class="desc">e.g. Williams</div>
+          </label>
+          <label class="format-opt" id="optTricode">
+            <input type="radio" name="nameFmt" value="tricode">
+            <div class="name">Tricode_Num_LastName</div>
+            <div class="desc">e.g. UVA_6_WILLIAMS</div>
+          </label>
+          <label class="format-opt" id="optTricodeNum">
+            <input type="radio" name="nameFmt" value="tricodenum">
+            <div class="name">Tricode_Number</div>
+            <div class="desc">e.g. UVA_6</div>
+          </label>
+        </div>
+        <div class="row" id="tricodeRow" style="display:none; margin-top:14px;">
+          <div class="field narrow">
+            <label for="teamTricode">Team Tricode</label>
+            <input type="text" id="teamTricode" placeholder="e.g. UVA" maxlength="8">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Output Format</h2>
+      <div class="panel-body">
+        <div class="format-toggle">
+          <label class="format-opt active" id="optAway">
+            <input type="radio" name="fmt" value="away" checked>
+            <div class="name">Header style</div>
+            <div class="desc">Team name row, then player rows, 3 columns. No "Num,Name,Pos" header row.</div>
+          </label>
+          <label class="format-opt" id="optHome">
+            <input type="radio" name="fmt" value="home">
+            <div class="name">Padded style</div>
+            <div class="desc">Team name row padded to 6 cols, no header, rows padded to 6 cols.</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Paste Raw Roster</h2>
+      <div class="panel-body">
+        <textarea id="rawPaste" style="min-height:260px;" placeholder="1&#10;Victoria Safradin&#10;Senior	5-10	GK	Eastlake, Ohio	North HS&#10;..."></textarea>
+        <div class="colhint" id="countRaw">0 players detected</div>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Preview <span style="text-transform:none; letter-spacing:0; color:#5c6773; font-weight:400;">click any cell to fix it</span></h2>
+      <div class="panel-body">
+        <div id="previewWrap" style="color:#5c6773; font-size:13px;">Paste roster data above to preview.</div>
+        <div class="row" style="margin-top:18px;">
+          <button class="primary" id="downloadBtn" disabled>Download CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= GAME SETUP MODE ============================= -->
+  <div class="modepanel" id="modeGame">
+    <header>
+      <p class="kicker">Game Package</p>
+      <h1>Game Setup</h1>
+      <p class="sub">Pick a sport, paste each team's roster, and list the play tags you want available for this game. Generates three CSVs at once: the home roster, the away roster, and a play-tags file — all in the layout your graphics system expects.</p>
+    </header>
+
+    <div class="panel">
+      <h2>Sport</h2>
+      <div class="panel-body">
+        <div class="row">
+          <div class="field narrow">
+            <label for="sportSelect">Sport</label>
+            <select id="sportSelect">
+              <option value="football">Football</option>
+              <option value="basketball">Basketball</option>
+              <option value="soccer">Soccer</option>
+              <option value="volleyball">Volleyball</option>
+              <option value="baseball">Baseball</option>
+              <option value="softball">Softball</option>
+              <option value="lacrosse">Lacrosse</option>
+              <option value="fieldhockey">Field Hockey</option>
+              <option value="hockey">Hockey</option>
+              <option value="wrestling">Wrestling</option>
+              <option value="track">Track &amp; Field</option>
+              <option value="gymnastics">Gymnastics</option>
+              <option value="bowling">Bowling</option>
+              <option value="tennis">Tennis</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Name Format &amp; Output Format <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#5c6773;">applies to both rosters</span></h2>
+      <div class="panel-body">
+        <div class="row">
+          <div class="field">
+            <label>Name Format</label>
+            <div class="format-toggle">
+              <label class="format-opt active" id="gOptFull">
+                <input type="radio" name="gNameFmt" value="full" checked>
+                <div class="name">Full name</div>
+              </label>
+              <label class="format-opt" id="gOptLast">
+                <input type="radio" name="gNameFmt" value="last">
+                <div class="name">Last name only</div>
+              </label>
+              <label class="format-opt" id="gOptTricode">
+                <input type="radio" name="gNameFmt" value="tricode">
+                <div class="name">Tricode_Num_LastName</div>
+              </label>
+              <label class="format-opt" id="gOptTricodeNum">
+                <input type="radio" name="gNameFmt" value="tricodenum">
+                <div class="name">Tricode_Number</div>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Output Format</label>
+            <div class="format-toggle">
+              <label class="format-opt active" id="gOptAway">
+                <input type="radio" name="gFmt" value="away" checked>
+                <div class="name">Header style</div>
+              </label>
+              <label class="format-opt" id="gOptHome">
+                <input type="radio" name="gFmt" value="home">
+                <div class="name">Padded style</div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="teamgrid">
+      <div class="teamcol home">
+        <div class="panel">
+          <h2>Home Team</h2>
+          <div class="panel-body">
+            <div class="row">
+              <div class="field">
+                <label for="teamName_home">Home Team Name</label>
+                <input type="text" id="teamName_home" placeholder="e.g. Virginia">
+              </div>
+            </div>
+            <div class="row" id="tricodeRow_home" style="display:none;">
+              <div class="field narrow">
+                <label for="teamTricode_home">Home Tricode</label>
+                <input type="text" id="teamTricode_home" placeholder="e.g. UVA" maxlength="8">
+              </div>
+            </div>
+            <label for="rawPaste_home" style="margin-top:4px;">Paste Home Roster</label>
+            <textarea id="rawPaste_home" placeholder="Paste the home team's roster here..."></textarea>
+            <div class="colhint" id="countRaw_home">0 players detected</div>
+            <div class="msg" id="msg_home"></div>
+            <div id="previewWrap_home" style="color:#5c6773; font-size:12.5px; margin-top:12px; max-height:260px; overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="teamcol away">
+        <div class="panel">
+          <h2>Away Team</h2>
+          <div class="panel-body">
+            <div class="row">
+              <div class="field">
+                <label for="teamName_away">Away Team Name</label>
+                <input type="text" id="teamName_away" placeholder="e.g. Duke">
+              </div>
+            </div>
+            <div class="row" id="tricodeRow_away" style="display:none;">
+              <div class="field narrow">
+                <label for="teamTricode_away">Away Tricode</label>
+                <input type="text" id="teamTricode_away" placeholder="e.g. DUKE" maxlength="8">
+              </div>
+            </div>
+            <label for="rawPaste_away" style="margin-top:4px;">Paste Away Roster</label>
+            <textarea id="rawPaste_away" placeholder="Paste the away team's roster here..."></textarea>
+            <div class="colhint" id="countRaw_away">0 players detected</div>
+            <div class="msg" id="msg_away"></div>
+            <div id="previewWrap_away" style="color:#5c6773; font-size:12.5px; margin-top:12px; max-height:260px; overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Game Play Tags
+        <button class="side-action" id="loadPresetBtn" type="button">Load defaults for this sport</button>
+      </h2>
+      <div class="panel-body">
+        <p style="font-size:12.5px; color:var(--ink-dim); margin:0 0 10px;">One tag per line. These become a third CSV, numbered in the order listed. Edit freely — the sport preset is just a starting point.</p>
+        <textarea id="tagsInput" style="min-height:160px;" placeholder="RUSH&#10;PASS&#10;TD&#10;..."></textarea>
+        <div class="colhint" id="countTags">0 tags</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Generate</h2>
+      <div class="panel-body">
+        <div id="gameMsg" class="msg">Fill in both team rosters to generate the game package.</div>
+        <div class="generate-bar">
+          <button class="primary big" id="generateBtn" disabled>Generate Game Files</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Works entirely in your browser — nothing is uploaded anywhere.
+    <div class="disclaimer">Vueweb is a product of Evertz Microsystems Ltd. This is an independent, unaffiliated helper tool and is not produced, endorsed, or supported by Evertz.</div>
+  </footer>
+</div>
+
+<script>
+/* ============================================================================
+   SHARED PARSING CORE — used by both Single Roster mode and Game Setup mode
+   ============================================================================ */
+
+function csvField(v){
+  v = String(v);
+  if(v.includes(',') || v.includes('"') || v.includes('\n')){
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+  return v;
+}
+
+// Returns just the last name — used for "last name only" and the tricode format.
+// Takes the last whitespace-separated token, skipping trailing suffixes like Jr./Sr./III
+// so "John Smith Jr." correctly returns "Smith" instead of "Jr."
+const NAME_SUFFIXES = new Set(["JR","SR","II","III","IV","V","VI"]);
+function lastNameOnly(name){
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  while(parts.length > 1 && NAME_SUFFIXES.has(parts[parts.length - 1].replace(/\.$/, '').toUpperCase())){
+    parts.pop();
+  }
+  return parts.length > 0 ? parts[parts.length - 1] : name;
+}
+
+// Formats a player's display name according to the selected Name Format option.
+function formatName(p, nameFmt, tricode){
+  if(nameFmt === 'last'){
+    return lastNameOnly(p.name);
+  }
+  if(nameFmt === 'tricode'){
+    return `${tricode}_${p.num}_${lastNameOnly(p.name).toUpperCase()}`;
+  }
+  if(nameFmt === 'tricodenum'){
+    return `${tricode}_${p.num}`;
+  }
+  return p.name;
+}
+
+// Recognized position vocabulary — used to find the position field regardless of which
+// column a given school's site puts it in. Covers football, basketball, soccer,
+// volleyball, baseball/softball, hockey, lacrosse, and field hockey abbreviations.
+const POSITION_WORDS = [
+  "goalkeeper","goalie","defender","midfielder","forward","attacker","striker","winger","sweeper","keeper",
+  "midfield","defense","defence","attack",
+  "quarterback","running back","fullback","wide receiver","tight end","offensive line","offensive tackle",
+  "offensive guard","center","defensive line","defensive end","defensive tackle","nose tackle","linebacker",
+  "cornerback","safety","kicker","punter","long snapper","athlete","kick returner","punt returner",
+  "point guard","shooting guard","small forward","power forward",
+  "setter","outside hitter","middle blocker","libero","defensive specialist","opposite","right side",
+  "pitcher","catcher","infielder","outfielder","designated hitter","shortstop","utility",
+  "left wing","right wing","attack","attackman","defenseman","faceoff","long stick midfielder"
+];
+const POSITION_TOKENS = new Set([
+  // soccer / field hockey
+  "GK","G","D","DF","DEF","CB","LB","RB","WB","M","MF","MID","CM","DM","AM","CDM","CAM","F","FW","FWD","ATT","ST","W","LW","RW","SW",
+  // football
+  "QB","RB","FB","WR","TE","OL","OT","OG","OC","C","DL","DE","DT","NT","LB","ILB","OLB","MLB","DB","CB","S","FS","SS","K","P","LS","ATH","PK","KR","PR","UTIL",
+  // basketball
+  "PG","SG","SF","PF","C",
+  // volleyball
+  "S","OH","MB","L","DS","RS","OPP",
+  // baseball / softball
+  "P","C","1B","2B","3B","SS","OF","LF","CF","RF","IF","INF","UTIL","DH","LHP","RHP",
+  // hockey / lacrosse
+  "LW","RW","D","G","F","A","LSM","FO","FOGO","GB"
+]);
+
+function matchPosition(field){
+  const trimmed = field.trim();
+  if(!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  if(POSITION_WORDS.includes(lower)) return true;
+  // handles combo positions like "F/M" or "M/D"
+  const parts = trimmed.split(/[\/,]/).map(p => p.trim());
+  if(parts.length > 0 && parts.every(p => POSITION_TOKENS.has(p.toUpperCase()) || POSITION_WORDS.includes(p.toLowerCase()))) return true;
+  return false;
+}
+
+// Fallback vocabulary for sports with no "position" at all (wrestling, etc.) — when nothing
+// matches the position list, this catches a class-year token (Fr./So./R-Jr./5th/Gr.) so the
+// third column at least shows something useful instead of grabbing hometown text by accident.
+function matchClassYear(field){
+  const trimmed = field.trim().replace(/\.$/, '');
+  return /^(R-)?(FR|SO|JR|SR|GR|GRAD|5TH|FRESHMAN|SOPHOMORE|JUNIOR|SENIOR|GRADUATE)$/i.test(trimmed);
+}
+
+// Event-group vocabulary for individual sports (track & field, cross country) that have no
+// jersey number and no "position" — the event group (Sprints, Distance, Throws, etc.) is the
+// closest equivalent and goes in the position column instead.
+const EVENT_GROUP_WORDS = [
+  "sprints","distance","jumps","throws","hurdles","middle distance","mid-distance","relays",
+  "multis","pole vault","high jump","long jump","triple jump","shot put","discus","javelin",
+  "hammer","decathlon","heptathlon","race walk","cross country","weight throw","combined events"
+];
+function matchEventGroup(field){
+  const trimmed = field.trim();
+  if(!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  if(EVENT_GROUP_WORDS.includes(lower)) return true;
+  // handles combos like "Jumps/Hurdles" or "Sprints / Hurdles" or "Mid-Distance/Distance"
+  const parts = trimmed.split('/').map(p => p.trim().toLowerCase());
+  if(parts.length > 1 && parts.every(p => EVENT_GROUP_WORDS.includes(p))) return true;
+  return false;
+}
+
+function findPosition(fields){
+  for(const f of fields){
+    if(matchPosition(f)) return f.trim();
+  }
+  for(const f of fields){
+    if(matchEventGroup(f)) return f.trim();
+  }
+  // a short, non-hometown-looking 3rd field (e.g. "-" for an unlisted position) is more likely
+  // a genuine (if unrecognized) position marker than hometown/major text, so prefer it over
+  // falling back to class year
+  if(fields.length > 2){
+    const candidate = fields[2].trim();
+    if(candidate && candidate.length <= 5 && !candidate.includes(',')){
+      return candidate;
+    }
+  }
+  for(const f of fields){
+    if(matchClassYear(f)) return f.trim();
+  }
+  // fallback if nothing matched any known vocabulary
+  if(fields.length > 2) return fields[2].trim();
+  return (fields[0] || '').trim();
+}
+
+// A "number" line is either a jersey number/weight class (digits), or the literal "null"
+// some sites use when a wrestler has no assigned weight class yet.
+function isNumberLine(s){
+  return /^\d+$/.test(s) || /^null$/i.test(s);
+}
+
+// Looks like a "First Last" style name — used to recognize no-number roster rows (track, etc.)
+function looksLikeName(s){
+  return /^[A-Za-z][A-Za-z'.\- ]*\s[A-Za-z][A-Za-z'.\-]*/.test(s.trim());
+}
+
+// A lone line with no tabs that itself looks like a person's name — used to detect the
+// gymnastics-style layout (name alone, then a details line, no jersey number at all).
+function isLoneNameLine(line){
+  return !line.includes('\t') && looksLikeName(line);
+}
+
+// Parses roster copy/paste dumps into {num, name, pos} rows. Handles four layouts:
+//
+// A) Multi-line style (number, name, and details each on their own line, e.g. Virginia,
+//    or a school listing height/weight/hometown with lots of social-link lines in between):
+//      <digits or "null">   <- jersey number / weight class alone
+//      <name>                <- name alone
+//      <tab-separated row>   <- Position/Class/Height/etc, order varies by school
+//      (any number of extra lines: social links, previous school, etc.) <- discarded
+//
+// B) Single-line style (one full row per player, often with a header row above it):
+//      No.<TAB>Name<TAB>Pos.<TAB>Cl.<TAB>Ht.<TAB>Wt.<TAB>Hometown / High School
+//      0<TAB>Juan Carlos Alvarez<TAB>GK<TAB>Sr.<TAB>6-3<TAB><TAB>McAllen, Texas /
+//
+// C) No-number, single-line style (track & field, cross country — one row per athlete):
+//      Name<TAB>Event Group<TAB>Class<TAB>Major<TAB>Hometown<TAB>High School<TAB>...
+//      Tolu Akinduro<TAB>Jumps/Hurdles<TAB>Sr.<TAB>Public Health<TAB>Toronto, Ontario<TAB>...
+//
+// D) No-number, two-line style (gymnastics — name alone, then a tab-separated details line,
+//    with no position/event group at all, so the third column falls back to class year):
+//      Megan Bingham
+//      Sr.<TAB>Public Health Science<TAB>Louisville, KY<TAB>Eastern<TAB>...
+function parseRoster(text){
+  const rawLines = text.split(/\r?\n/).map(l => l.replace(/\t+$/,'').trim());
+  const results = [];
+  let i = 0;
+  while(i < rawLines.length){
+    const line = rawLines[i];
+    if(line === ''){ i++; continue; }
+    const fields = line.split('\t').map(f => f.trim());
+    if(isNumberLine(fields[0])){
+      if(fields.length >= 2 && fields[1] !== ''){
+        // single-line style: whole record on one row
+        const num = fields[0];
+        const name = fields[1];
+        const pos = findPosition(fields.slice(2));
+        results.push({num, name, pos});
+        i++;
+      } else {
+        // multi-line style: number alone, then name alone, then a details line
+        const num = fields[0];
+        i++;
+        while(i < rawLines.length && rawLines[i] === '') i++;
+        if(i >= rawLines.length) break;
+        const name = rawLines[i];
+        i++;
+        while(i < rawLines.length && rawLines[i] === '') i++;
+        if(i >= rawLines.length) break;
+        const detailLine = rawLines[i];
+        const detailFields = detailLine.split('\t').map(f => f.trim());
+        const pos = findPosition(detailFields);
+        i++;
+        // skip everything until the next line that starts with a jersey number, or end
+        while(i < rawLines.length && !isNumberLine(rawLines[i].split('\t')[0])) i++;
+        if(name && !isNumberLine(name)){
+          results.push({num, name, pos});
+        }
+      }
+    } else if(fields.length >= 2 && looksLikeName(fields[0]) && (matchPosition(fields[1]) || matchEventGroup(fields[1]))){
+      // no-number, single-line style: whole record on one row, no jersey number column
+      const name = fields[0];
+      const pos = findPosition(fields.slice(1));
+      results.push({num: '', name, pos});
+      i++;
+    } else if(isLoneNameLine(line)){
+      // no-number, two-line style: name alone, then a tab-separated details line
+      const name = line;
+      i++;
+      while(i < rawLines.length && rawLines[i] === '') i++;
+      if(i >= rawLines.length) break;
+      const detailLine = rawLines[i];
+      if(!detailLine.includes('\t')){
+        // no details line followed — not actually a valid record, back off
+        continue;
+      }
+      const detailFields = detailLine.split('\t').map(f => f.trim());
+      const pos = findPosition(detailFields);
+      i++;
+      // skip until the next lone-name line, number line, or no-number single-line record
+      while(i < rawLines.length){
+        const nextLine = rawLines[i];
+        const nextFields = nextLine.split('\t').map(f => f.trim());
+        if(isNumberLine(nextFields[0])) break;
+        if(isLoneNameLine(nextLine)) break;
+        if(nextFields.length >= 2 && looksLikeName(nextFields[0]) && (matchPosition(nextFields[1]) || matchEventGroup(nextFields[1]))) break;
+        i++;
+      }
+      results.push({num: '', name, pos});
+    } else {
+      i++;
+    }
+  }
+  return results;
+}
+
+function buildRosterCsv(team, players, fmt, nameFmt, tricode){
+  let out = '';
+  if(fmt === 'away'){
+    out += csvField(team) + '\r\n';
+    players.forEach(p => {
+      const name = formatName(p, nameFmt, tricode);
+      out += `${csvField(p.num)},${csvField(name)},${csvField(p.pos)}\r\n`;
+    });
+  } else {
+    out += csvField(team) + ',,,,,\r\n';
+    players.forEach(p => {
+      const name = formatName(p, nameFmt, tricode);
+      out += `${csvField(p.num)},${csvField(name)},${csvField(p.pos)},,,\r\n`;
+    });
+  }
+  return out;
+}
+
+function triggerDownload(filename, content){
+  const blob = new Blob([content], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================================
+   MODE TABS
+   ============================================================================ */
+document.querySelectorAll('.modetab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.modetab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.modepanel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const mode = tab.dataset.mode;
+    document.getElementById(mode === 'single' ? 'modeSingle' : 'modeGame').classList.add('active');
+  });
+});
+
+/* ============================================================================
+   SINGLE ROSTER MODE
+   ============================================================================ */
+(function(){
+  const rawPaste = document.getElementById('rawPaste');
+  const teamName = document.getElementById('teamName');
+  const teamTricode = document.getElementById('teamTricode');
+  const tricodeRow = document.getElementById('tricodeRow');
+  const optFull = document.getElementById('optFull');
+  const optLast = document.getElementById('optLast');
+  const optTricode = document.getElementById('optTricode');
+  const optTricodeNum = document.getElementById('optTricodeNum');
+  const msg = document.getElementById('msg');
+  const previewWrap = document.getElementById('previewWrap');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const optAway = document.getElementById('optAway');
+  const optHome = document.getElementById('optHome');
+  const countRaw = document.getElementById('countRaw');
+
+  let players = [];
+
+  function getFormat(){
+    return document.querySelector('input[name=fmt]:checked').value;
+  }
+  function getNameFormat(){
+    return document.querySelector('input[name=nameFmt]:checked').value;
+  }
+
+  document.querySelectorAll('input[name=nameFmt]').forEach(r => {
+    r.addEventListener('change', () => {
+      const val = getNameFormat();
+      optFull.classList.toggle('active', val === 'full');
+      optLast.classList.toggle('active', val === 'last');
+      optTricode.classList.toggle('active', val === 'tricode');
+      optTricodeNum.classList.toggle('active', val === 'tricodenum');
+      tricodeRow.style.display = (val === 'tricode' || val === 'tricodenum') ? 'flex' : 'none';
+      updateMsgAndButton();
+    });
+  });
+
+  document.querySelectorAll('input[name=fmt]').forEach(r => {
+    r.addEventListener('change', () => {
+      optAway.classList.toggle('active', getFormat() === 'away');
+      optHome.classList.toggle('active', getFormat() === 'home');
+      updateMsgAndButton();
+    });
+  });
+
+  function renderPreview(){
+    if(players.length === 0){
+      previewWrap.innerHTML = '<span style="color:#5c6773;">Paste roster data above to preview.</span>';
+      return;
+    }
+    let html = '<table class="preview"><thead><tr><th>Num</th><th>Name</th><th>Pos</th></tr></thead><tbody>';
+    players.forEach((p, idx) => {
+      html += `<tr>
+        <td contenteditable="true" data-idx="${idx}" data-field="num">${p.num}</td>
+        <td contenteditable="true" data-idx="${idx}" data-field="name">${p.name}</td>
+        <td contenteditable="true" data-idx="${idx}" data-field="pos">${p.pos}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    previewWrap.innerHTML = html;
+
+    previewWrap.querySelectorAll('[contenteditable]').forEach(cell => {
+      cell.addEventListener('blur', () => {
+        const idx = +cell.dataset.idx;
+        const field = cell.dataset.field;
+        players[idx][field] = cell.textContent.trim();
+        updateMsgAndButton();
+      });
+    });
+  }
+
+  function updateMsgAndButton(){
+    const team = teamName.value.trim();
+    const nameFmt = getNameFormat();
+    countRaw.textContent = players.length + ' player' + (players.length === 1 ? '' : 's') + ' detected';
+
+    if(players.length === 0){
+      msg.textContent = '';
+      msg.className = 'msg';
+      downloadBtn.disabled = true;
+      return;
+    }
+    if(!team){
+      msg.textContent = 'Enter a team name to enable download.';
+      msg.className = 'msg error';
+      downloadBtn.disabled = true;
+      return;
+    }
+    if((nameFmt === 'tricode' || nameFmt === 'tricodenum') && !teamTricode.value.trim()){
+      msg.textContent = 'Enter a team tricode to enable download.';
+      msg.className = 'msg error';
+      downloadBtn.disabled = true;
+      return;
+    }
+    msg.textContent = `${players.length} players ready · ${team}`;
+    msg.className = 'msg ok';
+    downloadBtn.disabled = false;
+  }
+
+  function handleRawInput(){
+    players = parseRoster(rawPaste.value);
+    renderPreview();
+    updateMsgAndButton();
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    const team = teamName.value.trim();
+    const fmt = getFormat();
+    const nameFmt = getNameFormat();
+    const tricode = teamTricode.value.trim().toUpperCase();
+    const csv = buildRosterCsv(team, players, fmt, nameFmt, tricode);
+    const filename = team.replace(/[^a-z0-9]+/gi, '_') || 'roster';
+    triggerDownload(filename + '.csv', csv);
+  });
+
+  rawPaste.addEventListener('input', handleRawInput);
+  teamName.addEventListener('input', updateMsgAndButton);
+  teamTricode.addEventListener('input', updateMsgAndButton);
+  updateMsgAndButton();
+})();
+
+/* ============================================================================
+   GAME SETUP MODE
+   ============================================================================ */
+(function(){
+  const sportSelect = document.getElementById('sportSelect');
+  const tagsInput = document.getElementById('tagsInput');
+  const countTags = document.getElementById('countTags');
+  const loadPresetBtn = document.getElementById('loadPresetBtn');
+  const generateBtn = document.getElementById('generateBtn');
+  const gameMsg = document.getElementById('gameMsg');
+
+  const gOptFull = document.getElementById('gOptFull');
+  const gOptLast = document.getElementById('gOptLast');
+  const gOptTricode = document.getElementById('gOptTricode');
+  const gOptTricodeNum = document.getElementById('gOptTricodeNum');
+  const gOptAway = document.getElementById('gOptAway');
+  const gOptHome = document.getElementById('gOptHome');
+
+  function getGFormat(){
+    return document.querySelector('input[name=gFmt]:checked').value;
+  }
+  function getGNameFormat(){
+    return document.querySelector('input[name=gNameFmt]:checked').value;
+  }
+
+  const SPORT_TAG_PRESETS = {
+    football: ["RUSH","PASS","INC","TD","FG","FGM","XP","XPM","2PT","PUNT","KO","OSK","INT","FUM","FR","SACK","SAF","TB","FC","KR","PR","1ST","3RD","4TH","TOD","PEN","FS","HOLD","PI","TO"],
+    basketball: ["2PT","3PT","FT","AST","REB","STL","BLK","TO","FOUL","TIMEOUT"],
+    soccer: ["GOAL","ASSIST","SHOT","SAVE","FOUL","YELLOW","RED","CORNER","OFFSIDE","PK","SUB"],
+    volleyball: ["KILL","BLOCK","ACE","DIG","ASSIST","ERROR","TIMEOUT","SUB"],
+    baseball: ["HIT","SINGLE","DOUBLE","TRIPLE","HR","RBI","K","BB","ERROR","STEAL","DP"],
+    softball: ["HIT","SINGLE","DOUBLE","TRIPLE","HR","RBI","K","BB","ERROR","STEAL","DP"],
+    lacrosse: ["GOAL","ASSIST","SHOT","SAVE","FACEOFF","GB","TURNOVER","PENALTY"],
+    fieldhockey: ["GOAL","ASSIST","SHOT","SAVE","PC","CARD"],
+    hockey: ["GOAL","ASSIST","SHOT","SAVE","PENALTY","PP","PK","FACEOFF"],
+    wrestling: ["PIN","TF","MD","DEC","TAKEDOWN","ESCAPE","REVERSAL","NEARFALL"],
+    track: ["PR","SB","DNF","DQ","WIN","PLACE"],
+    gymnastics: ["STICK","FALL","DEDUCTION","ROUTINE"],
+    bowling: ["STRIKE","SPARE","GUTTER","SPLIT","OPEN"],
+    tennis: ["ACE","WINNER","UNFORCED ERROR","BREAK POINT","SET POINT"]
+  };
+
+  loadPresetBtn.addEventListener('click', () => {
+    const preset = SPORT_TAG_PRESETS[sportSelect.value] || [];
+    tagsInput.value = preset.join('\n');
+    updateTagCount();
+  });
+
+  function getTags(){
+    return tagsInput.value.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
+  }
+  function updateTagCount(){
+    countTags.textContent = getTags().length + ' tags';
+    updateGenerateState();
+  }
+  tagsInput.addEventListener('input', updateTagCount);
+
+  // Team controller factory — one instance for home, one for away
+  function makeTeamController(prefix){
+    const teamNameEl = document.getElementById('teamName_' + prefix);
+    const tricodeEl = document.getElementById('teamTricode_' + prefix);
+    const tricodeRowEl = document.getElementById('tricodeRow_' + prefix);
+    const rawPasteEl = document.getElementById('rawPaste_' + prefix);
+    const previewEl = document.getElementById('previewWrap_' + prefix);
+    const countEl = document.getElementById('countRaw_' + prefix);
+    const msgEl = document.getElementById('msg_' + prefix);
+
+    let players = [];
+
+    function renderPreview(){
+      if(players.length === 0){
+        previewEl.innerHTML = '<span style="color:#5c6773;">Paste roster data above to preview.</span>';
+        return;
+      }
+      let html = '<table class="preview"><thead><tr><th>Num</th><th>Name</th><th>Pos</th></tr></thead><tbody>';
+      players.forEach((p, idx) => {
+        html += `<tr>
+          <td contenteditable="true" data-idx="${idx}" data-field="num">${p.num}</td>
+          <td contenteditable="true" data-idx="${idx}" data-field="name">${p.name}</td>
+          <td contenteditable="true" data-idx="${idx}" data-field="pos">${p.pos}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      previewEl.innerHTML = html;
+
+      previewEl.querySelectorAll('[contenteditable]').forEach(cell => {
+        cell.addEventListener('blur', () => {
+          const idx = +cell.dataset.idx;
+          const field = cell.dataset.field;
+          players[idx][field] = cell.textContent.trim();
+          updateMsg();
+        });
+      });
+    }
+
+    function updateMsg(){
+      const team = teamNameEl.value.trim();
+      countEl.textContent = players.length + ' player' + (players.length === 1 ? '' : 's') + ' detected';
+      if(players.length === 0){
+        msgEl.textContent = '';
+        msgEl.className = 'msg';
+      } else if(!team){
+        msgEl.textContent = 'Enter a team name.';
+        msgEl.className = 'msg error';
+      } else if((getGNameFormat() === 'tricode' || getGNameFormat() === 'tricodenum') && !tricodeEl.value.trim()){
+        msgEl.textContent = 'Enter a tricode.';
+        msgEl.className = 'msg error';
+      } else {
+        msgEl.textContent = `${players.length} players ready · ${team}`;
+        msgEl.className = 'msg ok';
+      }
+      updateGenerateState();
+    }
+
+    rawPasteEl.addEventListener('input', () => {
+      players = parseRoster(rawPasteEl.value);
+      renderPreview();
+      updateMsg();
+    });
+    teamNameEl.addEventListener('input', updateMsg);
+    tricodeEl.addEventListener('input', updateMsg);
+
+    return {
+      isReady(){
+        const team = teamNameEl.value.trim();
+        if(players.length === 0 || !team) return false;
+        if((getGNameFormat() === 'tricode' || getGNameFormat() === 'tricodenum') && !tricodeEl.value.trim()) return false;
+        return true;
+      },
+      buildCsv(){
+        const team = teamNameEl.value.trim();
+        const tricode = tricodeEl.value.trim().toUpperCase();
+        return buildRosterCsv(team, players, getGFormat(), getGNameFormat(), tricode);
+      },
+      teamFileLabel(){
+        return (teamNameEl.value.trim().replace(/[^a-z0-9]+/gi, '_') || prefix);
+      },
+      refreshMsg: updateMsg,
+      toggleTricodeRow(show){
+        tricodeRowEl.style.display = show ? 'flex' : 'none';
+      }
+    };
+  }
+
+  const homeTeam = makeTeamController('home');
+  const awayTeam = makeTeamController('away');
+
+  document.querySelectorAll('input[name=gNameFmt]').forEach(r => {
+    r.addEventListener('change', () => {
+      const val = getGNameFormat();
+      gOptFull.classList.toggle('active', val === 'full');
+      gOptLast.classList.toggle('active', val === 'last');
+      gOptTricode.classList.toggle('active', val === 'tricode');
+      gOptTricodeNum.classList.toggle('active', val === 'tricodenum');
+      const show = (val === 'tricode' || val === 'tricodenum');
+      homeTeam.toggleTricodeRow(show);
+      awayTeam.toggleTricodeRow(show);
+      homeTeam.refreshMsg();
+      awayTeam.refreshMsg();
+    });
+  });
+
+  document.querySelectorAll('input[name=gFmt]').forEach(r => {
+    r.addEventListener('change', () => {
+      gOptAway.classList.toggle('active', getGFormat() === 'away');
+      gOptHome.classList.toggle('active', getGFormat() === 'home');
+    });
+  });
+
+  function updateGenerateState(){
+    const homeReady = homeTeam.isReady();
+    const awayReady = awayTeam.isReady();
+    if(homeReady && awayReady){
+      gameMsg.textContent = 'Ready to generate: home roster, away roster' + (getTags().length ? ', and play tags.' : '.');
+      gameMsg.className = 'msg ok';
+      generateBtn.disabled = false;
+    } else {
+      const missing = [];
+      if(!homeReady) missing.push('home team');
+      if(!awayReady) missing.push('away team');
+      gameMsg.textContent = 'Fill in ' + missing.join(' and ') + ' to generate the game package.';
+      gameMsg.className = 'msg';
+      generateBtn.disabled = true;
+    }
+  }
+
+  generateBtn.addEventListener('click', () => {
+    const homeLabel = homeTeam.teamFileLabel();
+    const awayLabel = awayTeam.teamFileLabel();
+    triggerDownload(`Home_${homeLabel}.csv`, homeTeam.buildCsv());
+    triggerDownload(`Away_${awayLabel}.csv`, awayTeam.buildCsv());
+
+    const tags = getTags();
+    if(tags.length > 0){
+      let tagsCsv = `${sportSelect.options[sportSelect.selectedIndex].text} Play Tags\r\n`;
+      tags.forEach((t, idx) => {
+        tagsCsv += `${idx + 1},${csvField(t)}\r\n`;
+      });
+      triggerDownload(`PlayTags_${sportSelect.value}.csv`, tagsCsv);
+    }
+  });
+
+  updateGenerateState();
+})();
+</script>
+</body>
+</html>

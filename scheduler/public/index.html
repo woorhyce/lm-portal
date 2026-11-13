@@ -1,0 +1,586 @@
+<script src="/lm-sync.js"></script>
+<title>Schedule Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0c0e12;
+    --panel:#141821;
+    --panel-2:#191f2a;
+    --border:#262e3d;
+    --text:#e7ebf3;
+    --muted:#8a94a6;
+    --muted-2:#5b6577;
+    --accent:#3ddad0;
+    --accent-dim:#1e6e69;
+    --home:#f5a623;
+    --danger:#ff6a5a;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:transparent;color:var(--text);font-family:var(--sans);}
+  .app{max-width:920px;margin:0 auto;padding:28px 20px 60px;}
+
+  .masthead{
+    border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:24px;
+  }
+  .masthead h1{
+    font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:0.2px;
+  }
+  .masthead p{margin:0 0 12px;color:var(--muted);font-size:13.5px;max-width:560px;line-height:1.5;}
+  .tally{
+    display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);
+    font-size:11px;color:var(--muted);letter-spacing:0.3px;
+  }
+  .tally .dot{width:7px;height:7px;border-radius:50%;background:var(--home);box-shadow:0 0 8px var(--home);}
+
+  .steps{display:flex;flex-direction:column;gap:16px;}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:20px 22px;
+  }
+
+  .step-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .step-num{
+    flex:none;width:22px;height:22px;border-radius:50%;
+    background:rgba(61,218,208,0.1);border:1px solid var(--accent-dim);
+    color:var(--accent);font-family:var(--mono);font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .step-head h2{font-size:14.5px;font-weight:600;margin:0;color:var(--text);}
+  .step-head .step-sub{margin-left:auto;font-size:12px;color:var(--muted-2);font-family:var(--mono);}
+
+  .panel-note{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 14px;}
+  .panel-note b{color:var(--muted);font-weight:600;}
+  .panel-note code{
+    font-family:var(--mono);font-size:11.5px;background:var(--panel-2);
+    padding:1px 5px;border-radius:4px;color:var(--text);
+  }
+
+  label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);
+    color:var(--text);border-radius:6px;padding:8px 9px;font-family:var(--sans);font-size:13.5px;
+    outline:none;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus,
+  input[type=date]:focus, input[type=time]:focus, textarea:focus{
+    border-color:var(--accent);
+  }
+
+  /* --- Step 2: defaults laid out as a single aligned row --- */
+  .defaults-row{
+    display:grid;
+    grid-template-columns: 1.3fr 1.3fr 1fr 1fr 1.1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media (max-width:760px){ .defaults-row{grid-template-columns:1fr 1fr;} }
+  .dur-row{display:flex;gap:6px;align-items:center;}
+  .dur-row input{width:100%;text-align:center;}
+  .dur-row span{color:var(--muted-2);font-size:11.5px;flex:none;}
+
+  .btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    padding:9px 14px;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:500;
+    cursor:pointer;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--muted-2);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#04201d;font-weight:600;}
+  .btn.primary:hover{background:#4fe6dc;}
+  .btn.ghost{background:transparent;}
+  .btn.small{padding:6px 10px;font-size:12px;}
+
+  textarea{font-family:var(--mono);font-size:12.5px;resize:vertical;line-height:1.5;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;font-size:10.5px;color:var(--muted);font-weight:600;
+    padding:0 8px 8px;border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  tbody td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tbody tr:hover{background:rgba(255,255,255,0.015);}
+  tbody input[type=text], tbody input[type=date], tbody input[type=time], tbody input[type=number], tbody select{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    border-radius:5px;padding:6px 7px;font-size:12.5px;width:100%;font-family:var(--sans);
+  }
+  tbody .mono-cell input, .end-time{font-family:var(--mono);font-size:12px;}
+  .col-name{width:190px;}
+  .col-date{width:118px;}
+  .col-time{width:88px;}
+  .col-dur{width:70px;}
+  .col-end{width:150px;color:var(--muted);white-space:nowrap;}
+  .col-task{width:118px;}
+  .col-io{width:110px;}
+  .col-del{width:34px;text-align:center;}
+
+  .del-btn{
+    background:transparent;border:none;color:var(--muted-2);cursor:pointer;font-size:15px;
+    width:26px;height:26px;border-radius:5px;
+  }
+  .del-btn:hover{color:var(--danger);background:rgba(255,106,90,0.08);}
+
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+  .table-wrap table{font-size:12.5px;}
+  .table-wrap thead th{padding-top:8px;}
+
+  .empty-state{
+    text-align:center;padding:28px 16px;color:var(--muted-2);font-size:12.5px;
+    border:1px dashed var(--border);border-radius:8px;
+  }
+
+  .export-bar{display:flex;align-items:center;gap:12px;margin-top:16px;}
+  .export-note{font-size:12px;color:var(--muted-2);font-family:var(--mono);}
+</style>
+
+<div class="app">
+  <div class="masthead">
+    <h1>Schedule Builder</h1>
+    <p>Turn a season schedule into ready-to-import scheduler events, for any school and any sport.</p>
+    <div class="tally"><span class="dot"></span> <span id="gameCount">0</span> HOME GAMES LOADED</div>
+  </div>
+
+  <div class="steps">
+
+    <!-- STEP 1: BULK IMPORT -->
+    <div class="panel">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h2>Import home games</h2>
+      </div>
+      <p class="panel-note">
+        One game per line: <b>Opponent, Date, Time</b> — separated by commas, tabs, or pipes. Dates can be
+        <code>YYYY-MM-DD</code>, <code>M/D/YYYY</code>, or <code>Mon D, YYYY</code>. Paste straight from a
+        spreadsheet, or ask Claude to fetch a schedule page and hand you this list for any school or sport.
+      </p>
+      <textarea id="bulkText" rows="4" placeholder="Kansas City, 2026-08-05, 6:00 PM
+Baylor, 2026-08-12, 7:00 PM
+North Carolina, 8/20/2026, 6:30 PM"></textarea>
+      <div class="btn-row">
+        <button class="btn primary" id="importBtn">Add to schedule</button>
+        <button class="btn ghost small" id="clearAllBtn">Clear all rows</button>
+        <span class="export-note" id="importNote"></span>
+      </div>
+    </div>
+
+    <!-- STEP 2: DEFAULTS -->
+    <div class="panel">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h2>Set defaults</h2>
+        <span class="step-sub">applied to every row</span>
+      </div>
+      <div class="defaults-row">
+        <div>
+          <label>Sport / label</label>
+          <input type="text" id="defSport" placeholder="e.g. Soccer" value="Soccer">
+        </div>
+        <div>
+          <label>Task</label>
+          <select id="defTask">
+            <option value="shadowexport">shadowexport (growing file)</option>
+            <option value="clipplayback">clipplayback (play at time)</option>
+          </select>
+        </div>
+        <div>
+          <label>Input</label>
+          <input type="text" id="defInput" placeholder="e.g. PGM" value="PGM">
+        </div>
+        <div>
+          <label>Output</label>
+          <input type="text" id="defOutput" placeholder="e.g. NAS" value="NAS">
+        </div>
+        <div>
+          <label>Duration</label>
+          <div class="dur-row">
+            <input type="number" id="defHours" min="0" value="2"><span>hr</span>
+            <input type="number" id="defMins" min="0" max="59" value="30"><span>min</span>
+          </div>
+        </div>
+      </div>
+      <p class="panel-note" style="margin-top:12px;margin-bottom:0;">
+        Name becomes <b>"{Sport} vs {Opponent}"</b>. Recording starts at kickoff/first pitch/tipoff and runs
+        for the duration above — override any field per game in the table below.
+      </p>
+      <div class="btn-row">
+        <button class="btn primary" id="applyAllBtn">Apply defaults to all rows</button>
+        <button class="btn ghost" id="addRowBtn">+ Add game</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: REVIEW TABLE -->
+    <div class="panel">
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <h2>Review &amp; edit</h2>
+        <span class="step-sub"><span id="rowCount">0</span> events</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-name">Name</th>
+              <th class="col-date">Date</th>
+              <th class="col-time">Start</th>
+              <th class="col-dur">Dur (hr)</th>
+              <th class="col-end">Ends</th>
+              <th class="col-task">Task</th>
+              <th class="col-io">Input</th>
+              <th class="col-io">Output</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        No games yet — import some above or click "+ Add game".
+      </div>
+    </div>
+
+    <!-- STEP 4: EXPORT -->
+    <div class="panel">
+      <div class="step-head">
+        <span class="step-num">4</span>
+        <h2>Export</h2>
+      </div>
+      <p class="panel-note">
+        Builds a file matching your scheduler template: <b>name, schedule_id, start, end,
+        event_id, task, input_type, input, output_type, output, event_params</b>. <b>schedule_id</b>,
+        <b>event_id</b>, and <b>event_params</b> are left blank so the system assigns them.
+        <b>input_type</b>/<b>output_type</b> are filled in automatically from the task
+        (<code>shadowexport</code> → <code>record_train</code>/<code>profile</code>,
+        <code>clipplayback</code> → <code>clips</code>/<code>dreamcatcher_outputs</code>) — <b>start</b>/<b>end</b>
+        are written as full datetimes down to the second. Use <b>.xlsx</b> if your scheduler expects a
+        workbook, or <b>.csv</b> for a plain-text import.
+      </p>
+      <div class="export-bar" style="margin-top:0;">
+        <button class="btn primary" id="exportBtn">Export .xlsx</button>
+        <button class="btn ghost" id="exportCsvBtn">Export .csv</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Example lines shown in the bulk-import box on first load — real home games pulled from
+// arkansasrazorbacks.com/sport/w-soccer/schedule/ (2026-27 season). Replace with any school/sport.
+const exampleBulk = `Kansas City, 2026-08-05, 6:00 PM
+Baylor, 2026-08-12, 7:00 PM
+North Carolina, 2026-08-20, 6:30 PM
+Clemson, 2026-08-27, 7:00 PM
+Little Rock, 2026-08-30, 1:00 PM
+Jackson State, 2026-09-04, 6:30 PM
+Texas, 2026-09-10, 8:00 PM
+Georgia, 2026-09-24, 6:30 PM
+Auburn, 2026-09-27, 1:30 PM
+Missouri, 2026-10-02, 6:30 PM
+Florida, 2026-10-18, 1:30 PM`;
+
+let rows = [];
+let idCounter = 0;
+
+function defaults(){
+  return {
+    task: document.getElementById('defTask').value,
+    input: document.getElementById('defInput').value,
+    output: document.getElementById('defOutput').value,
+    hours: parseFloat(document.getElementById('defHours').value) || 0,
+    mins: parseFloat(document.getElementById('defMins').value) || 0,
+  };
+}
+
+function newRow(seed){
+  const d = defaults();
+  return {
+    id: idCounter++,
+    name: seed ? seed.name : "New game",
+    date: seed ? seed.date : "",
+    time: seed ? seed.time : "",
+    durHours: (d.hours + d.mins/60),
+    task: d.task,
+    input: d.input,
+    output: d.output,
+  };
+}
+
+// ---- bulk import parsing ----
+function splitLine(line){
+  let parts;
+  if(line.includes('\t')) parts = line.split('\t');
+  else if(line.includes('|')) parts = line.split('|');
+  else {
+    parts = line.split(',');
+    // "Opponent, Mon D, YYYY, Time" -> 4 parts because the date itself has a comma
+    if(parts.length === 4){
+      parts = [parts[0], parts[1] + ',' + parts[2], parts[3]];
+    }
+  }
+  return parts.map(p => p.trim()).filter(p => p.length);
+}
+
+function parseDateStr(s){
+  let m;
+  if((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))){
+    return { y: +m[1], mo: +m[2]-1, d: +m[3] };
+  }
+  if((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))){
+    return { y: +m[3], mo: +m[1]-1, d: +m[2] };
+  }
+  const parsed = new Date(s);
+  if(!isNaN(parsed.getTime())){
+    return { y: parsed.getFullYear(), mo: parsed.getMonth(), d: parsed.getDate() };
+  }
+  return null;
+}
+
+function parseTimeStr(s){
+  const m = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?$/);
+  if(!m) return null;
+  let h = +m[1]; const min = +m[2]; const ap = m[3] ? m[3].toUpperCase() : null;
+  if(ap === 'PM' && h !== 12) h += 12;
+  if(ap === 'AM' && h === 12) h = 0;
+  return { h, min };
+}
+
+function parseBulkText(text){
+  const sport = document.getElementById('defSport').value.trim();
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length);
+  let added = 0, skipped = 0;
+
+  lines.forEach(line => {
+    const parts = splitLine(line);
+    if(parts.length < 3){ skipped++; return; }
+    const [opponent, dateRaw, timeRaw] = parts;
+    const dateParts = parseDateStr(dateRaw);
+    const timeParts = parseTimeStr(timeRaw);
+    if(!dateParts || !timeParts){ skipped++; return; }
+
+    const pad = n => String(n).padStart(2,'0');
+    const dateStr = `${dateParts.y}-${pad(dateParts.mo+1)}-${pad(dateParts.d)}`;
+    const timeStr = `${pad(timeParts.h)}:${pad(timeParts.min)}`;
+    const name = sport ? `${sport} vs ${opponent}` : `vs ${opponent}`;
+
+    rows.push(newRow({ name, date: dateStr, time: timeStr }));
+    added++;
+  });
+
+  return { added, skipped };
+}
+
+function computeEnd(row){
+  if(!row.date || !row.time) return null;
+  const start = new Date(row.date + "T" + row.time + ":00");
+  if(isNaN(start.getTime())) return null;
+  const durMs = (parseFloat(row.durHours)||0) * 3600 * 1000;
+  return new Date(start.getTime() + durMs);
+}
+
+// input_type / output_type are fixed by the system based on task — not user-editable.
+// Confirmed from an actual scheduler export: shadowexport always pairs with
+// record_train/profile, clipplayback always pairs with clips/dreamcatcher_outputs.
+const IO_TYPES = {
+  shadowexport: { input_type: "record_train", output_type: "profile" },
+  clipplayback: { input_type: "clips", output_type: "dreamcatcher_outputs" },
+};
+
+function fmtEnd(d){
+  if(!d) return "—";
+  const pad = n => String(n).padStart(2,'0');
+  const h = d.getHours(); const ampm = h>=12?'PM':'AM'; const h12 = ((h%12)||12);
+  return `${d.getMonth()+1}/${d.getDate()}/${String(d.getFullYear()).slice(2)} ${h12}:${pad(d.getMinutes())} ${ampm}`;
+}
+
+function render(){
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    const end = computeEnd(row);
+
+    tr.innerHTML = `
+      <td class="col-name"><input type="text" data-f="name" value="${escapeAttr(row.name)}"></td>
+      <td class="col-date"><input type="date" data-f="date" value="${row.date}"></td>
+      <td class="col-time mono-cell"><input type="time" data-f="time" value="${row.time}"></td>
+      <td class="col-dur"><input type="number" step="0.25" min="0" data-f="durHours" value="${row.durHours}"></td>
+      <td class="col-end end-time">${fmtEnd(end)}</td>
+      <td class="col-task">
+        <select data-f="task">
+          <option value="shadowexport" ${row.task==='shadowexport'?'selected':''}>shadowexport</option>
+          <option value="clipplayback" ${row.task==='clipplayback'?'selected':''}>clipplayback</option>
+        </select>
+      </td>
+      <td class="col-io"><input type="text" data-f="input" value="${escapeAttr(row.input)}"></td>
+      <td class="col-io"><input type="text" data-f="output" value="${escapeAttr(row.output)}"></td>
+      <td class="col-del"><button class="del-btn" data-del="1">×</button></td>
+    `;
+
+    tr.querySelectorAll('[data-f]').forEach(el => {
+      el.addEventListener('input', () => {
+        row[el.dataset.f] = el.value;
+        // only re-render the end-time cell + count, not the whole table (keeps focus)
+        const endCell = tr.querySelector('.end-time');
+        endCell.textContent = fmtEnd(computeEnd(row));
+      });
+    });
+    tr.querySelector('[data-del]').addEventListener('click', () => {
+      rows = rows.filter(r => r.id !== row.id);
+      render();
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('rowCount').textContent = rows.length;
+  document.getElementById('gameCount').textContent = rows.length;
+
+  const wrap = document.querySelector('.table-wrap');
+  const empty = document.getElementById('emptyState');
+  wrap.style.display = rows.length ? '' : 'none';
+  empty.style.display = rows.length ? 'none' : '';
+}
+
+function escapeAttr(s){
+  return String(s || '').replace(/"/g, '&quot;');
+}
+
+document.getElementById('applyAllBtn').addEventListener('click', () => {
+  const d = defaults();
+  rows.forEach(r => {
+    r.task = d.task;
+    r.input = d.input;
+    r.output = d.output;
+    r.durHours = d.hours + d.mins/60;
+  });
+  render();
+});
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  rows.push(newRow(null));
+  render();
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  const text = document.getElementById('bulkText').value;
+  const { added, skipped } = parseBulkText(text);
+  render();
+  document.getElementById('importNote').textContent =
+    `Added ${added} game${added===1?'':'s'}` + (skipped ? `, skipped ${skipped} line${skipped===1?'':'s'} (couldn't read date/time).` : '.');
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if(rows.length && !confirm('Clear all rows from the schedule?')) return;
+  rows = [];
+  render();
+});
+
+function fmtCsvDateTime(d){
+  if(!d) return "";
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function csvEscape(v){
+  const s = (v === null || v === undefined) ? "" : String(v);
+  if(/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  const header = ["name","schedule_id","start","end","event_id","task","input_type","input","output_type","output","event_params"];
+  const lines = [header.join(',')];
+
+  rows.forEach(row => {
+    let start = (row.date && row.time) ? new Date(row.date + "T" + row.time + ":00") : null;
+    if(start && isNaN(start.getTime())) start = null;
+    const end = computeEnd(row);
+    const io = IO_TYPES[row.task] || { input_type: "", output_type: "" };
+    const cells = [
+      row.name, "", fmtCsvDateTime(start), fmtCsvDateTime(end), "",
+      row.task, io.input_type, row.input, io.output_type, row.output, ""
+    ];
+    lines.push(cells.map(csvEscape).join(','));
+  });
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `scheduler_import_${today}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  document.getElementById('exportNote').textContent = `Exported ${rows.length} events as CSV.`;
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const header = ["name","schedule_id","start","end","event_id","task","input_type","input","output_type","output","event_params"];
+  const data = [header];
+
+  rows.forEach(row => {
+    let start = (row.date && row.time) ? new Date(row.date + "T" + row.time + ":00") : null;
+    if(start && isNaN(start.getTime())) start = null;
+    const end = computeEnd(row);
+    const io = IO_TYPES[row.task] || { input_type: "", output_type: "" };
+    data.push([
+      row.name,
+      null,
+      start,
+      end,
+      null,
+      row.task,
+      io.input_type,
+      row.input,
+      io.output_type,
+      row.output,
+      null
+    ]);
+  });
+
+  // No {cellDates:true} here — that option keeps Date objects as raw values (t:'d').
+  // We want aoa_to_sheet's default behavior instead: Date -> numeric Excel serial (t:'n'),
+  // so we only restyle the format below rather than reassigning t (which previously left
+  // a Date object sitting in a "numeric" cell and corrupted the file).
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // force date+time+seconds format on start/end columns (C and D), rows 2..N
+  for(let r = 2; r <= rows.length + 1; r++){
+    ['C','D'].forEach(col => {
+      const cell = ws[col + r];
+      if(cell && cell.t === 'n'){ cell.z = 'm/d/yy h:mm:ss'; }
+    });
+  }
+
+  ws['!cols'] = [
+    {wch:26},{wch:11},{wch:18},{wch:18},{wch:9},
+    {wch:14},{wch:11},{wch:14},{wch:12},{wch:14},{wch:13}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Schedule Data");
+
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `scheduler_import_${today}.xlsx`);
+
+  document.getElementById('exportNote').textContent = `Exported ${rows.length} events.`;
+});
+
+// init — table starts empty; the bulk-import box is pre-filled with a real example
+// (Arkansas women's soccer home games) so you can see the format, then click
+// "Add to schedule" to try it, or clear the box and paste your own school's games.
+document.getElementById('bulkText').value = exampleBulk;
+render();
+</script>
