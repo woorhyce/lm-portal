@@ -3,6 +3,7 @@
 //   PUT    /api/data/:key          -> save your value (JSON body)
 //   GET    /api/data/:key?shared=1 -> team-shared value (PUT works the same)
 //   GET    /api/me                 -> signed-in email
+//   GET    /api/data               -> all of your keys for this tool (used by lm-sync.js)
 
 const json = (d, s = 200) => new Response(JSON.stringify(d), {
   status: s, headers: { "content-type": "application/json", "cache-control": "no-store" },
@@ -15,7 +16,17 @@ export default {
 
     if (url.pathname === "/api/me") return json({ email, portal: env.PORTAL_URL });
 
-    const m = url.pathname.match(/^\/api\/data\/([\w.-]{1,100})$/);
+    if (url.pathname === "/api/data" && request.method === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT key, value, updated FROM tool_data WHERE tool=?1 AND email=?2"
+      ).bind(env.TOOL, email).all();
+      return json({ items: results.map(r => ({ key: r.key, value: JSON.parse(r.value), updated: r.updated })) });
+    }
+
+    const raw = url.pathname.startsWith("/api/data/") ? url.pathname.slice(10) : null;
+    let dkey = null;
+    try { dkey = raw && decodeURIComponent(raw); } catch {}
+    const m = dkey && dkey.length <= 200 ? [null, dkey] : null;
     if (m) {
       const owner = url.searchParams.get("shared") ? "*" : email;
       if (request.method === "GET") {
@@ -24,7 +35,7 @@ export default {
         ).bind(env.TOOL, owner, m[1]).first();
         return json(row ? { value: JSON.parse(row.value), updated: row.updated } : { value: null });
       }
-      if (request.method === "PUT") {
+      if (request.method === "PUT" || request.method === "POST") {
         const value = JSON.stringify(await request.json());
         await env.DB.prepare(
           `INSERT INTO tool_data (tool,email,key,value,updated) VALUES (?1,?2,?3,?4,datetime('now'))
