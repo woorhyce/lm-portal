@@ -36,6 +36,7 @@ export default {
         ...t,
         file_needed: !!t.file_needed,
         local_only: !!t.local_only,
+        downloads: t.downloads ? JSON.parse(t.downloads) : null,
         url: t.url || (t.local_only ? `/local/${t.slug}.html` : env.TOOL_URL.replace("{slug}", t.slug)),
       }));
       return json({ tools });
@@ -49,7 +50,7 @@ export default {
       if (me?.role !== "admin") return json({ error: "Admins only" }, 403);
       const body = await request.json();
       const allowed = ["name", "category", "description", "version", "updated", "icon",
-                       "file_needed", "local_only", "sort", "enabled"];
+                       "file_needed", "local_only", "sort", "enabled", "url", "downloads"];
       const sets = [], vals = [];
       for (const k of allowed) if (k in body) { sets.push(`${k} = ?${vals.length + 1}`); vals.push(body[k]); }
       if (!sets.length) return json({ error: "Nothing to update" }, 400);

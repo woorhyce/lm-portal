@@ -58,6 +58,9 @@ main{padding:28px 32px;max-width:1500px}
 .ver{font:600 12px var(--mono)}
 .date{font-size:12px;color:var(--muted)}
 .open{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 14px;border-radius:999px}
+.dls{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
+.dl{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 13px;border-radius:999px}
+.dl svg{width:14px;height:14px}
 .vd{display:flex;flex-direction:column;line-height:1.3;white-space:nowrap}
 .open,.notes-btn{white-space:nowrap}
 .notes-btn{background:none;border:1px solid var(--line);color:var(--muted);font:600 12px var(--sans);padding:5px 11px;border-radius:999px;cursor:pointer}
@@ -124,18 +127,21 @@ const ICONS = {
   users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
   calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+  palette:'<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.9-.7-1.3-.7-2.2 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.7-4-8.6-9-8.6z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/>',
+  download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   box:'<rect x="4" y="4" width="16" height="16" rx="2"/>'
 };
 const SAMPLE = [
  {slug:'admin',name:'LM Admin Tools',category:'Admin',description:'Per diem, RMA, travel requests, trip reports, vacation, travel dates and weekly summary builders.',version:'2.2',updated:'2026-10-16',icon:'briefcase',url:'#'},
  {slug:'commissioning',name:'LM Commissioning',category:'Commissioning',description:'Project-based commissioning: server, Matrox and I/O setup, Operational Settings, and Package & Deploy for per-server .efp files.',version:'latest',icon:'wrench',file_needed:true,url:'#'},
- {slug:'health',name:'LM Health Report',category:'Monitoring',description:'DreamCatcher cluster health checks and report.',version:'latest',icon:'heart',local_only:true,url:'#'},
+ {slug:'health',name:'LM Health Report',category:'Monitoring',description:'Installable DreamCatcher cluster health check (.efp). Pick the build for the server: Trusty or Live Media.',version:'latest',icon:'heart',downloads:[{label:'Trusty',url:'#'},{label:'Live Media',url:'#'}]},
  {slug:'monitoring',name:'LM Monitoring',category:'Monitoring',description:'Live, read-only 2110 view of DreamCatcher Matrox cards from the NMOS API. IO map, Red/Blue lanes, SDP compare across servers.',version:'1.0.80',updated:'2026-11-10',icon:'pulse',local_only:true,url:'#'},
  {slug:'core-builder',name:'LM Core Builder',category:'Documentation',description:'Draws rear and front plates for an LM-CORE build: model, input card, SDI I/O config and front PCIe slot. Exports PNG.',version:'0.1',updated:'2026-10-30',icon:'grid',file_needed:true,url:'#'},
  {slug:'games',name:'LM Games',category:'Operations',description:'Game and event tracking.',version:'latest',icon:'flag',url:'#'},
  {slug:'mediabank',name:'Media Bank Integration',category:'Integrations',description:'MediaBank and DreamCatcher integration tools.',version:'latest',icon:'link',url:'#'},
  {slug:'roster',name:'VueWeb Roster Management',category:'Integrations',description:'Build and manage vueWeb rosters.',version:'latest',icon:'users',url:'#'},
  {slug:'scheduler',name:'Scheduler Builder',category:'Operations',description:'Build DreamCatcher schedules.',version:'latest',icon:'calendar',url:'#'},
+ {slug:'design-studio',name:'LM Design Studio',category:'Design',description:'Live-Media design studio.',version:'latest',icon:'palette',url:'#'},
  {slug:'highlights',name:'Highlight Factory Tools',category:'Production',description:'Highlight Factory setup and helpers.',version:'latest',icon:'film',url:'#'}
 ];
 let tools = [], cat = 'All tools';
@@ -162,10 +168,11 @@ function render(){
         <div><div class="name">${esc(t.name)}</div><div class="cat">${esc(t.category)}</div></div></div>
       ${(t.file_needed||t.local_only)?`<div class="tags">${t.file_needed?'<span class="tag file">FILE NEEDED</span>':''}${t.local_only?'<span class="tag local">RUNS ON SITE LAN</span>':''}</div>`:''}
       <p class="desc">${esc(t.description)}</p>
+      ${t.downloads ? `<div class="dls">${t.downloads.map(d => `<a class="dl" href="${esc(d.url)}" download>${svg('download')}${esc(d.label)}</a>`).join('')}</div>` : ''}
       <div class="foot"><div class="vd"><span class="ver">${/^\d/.test(t.version)?'v'+esc(t.version):'Latest'}</span>
         <span class="date">${fmtDate(t.updated)}</span></div>
         <button class="notes-btn" data-notes="${esc(t.slug)}" style="margin-left:auto">Release notes</button>
-        <a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a></div>
+        ${t.downloads ? '' : `<a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a>`}</div>
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
 $('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; render(); } });

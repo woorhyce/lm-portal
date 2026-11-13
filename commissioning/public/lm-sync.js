@@ -1,8 +1,31 @@
-// lm-sync.js: makes a tool's existing localStorage sync to D1 with no other code changes.
+// lm-sync.js: adds a "Tool Library" link and makes a tool's existing localStorage sync to D1 with no other code changes.
 // Load it FIRST in <head>:  <script src="/lm-sync.js"></script>
 //  - On load: pulls your saved keys from the server into localStorage (server wins),
 //    and uploads any keys that exist only in this browser (first-run migration).
 //  - After that: every localStorage.setItem/removeItem is saved to the server (debounced).
+// Back-to-portal link, added to every tool that loads this file.
+(function () {
+  if (!/^https?:$/.test(location.protocol) || window.self !== window.top) return;
+  function add(portal) {
+    if (!portal || document.getElementById("lm-home")) return;
+    var a = document.createElement("a");
+    a.id = "lm-home"; a.href = portal; a.title = "Back to the Live-Media Tool Library";
+    a.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Tool Library</span>';
+    a.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:2147483000;display:flex;align-items:center;gap:6px;" +
+      "padding:6px 11px;border-radius:999px;background:#1a2231;color:#e8ecf3;border:1px solid #33405a;" +
+      "font:600 12px/1 system-ui,-apple-system,'Segoe UI',sans-serif;text-decoration:none;opacity:.72;" +
+      "box-shadow:0 2px 8px rgba(0,0,0,.25);transition:opacity .15s";
+    a.onmouseenter = function () { a.style.opacity = "1"; };
+    a.onmouseleave = function () { a.style.opacity = ".72"; };
+    document.body.appendChild(a);
+  }
+  function go() {
+    fetch("/api/me").then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (u) { add(u.portal); }).catch(function () {});
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();
+})();
+
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;            // opened as a local file: plain localStorage
   var ls = window.localStorage, P = Storage.prototype;
