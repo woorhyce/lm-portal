@@ -1,0 +1,24 @@
+# Copy this folder, rename it, then change name + pattern + TOOL.
+name = "lm-TOOLSLUG"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = true      # NO-DOMAIN MODE. With a domain: set false
+preview_urls = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+TOOL = "TOOLSLUG"
+PORTAL_URL = "https://lm-portal.woorhyce.workers.dev/"   # with a domain: https://lmtools.xyz/
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lm-db"
+database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
+
+# With a domain, uncomment:
+# [[routes]]
+# pattern = "TOOLSLUG.lmtools.xyz"
+# custom_domain = true

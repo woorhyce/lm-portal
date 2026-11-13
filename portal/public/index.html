@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live-Media Tool Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141a26; --panel:#171e2c; --card:#1a2231; --line:#283246; --text:#e8ecf3; --muted:#9aa5b8;
+  --accent:#7aa7ef; --accent-ink:#0e1a30; --warn-bg:#3a2a12; --warn:#f2b866; --local-bg:#152a2a; --local:#6fd3c4;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+:root[data-theme="light"]{
+  --bg:#f4f6fa; --panel:#ffffff; --card:#ffffff; --line:#dde3ec; --text:#152033; --muted:#5c6880;
+  --accent:#2f6bd8; --accent-ink:#ffffff; --warn-bg:#fdf0db; --warn:#9a5b00; --local-bg:#ddf4f0; --local:#0d6b5e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;align-items:center;gap:16px;height:48px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.logo{font:600 17px var(--mono);letter-spacing:.12em}
+.logo b{color:var(--accent);font-weight:600}
+.sub{font:600 11px var(--mono);letter-spacing:.12em;color:var(--muted);padding-left:16px;border-left:1px solid var(--line)}
+.spacer{flex:1}
+.who{font-size:12px;color:var(--muted)}
+.theme{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 10px;font:12px var(--sans);cursor:pointer}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100% - 48px)}
+nav{background:var(--panel);border-right:1px solid var(--line);padding:16px 0}
+nav h3{font:600 10px var(--mono);letter-spacing:.12em;color:var(--muted);margin:8px 14px}
+nav button,nav a{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--text);font:600 13px var(--sans);text-align:left;text-decoration:none;cursor:pointer}
+nav button.on{background:rgba(122,167,239,.1);box-shadow:inset 3px 0 var(--accent)}
+nav .n{margin-left:auto;font:11px var(--mono);color:var(--muted)}
+nav a{font-weight:400;font-size:12.5px}
+nav h3.recent{margin-top:24px}
+main{padding:28px 32px;max-width:1500px}
+.top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.top h1{margin:0;font-size:22px}
+.count{color:var(--muted);font-size:12px}
+.search{margin-left:auto;width:min(320px,100%);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:13px var(--sans)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;min-height:210px}
+.head{display:flex;gap:12px;align-items:center}
+.ico{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:rgba(122,167,239,.1);color:var(--accent);flex:none}
+.ico svg{width:20px;height:20px}
+.name{font-weight:600;font-size:15px}
+.cat{font:11px var(--mono);color:var(--muted);letter-spacing:.06em}
+.tags{display:flex;gap:6px;margin-top:12px}
+.tag{font:600 10px var(--mono);padding:2px 7px;border-radius:4px;letter-spacing:.05em}
+.tag.file{background:var(--warn-bg);color:var(--warn)}
+.tag.local{background:var(--local-bg);color:var(--local)}
+.desc{color:var(--muted);font-size:13px;margin:12px 0 14px;flex:1}
+.foot{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.ver{font:600 12px var(--mono)}
+.date{font-size:12px;color:var(--muted)}
+.open{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 14px;border-radius:999px}
+.vd{display:flex;flex-direction:column;line-height:1.3;white-space:nowrap}
+.open,.notes-btn{white-space:nowrap}
+.notes-btn{background:none;border:1px solid var(--line);color:var(--muted);font:600 12px var(--sans);padding:5px 11px;border-radius:999px;cursor:pointer}
+.notes-btn:hover{color:var(--text);border-color:var(--muted)}
+dialog{width:min(560px,92vw);max-height:80vh;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}
+dialog::backdrop{background:rgba(5,8,14,.6)}
+.dlg-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.dlg-head h2{margin:0;font-size:16px}
+.dlg-head .cat{margin-left:2px}
+.close{margin-left:auto;background:none;border:0;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:4px 8px}
+.rel{padding:16px 20px;border-bottom:1px solid var(--line)}
+.rel:last-child{border-bottom:0}
+.rel-top{display:flex;align-items:baseline;gap:10px}
+.rel-ver{font:600 13px var(--mono)}
+.rel-date{font-size:12px;color:var(--muted)}
+.rel-latest{font:600 10px var(--mono);color:var(--accent);margin-left:auto}
+.rel ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
+.rel p{margin:8px 0 0;color:var(--muted);font-size:13px}
+.empty{color:var(--muted);padding:40px 0}
+.banner{background:var(--warn-bg);color:var(--warn);font-size:12px;padding:6px 20px}
+@media (max-width:760px){.layout{grid-template-columns:1fr}nav{display:none}main{padding:20px 16px}.who{display:none}}
+</style>
+</head>
+<body>
+<div id="banner" class="banner" hidden>Showing sample data. The tools API isn’t reachable from this page.</div>
+<header>
+  <div class="logo">LIVE-<b>MEDIA</b></div>
+  <div class="sub">TOOL LIBRARY</div>
+  <div class="spacer"></div>
+  <div class="who" id="who"></div>
+  <button class="theme" id="theme">Light</button>
+</header>
+<div class="layout">
+  <nav>
+    <h3>LIBRARY</h3>
+    <div id="cats"></div>
+    <h3 class="recent">RECENTLY UPDATED</h3>
+    <div id="recent"></div>
+  </nav>
+  <main>
+    <div class="top">
+      <h1 id="title">All tools</h1>
+      <span class="count" id="count"></span>
+      <input class="search" id="q" type="search" placeholder="Search tools" aria-label="Search tools">
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <div class="dlg-head"><div class="ico" id="dlg-ico"></div>
+    <div><h2 id="dlg-title"></h2><div class="cat">Release notes</div></div>
+    <button class="close" id="dlg-close" aria-label="Close">×</button></div>
+  <div id="dlg-body"></div>
+</dialog>
+<script>
+const ICONS = {
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+  wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+  pulse:'<path d="M3 12h4l2-6 4 12 2-6h6"/>',
+  grid:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h3v4H7zM14 10h3v4h-3z"/>',
+  flag:'<path d="M5 21V4h11l-2 4 2 4H5"/>',
+  link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+  box:'<rect x="4" y="4" width="16" height="16" rx="2"/>'
+};
+const SAMPLE = [
+ {slug:'admin',name:'LM Admin Tools',category:'Admin',description:'Per diem, RMA, travel requests, trip reports, vacation, travel dates and weekly summary builders.',version:'2.2',updated:'2026-10-16',icon:'briefcase',url:'#'},
+ {slug:'commissioning',name:'LM Commissioning',category:'Commissioning',description:'Project-based commissioning: server, Matrox and I/O setup, Operational Settings, and Package & Deploy for per-server .efp files.',version:'latest',icon:'wrench',file_needed:true,url:'#'},
+ {slug:'health',name:'LM Health Report',category:'Monitoring',description:'DreamCatcher cluster health checks and report.',version:'latest',icon:'heart',local_only:true,url:'#'},
+ {slug:'monitoring',name:'LM Monitoring',category:'Monitoring',description:'Live, read-only 2110 view of DreamCatcher Matrox cards from the NMOS API. IO map, Red/Blue lanes, SDP compare across servers.',version:'1.0.80',updated:'2026-11-10',icon:'pulse',local_only:true,url:'#'},
+ {slug:'core-builder',name:'LM Core Builder',category:'Documentation',description:'Draws rear and front plates for an LM-CORE build: model, input card, SDI I/O config and front PCIe slot. Exports PNG.',version:'0.1',updated:'2026-10-30',icon:'grid',file_needed:true,url:'#'},
+ {slug:'games',name:'LM Games',category:'Operations',description:'Game and event tracking.',version:'latest',icon:'flag',url:'#'},
+ {slug:'mediabank',name:'Media Bank Integration',category:'Integrations',description:'MediaBank and DreamCatcher integration tools.',version:'latest',icon:'link',url:'#'},
+ {slug:'roster',name:'VueWeb Roster Management',category:'Integrations',description:'Build and manage vueWeb rosters.',version:'latest',icon:'users',url:'#'},
+ {slug:'scheduler',name:'Scheduler Builder',category:'Operations',description:'Build DreamCatcher schedules.',version:'latest',icon:'calendar',url:'#'},
+ {slug:'highlights',name:'Highlight Factory Tools',category:'Production',description:'Highlight Factory setup and helpers.',version:'latest',icon:'film',url:'#'}
+];
+let tools = [], cat = 'All tools';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]||ICONS.box}</svg>`;
+
+function render(){
+  const cats = {};
+  tools.forEach(t => cats[t.category] = (cats[t.category]||0) + 1);
+  $('cats').innerHTML = [['All tools', tools.length], ...Object.entries(cats).sort()]
+    .map(([c,n]) => `<button class="${c===cat?'on':''}" data-cat="${esc(c)}">${esc(c)}<span class="n">${n}</span></button>`).join('');
+  $('recent').innerHTML = tools.filter(t=>t.updated).sort((a,b)=>b.updated.localeCompare(a.updated)).slice(0,5)
+    .map(t => `<a href="${esc(t.url)}">${esc(t.name)}<span class="n">${esc(t.version)}</span></a>`).join('');
+  const q = $('q').value.trim().toLowerCase();
+  const list = tools.filter(t => (cat==='All tools' || t.category===cat) &&
+    (!q || (t.name+' '+t.description+' '+t.category).toLowerCase().includes(q)));
+  $('title').textContent = cat;
+  $('count').textContent = list.length + (list.length===1?' tool':' tools');
+  $('grid').innerHTML = list.length ? list.map(t => `
+    <article class="card">
+      <div class="head"><div class="ico">${svg(t.icon)}</div>
+        <div><div class="name">${esc(t.name)}</div><div class="cat">${esc(t.category)}</div></div></div>
+      ${(t.file_needed||t.local_only)?`<div class="tags">${t.file_needed?'<span class="tag file">FILE NEEDED</span>':''}${t.local_only?'<span class="tag local">RUNS ON SITE LAN</span>':''}</div>`:''}
+      <p class="desc">${esc(t.description)}</p>
+      <div class="foot"><div class="vd"><span class="ver">${/^\d/.test(t.version)?'v'+esc(t.version):'Latest'}</span>
+        <span class="date">${fmtDate(t.updated)}</span></div>
+        <button class="notes-btn" data-notes="${esc(t.slug)}" style="margin-left:auto">Release notes</button>
+        <a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a></div>
+    </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
+}
+$('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; render(); } });
+$('q').addEventListener('input', render);
+
+const SAMPLE_NOTES = {
+  admin:[{version:'2.2',date:'2026-10-16',notes:'- Weekly summary builder\n- Travel dates view\n- Fixed per diem rounding on partial days'},
+         {version:'2.1',date:'2026-09-30',notes:'- Added RMA form\n- Trip reports export'}],
+  monitoring:[{version:'1.0.80',date:'2026-11-10',notes:'- SDP compare across servers\n- Red/Blue lane view'}]
+};
+function noteHtml(text){
+  const lines = String(text).split('\n').map(l => l.trim()).filter(Boolean);
+  let out = '', inList = false;
+  for (const l of lines){
+    if (l.startsWith('- ')){ if(!inList){ out += '<ul>'; inList = true; } out += `<li>${esc(l.slice(2))}</li>`; }
+    else { if(inList){ out += '</ul>'; inList = false; } out += `<p>${esc(l)}</p>`; }
+  }
+  return out + (inList ? '</ul>' : '');
+}
+async function openNotes(slug){
+  const t = tools.find(x => x.slug === slug); if (!t) return;
+  $('dlg-title').textContent = t.name;
+  $('dlg-ico').innerHTML = svg(t.icon);
+  $('dlg-body').innerHTML = '<div class="rel"><p>Loading…</p></div>';
+  $('dlg').showModal();
+  let rels;
+  try { const r = await fetch(`/api/tools/${slug}/releases`); if (!r.ok) throw 0; rels = (await r.json()).releases; }
+  catch { rels = SAMPLE_NOTES[slug] || []; }
+  $('dlg-body').innerHTML = rels.length ? rels.map((x,i) => `
+    <section class="rel"><div class="rel-top"><span class="rel-ver">${/^\d/.test(x.version)?'v'+esc(x.version):esc(x.version)}</span>
+      <span class="rel-date">${fmtDate(x.date)}</span>${i===0?'<span class="rel-latest">CURRENT</span>':''}</div>
+      ${noteHtml(x.notes)}</section>`).join('')
+    : '<div class="rel"><p>No release notes yet for this tool.</p></div>';
+}
+$('grid').addEventListener('click', e => { const b = e.target.closest('[data-notes]'); if (b) openNotes(b.dataset.notes); });
+$('dlg-close').onclick = () => $('dlg').close();
+$('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
+
+function setTheme(t){ document.documentElement.dataset.theme = t; $('theme').textContent = t==='dark'?'Light':'Dark';
+  try{ localStorage.setItem('lm-theme', t) }catch{} }
+let saved; try{ saved = localStorage.getItem('lm-theme') }catch{}
+setTheme(saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+$('theme').onclick = () => setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+(async () => {
+  try {
+    const r = await fetch('/api/tools'); if (!r.ok) throw 0;
+    tools = (await r.json()).tools;
+    fetch('/api/me').then(r=>r.json()).then(u => $('who').textContent = u.email).catch(()=>{});
+  } catch { tools = SAMPLE; $('banner').hidden = false; }
+  render();
+})();
+</script>
+</body>
+</html>

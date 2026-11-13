@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LM Tool</title>
+<script src="/lm-store.js"></script>
+</head>
+<body>
+<p><a id="back" href="#">Back to Tool Library</a></p>
+<h1>Replace with your tool</h1>
+<p id="who"></p>
+<script>
+  LM.me().then(u => { who.textContent = "Signed in as " + u.email; back.href = u.portal; });
+</script>
+</body>
+</html>
