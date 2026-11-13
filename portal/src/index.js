@@ -36,7 +36,7 @@ export default {
         ...t,
         file_needed: !!t.file_needed,
         local_only: !!t.local_only,
-        url: t.local_only ? `/local/${t.slug}.html` : env.TOOL_URL.replace("{slug}", t.slug),
+        url: t.url || (t.local_only ? `/local/${t.slug}.html` : env.TOOL_URL.replace("{slug}", t.slug)),
       }));
       return json({ tools });
     }
