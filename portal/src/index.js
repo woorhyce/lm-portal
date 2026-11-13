@@ -25,7 +25,19 @@ export default {
     const email = userEmail(request);
 
     if (url.pathname === "/api/me") {
-      return json(await touchUser(env, email));
+      const me = await touchUser(env, email);
+      const prefs = await env.DB.prepare("SELECT theme FROM prefs WHERE email=?1").bind(email).first().catch(() => null);
+      return json({ ...me, theme: prefs?.theme || null });
+    }
+
+    if (url.pathname === "/api/prefs" && request.method === "PUT") {
+      const { theme } = await request.json();
+      if (theme !== "light" && theme !== "dark") return json({ error: "theme must be light or dark" }, 400);
+      await env.DB.prepare(
+        `INSERT INTO prefs (email, theme, updated) VALUES (?1, ?2, datetime('now'))
+         ON CONFLICT(email) DO UPDATE SET theme=?2, updated=datetime('now')`
+      ).bind(email, theme).run();
+      return json({ ok: true });
     }
 
     if (url.pathname === "/api/tools") {

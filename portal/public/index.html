@@ -79,10 +79,25 @@ dialog::backdrop{background:rgba(5,8,14,.6)}
 .rel-latest{font:600 10px var(--mono);color:var(--accent);margin-left:auto}
 .rel ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
 .rel p{margin:8px 0 0;color:var(--muted);font-size:13px}
+dialog.wide{width:min(820px,94vw)}
+.tabs{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--line);position:sticky;top:73px;background:var(--panel);z-index:1}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:600 13px var(--sans);padding:10px 4px;margin-right:14px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.guide{padding:18px 24px 28px;font-size:14px;line-height:1.6;max-width:72ch}
+.guide h1{font-size:20px;margin:4px 0 12px}.guide h2{font-size:16px;margin:24px 0 8px}.guide h3{font-size:14px;margin:18px 0 6px}
+.guide p,.guide li{color:var(--text)}.guide ul,.guide ol{padding-left:20px}
+.guide code{font:12.5px var(--mono);background:rgba(122,167,239,.12);padding:1px 5px;border-radius:4px}
+.guide pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto}
+.guide pre code{background:none;padding:0}
+.guide table{border-collapse:collapse;display:block;overflow-x:auto}.guide th,.guide td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+.guide blockquote{margin:0;padding:4px 14px;border-left:3px solid var(--accent);color:var(--muted)}
+.guide a{color:var(--accent)}.guide img{max-width:100%}
 .empty{color:var(--muted);padding:40px 0}
 .banner{background:var(--warn-bg);color:var(--warn);font-size:12px;padding:6px 20px}
 @media (max-width:760px){.layout{grid-template-columns:1fr}nav{display:none}main{padding:20px 16px}.who{display:none}}
 </style>
+<script src="/vendor/marked-12.0.2.min.js"></script>
+<script src="/vendor/purify-3.1.6.min.js"></script>
 </head>
 <body>
 <div id="banner" class="banner" hidden>Showing sample data. The tools API isn’t reachable from this page.</div>
@@ -111,8 +126,12 @@ dialog::backdrop{background:rgba(5,8,14,.6)}
 </div>
 <dialog id="dlg" aria-labelledby="dlg-title">
   <div class="dlg-head"><div class="ico" id="dlg-ico"></div>
-    <div><h2 id="dlg-title"></h2><div class="cat">Release notes</div></div>
+    <div><h2 id="dlg-title"></h2><div class="cat" id="dlg-sub">Release notes</div></div>
     <button class="close" id="dlg-close" aria-label="Close">×</button></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="notes">Release notes</button>
+    <button class="tab" role="tab" data-tab="guide">How it works</button>
+  </div>
   <div id="dlg-body"></div>
 </dialog>
 <script>
@@ -192,21 +211,46 @@ function noteHtml(text){
   }
   return out + (inList ? '</ul>' : '');
 }
-async function openNotes(slug){
-  const t = tools.find(x => x.slug === slug); if (!t) return;
-  $('dlg-title').textContent = t.name;
-  $('dlg-ico').innerHTML = svg(t.icon);
+let dlgSlug = null;
+async function showNotes(t){
   $('dlg-body').innerHTML = '<div class="rel"><p>Loading…</p></div>';
-  $('dlg').showModal();
   let rels;
-  try { const r = await fetch(`/api/tools/${slug}/releases`); if (!r.ok) throw 0; rels = (await r.json()).releases; }
-  catch { rels = SAMPLE_NOTES[slug] || []; }
+  try { const r = await fetch(`/api/tools/${t.slug}/releases`); if (!r.ok) throw 0; rels = (await r.json()).releases; }
+  catch { rels = SAMPLE_NOTES[t.slug] || []; }
+  if (dlgSlug !== t.slug) return;
   $('dlg-body').innerHTML = rels.length ? rels.map((x,i) => `
     <section class="rel"><div class="rel-top"><span class="rel-ver">${/^\d/.test(x.version)?'v'+esc(x.version):esc(x.version)}</span>
       <span class="rel-date">${fmtDate(x.date)}</span>${i===0?'<span class="rel-latest">CURRENT</span>':''}</div>
       ${noteHtml(x.notes)}</section>`).join('')
     : '<div class="rel"><p>No release notes yet for this tool.</p></div>';
 }
+async function showGuide(t){
+  $('dlg-body').innerHTML = '<div class="guide"><p>Loading…</p></div>';
+  let md = null;
+  try { const r = await fetch(`/guides/${t.slug}.md`, {cache:'no-cache'}); if (r.ok) md = await r.text(); } catch {}
+  if (dlgSlug !== t.slug) return;
+  if (!md) { $('dlg-body').innerHTML = `<div class="guide"><p>No guide yet for ${esc(t.name)}.</p><p>Add <code>portal/public/guides/${esc(t.slug)}.md</code> in GitHub and it shows up here.</p></div>`; return; }
+  const html = window.marked && window.DOMPurify ? DOMPurify.sanitize(marked.parse(md)) : `<pre>${esc(md)}</pre>`;
+  $('dlg-body').innerHTML = `<article class="guide">${html}</article>`;
+  $('dlg-body').querySelectorAll('.guide a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+}
+function setTab(tab){
+  const t = tools.find(x => x.slug === dlgSlug); if (!t) return;
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  $('dlg').classList.toggle('wide', tab === 'guide');
+  $('dlg-sub').textContent = tab === 'guide' ? 'How it works' : 'Release notes';
+  $('dlg').scrollTop = 0;
+  tab === 'guide' ? showGuide(t) : showNotes(t);
+}
+function openNotes(slug, tab = 'notes'){
+  const t = tools.find(x => x.slug === slug); if (!t) return;
+  dlgSlug = slug;
+  $('dlg-title').textContent = t.name;
+  $('dlg-ico').innerHTML = svg(t.icon);
+  $('dlg').showModal();
+  setTab(tab);
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 $('grid').addEventListener('click', e => { const b = e.target.closest('[data-notes]'); if (b) openNotes(b.dataset.notes); });
 $('dlg-close').onclick = () => $('dlg').close();
 $('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
@@ -215,13 +259,17 @@ function setTheme(t){ document.documentElement.dataset.theme = t; $('theme').tex
   try{ localStorage.setItem('lm-theme', t) }catch{} }
 let saved; try{ saved = localStorage.getItem('lm-theme') }catch{}
 setTheme(saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
-$('theme').onclick = () => setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('theme').onclick = () => {
+  const t = document.documentElement.dataset.theme==='dark'?'light':'dark';
+  setTheme(t);
+  fetch('/api/prefs', {method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify({theme:t})}).catch(()=>{});
+};
 
 (async () => {
   try {
     const r = await fetch('/api/tools'); if (!r.ok) throw 0;
     tools = (await r.json()).tools;
-    fetch('/api/me').then(r=>r.json()).then(u => $('who').textContent = u.email).catch(()=>{});
+    fetch('/api/me').then(r=>r.json()).then(u => { $('who').textContent = u.email; if (u.theme) setTheme(u.theme); }).catch(()=>{});
   } catch { tools = SAMPLE; $('banner').hidden = false; }
   render();
 })();

@@ -48,6 +48,20 @@
     timers[k] = setTimeout(function () { push(k); }, 800);
   }
 
+  // Shared light/dark preference. Tools that theme with <html data-theme> follow it;
+  // THEME_KEYS are tools' own localStorage keys for the same setting.
+  var THEME_KEYS = ["lmmon-theme"], theme = null;
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute("data-theme", t);
+    THEME_KEYS.forEach(function (k) { set.call(ls, k, t); });
+  }
+  function saveTheme(t) {
+    if ((t !== "light" && t !== "dark") || t === theme) return;
+    theme = t;
+    fetch("/api/prefs", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: t }) }).catch(console.error);
+  }
+
   // 1. Hydrate before the tool's own scripts run (synchronous on purpose).
   var online = false;
   try {
@@ -57,12 +71,21 @@
       var items = JSON.parse(x.responseText).items || [], have = {};
       items.forEach(function (it) { have[it.key] = 1; if (typeof it.value === "string") set.call(ls, it.key, it.value); });
       for (var i = 0; i < ls.length; i++) { var k = ls.key(i); if (!have[k]) queue(k, ls.getItem(k)); }
+      var th = (JSON.parse(x.responseText).prefs || {}).theme;
+      if (th === "light" || th === "dark") applyTheme(th);
     }
   } catch (e) { console.warn("[lm-sync] offline, using this browser's data only", e); }
   if (!online) return;
 
-  // 2. Mirror later changes.
-  P.setItem = function (k, v) { set.call(this, k, v); if (this === ls) queue(String(k), String(v)); };
+  // 2. Mirror later changes. A theme flip inside any tool updates the shared preference.
+  new MutationObserver(function () { saveTheme(document.documentElement.getAttribute("data-theme")); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  P.setItem = function (k, v) {
+    set.call(this, k, v);
+    if (this !== ls) return;
+    if (THEME_KEYS.indexOf(String(k)) >= 0) saveTheme(String(v));
+    queue(String(k), String(v));
+  };
   P.removeItem = function (k) { remove.call(this, k); if (this === ls) queue(String(k), null); };
   P.clear = function () { if (this === ls) for (var i = 0; i < ls.length; i++) queue(ls.key(i), null); clear.call(this); };
 
