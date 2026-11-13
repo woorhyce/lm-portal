@@ -11,7 +11,7 @@
     var a = document.createElement("a");
     a.id = "lm-home"; a.href = portal; a.title = "Back to the Live-Media Tool Library";
     a.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Tool Library</span>';
-    a.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:2147483000;display:flex;align-items:center;gap:6px;" +
+    a.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:2147483000;display:flex;align-items:center;gap:6px;" +
       "padding:6px 11px;border-radius:999px;background:#1a2231;color:#e8ecf3;border:1px solid #33405a;" +
       "font:600 12px/1 system-ui,-apple-system,'Segoe UI',sans-serif;text-decoration:none;opacity:.72;" +
       "box-shadow:0 2px 8px rgba(0,0,0,.25);transition:opacity .15s";
@@ -48,6 +48,20 @@
     timers[k] = setTimeout(function () { push(k); }, 800);
   }
 
+  // Shared light/dark preference. Tools that theme with <html data-theme> follow it;
+  // THEME_KEYS are tools' own localStorage keys for the same setting.
+  var THEME_KEYS = ["lmmon-theme"], theme = null;
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute("data-theme", t);
+    THEME_KEYS.forEach(function (k) { set.call(ls, k, t); });
+  }
+  function saveTheme(t) {
+    if ((t !== "light" && t !== "dark") || t === theme) return;
+    theme = t;
+    fetch("/api/prefs", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ theme: t }) }).catch(console.error);
+  }
+
   // 1. Hydrate before the tool's own scripts run (synchronous on purpose).
   var online = false;
   try {
@@ -57,12 +71,21 @@
       var items = JSON.parse(x.responseText).items || [], have = {};
       items.forEach(function (it) { have[it.key] = 1; if (typeof it.value === "string") set.call(ls, it.key, it.value); });
       for (var i = 0; i < ls.length; i++) { var k = ls.key(i); if (!have[k]) queue(k, ls.getItem(k)); }
+      var th = (JSON.parse(x.responseText).prefs || {}).theme;
+      if (th === "light" || th === "dark") applyTheme(th);
     }
   } catch (e) { console.warn("[lm-sync] offline, using this browser's data only", e); }
   if (!online) return;
 
-  // 2. Mirror later changes.
-  P.setItem = function (k, v) { set.call(this, k, v); if (this === ls) queue(String(k), String(v)); };
+  // 2. Mirror later changes. A theme flip inside any tool updates the shared preference.
+  new MutationObserver(function () { saveTheme(document.documentElement.getAttribute("data-theme")); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  P.setItem = function (k, v) {
+    set.call(this, k, v);
+    if (this !== ls) return;
+    if (THEME_KEYS.indexOf(String(k)) >= 0) saveTheme(String(v));
+    queue(String(k), String(v));
+  };
   P.removeItem = function (k) { remove.call(this, k); if (this === ls) queue(String(k), null); };
   P.clear = function () { if (this === ls) for (var i = 0; i < ls.length; i++) queue(ls.key(i), null); clear.call(this); };
 

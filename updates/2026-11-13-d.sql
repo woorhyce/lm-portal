@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS prefs (email TEXT PRIMARY KEY, theme TEXT, updated TEXT);

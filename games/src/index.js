@@ -3,7 +3,8 @@
 //   PUT    /api/data/:key          -> save your value (JSON body)
 //   GET    /api/data/:key?shared=1 -> team-shared value (PUT works the same)
 //   GET    /api/me                 -> signed-in email
-//   GET    /api/data               -> all of your keys for this tool (used by lm-sync.js)
+//   GET    /api/data               -> all of your keys for this tool + your shared prefs (used by lm-sync.js)
+//   PUT    /api/prefs              -> {"theme":"light"|"dark"}, shared by every tool and the portal
 
 const json = (d, s = 200) => new Response(JSON.stringify(d), {
   status: s, headers: { "content-type": "application/json", "cache-control": "no-store" },
@@ -20,7 +21,30 @@ export default {
       const { results } = await env.DB.prepare(
         "SELECT key, value, updated FROM tool_data WHERE tool=?1 AND email=?2"
       ).bind(env.TOOL, email).all();
-      return json({ items: results.map(r => ({ key: r.key, value: JSON.parse(r.value), updated: r.updated })) });
+      const prefs = await env.DB.prepare("SELECT theme FROM prefs WHERE email=?1").bind(email).first().catch(() => null);
+      return json({ items: results.map(r => ({ key: r.key, value: JSON.parse(r.value), updated: r.updated })), prefs: prefs || {} });
+    }
+
+    if (url.pathname === "/api/prefs" && request.method === "PUT") {
+      const { theme } = await request.json();
+      if (theme !== "light" && theme !== "dark") return json({ error: "theme must be light or dark" }, 400);
+      await env.DB.prepare(
+        `INSERT INTO prefs (email, theme, updated) VALUES (?1, ?2, datetime('now'))
+         ON CONFLICT(email) DO UPDATE SET theme=?2, updated=datetime('now')`
+      ).bind(email, theme).run();
+      return json({ ok: true });
+    }
+
+    // Leaderboard: everyone's synced high score (localStorage key "dcra-hi").
+    if (url.pathname === "/api/leaderboard") {
+      const { results } = await env.DB.prepare(
+        `SELECT d.email, u.name, CAST(json_extract(d.value, '$') AS INTEGER) AS score, d.updated
+           FROM tool_data d LEFT JOIN users u ON u.email = d.email
+          WHERE d.tool = ?1 AND d.key = 'dcra-hi' AND CAST(json_extract(d.value, '$') AS INTEGER) > 0
+          ORDER BY score DESC, d.updated ASC LIMIT 10`
+      ).bind(env.TOOL).all();
+      const label = (r) => (r.name || r.email.split("@")[0].replace(/[._-]+/g, " ")).toUpperCase().slice(0, 14);
+      return json({ me: email, rows: results.map((r, i) => ({ rank: i + 1, name: label(r), score: r.score, you: r.email === email })) });
     }
 
     const raw = url.pathname.startsWith("/api/data/") ? url.pathname.slice(10) : null;

@@ -116,6 +116,12 @@ canvas { display: block; width: 100%; max-width: 100%; aspect-ratio: 4 / 3; imag
 .fire:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a0f1e; }
 .mute { background: var(--line); color: var(--ink); box-shadow: 0 4px 0 #15123a; }
 .help { margin: 0; color: var(--dim); font-size: 18px; text-align: center; line-height: 1.15; }
+.lb { width: 100%; max-width: 280px; margin: 6px auto 4px; border-collapse: collapse; font-family: var(--display); font-size: 8px; line-height: 1.9; }
+.lb td { padding: 1px 4px; color: var(--ink); white-space: nowrap; text-align: left; }
+.lb td:first-child { color: var(--dim); width: 2.5em; text-align: right; }
+.lb td:last-child { text-align: right; color: var(--amber); }
+.lb tr.you td { color: var(--cyan); }
+.btn:disabled { opacity: .45; cursor: default; }
 kbd { font-family: var(--display); font-size: 8px; color: var(--cyan); }
 
 @keyframes blink { 50% { opacity: 0; } }
@@ -156,6 +162,7 @@ kbd { font-family: var(--display); font-size: 8px; color: var(--cyan); }
 
   <div class="deck">
     <button class="btn fire" id="fire">INSERT COIN</button>
+    <button class="btn mute" id="board" aria-pressed="false">SCORES</button>
     <button class="btn mute" id="mute" aria-pressed="false">SND ON</button>
   </div>
   <p class="help"><kbd>← →</kbd> or tap a camera to move · tap it again or <kbd>SPACE</kbd> to lock in early for a speed bonus</p>
@@ -564,6 +571,36 @@ function bubble(str, x, y) {
 
 /* ---- input ---- */
 els.fire.addEventListener("click", fire);
+
+/* ---- leaderboard (top 10 across every account, from the Tool Library) ---- */
+const boardBtn = document.getElementById("board");
+let boardOpen = false, boardSaved = null;
+const boardStates = ["title", "brief", "over", "win"];
+function syncBoardBtn() { boardBtn.disabled = !boardOpen && !boardStates.includes(state); }
+setInterval(syncBoardBtn, 300);
+function closeBoard() {
+  if (!boardOpen) return;
+  boardOpen = false; boardBtn.setAttribute("aria-pressed", "false"); boardBtn.textContent = "SCORES";
+  els.ov.innerHTML = boardSaved; els.ov.hidden = !boardSaved;
+}
+async function openBoard() {
+  boardOpen = true; boardSaved = els.ov.innerHTML;
+  boardBtn.setAttribute("aria-pressed", "true"); boardBtn.textContent = "BACK";
+  overlay(`<h2 class="amber">HIGH SCORES</h2><span class="sub">LOADING…</span>`);
+  let rows = null;
+  try { const r = await fetch("/api/leaderboard", { cache: "no-store" }); if (r.ok) rows = (await r.json()).rows; } catch (e) {}
+  if (!boardOpen) return;
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const body = rows == null ? `<span class="sub">LEADERBOARD OFFLINE</span>`
+    : !rows.length ? `<span class="sub">NO SCORES YET · FINISH A RUN TO GET ON THE BOARD</span>`
+    : `<table class="lb">${rows.map((r) => `<tr class="${r.you ? "you" : ""}"><td>${r.rank}.</td><td>${esc(r.name)}${r.you ? " &lt;" : ""}</td><td>${pad(r.score)}</td></tr>`).join("")}</table>`;
+  overlay(`<h2 class="amber">HIGH SCORES</h2>${body}<span class="sub">ALL OPERATORS · FULL RUNS</span>`);
+}
+boardBtn.addEventListener("click", () => { audio(); boardOpen ? closeBoard() : openBoard(); });
+els.fire.addEventListener("click", (e) => { if (boardOpen) { e.stopImmediatePropagation(); closeBoard(); } }, true);
+window.addEventListener("keydown", (e) => {
+  if (boardOpen && (e.key === "Escape" || e.key === " " || e.key === "Enter")) { e.preventDefault(); e.stopImmediatePropagation(); closeBoard(); }
+}, true);
 els.opts.forEach((b, i) => b.addEventListener("click", () => { audio(); if (state === "story") return choose(i); if (state !== "play") return; if (i === lane) lockIn(); else moveTo(i); }));
 cv.addEventListener("pointerdown", e => {
   audio(); const r = cv.getBoundingClientRect(), i = Math.floor((e.clientX - r.left) / r.width * LANES);

@@ -71,3 +71,11 @@ Switching to a domain later (data in D1 is untouched):
 1. Buy the domain; create one Access app for `domain` + `*.domain`.
 2. In every wrangler.toml: `workers_dev = false`, uncomment the routes block, update `TOOL_URL` / `PORTAL_URL`.
 3. Push. Remove the old per-Worker workers.dev Access apps.
+
+## Existing tools: zero-change sync
+
+Tools that already use localStorage only need one line, first thing in `<head>`:
+`<script src="/lm-sync.js"></script>` (it's in `_template/public/`).
+It pulls your saved data from D1 before the tool starts and saves every change back,
+so the same data shows up on any computer you log in from. The first time you open a tool
+in a browser that already has local data, that data is uploaded.
