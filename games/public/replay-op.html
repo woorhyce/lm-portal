@@ -8,111 +8,151 @@
 <title>Replay Op: DreamCatcher VUE + RCP-10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Exo+2:ital,wght@1,500;1,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;500;700&family=Exo+2:ital,wght@1,500;1,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ws:#1a2030; --wg:#2a3450; --wh:#4a5880; --wh2:#5a6a96; --row:#36435f; --line:#55638a;
-  --txt:#f3f5f9; --sub:#b8c1d8; --red:#e5352b; --grn:#3ad154; --amb:#f2a92f; --blue:#3f86f2;
+  --bg:#05070a; --vue:#0d0f13; --cell:#1b1e23; --cell2:#22262c; --line:#30353d; --txt:#e9ecef; --sub:#9aa1aa;
+  --tab:#2a2f36; --tabon:#8ccbee; --red:#e5352b; --out1:#ff3b30; --out2:#2f8cff; --grn:#6fcf3c; --gold:#f2c037; --amb:#f2a92f; --blue:#3f86f2;
   --scr1:#8796c2; --scr2:#6d7dab;
   color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ws:#1a2030; color-scheme:dark; } }
-:root[data-theme="dark"]{ --ws:#1a2030; color-scheme:dark; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#05070a; color-scheme:dark; } }
+:root[data-theme="dark"]{ --bg:#05070a; color-scheme:dark; }
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 html,body{height:100%}
-body{overflow:hidden;margin:0;background:var(--ws);color:var(--txt);font:15px/1.4 "Roboto Condensed","Arial Narrow",sans-serif}
+body{overflow:hidden;margin:0;background:var(--bg);color:var(--txt);font:14px/1.35 "Roboto",Arial,sans-serif}
 button{font:inherit;color:inherit}
 h1,h2{margin:0;font-weight:700}
-.sh1{text-shadow:0 1px 1px rgba(0,0,0,.55)}
+:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
 
-/* VUE toolbar */
-.vtool{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:linear-gradient(#4f5e88,#3d4a6e);border-bottom:1px solid #222a3e;padding:6px 14px;text-shadow:0 1px 1px rgba(0,0,0,.55)}
-.vtool h1{font-size:20px;letter-spacing:.02em}
-.vtool .lay{color:var(--sub);font-size:14px}
-.vtool .sp{flex:1}
-.vstat{display:grid;line-height:1.05}
-.vstat span{font-size:11px;color:var(--sub)}
-.vstat b{font-size:20px;font-variant-numeric:tabular-nums}
-.vbtn{background:linear-gradient(#6a7aa6,#55648f);border:1px solid #2c3550;border-radius:4px;padding:5px 14px;cursor:pointer;color:#fff;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.5)}
-.vbtn:hover{background:linear-gradient(#7584b0,#5d6c98)}
-.vbtn:focus-visible,.tile:focus-visible,.feed button:focus-visible,.fixbtn:focus-visible,.trk:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--k,1));display:grid;grid-template-columns:1290px 1fr;gap:10px;padding:10px;background:var(--bg)}
 
-/* widgets */
-#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--k,1));display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--ws)}
-.ws{min-height:0;padding:10px;display:grid;grid-template-columns:minmax(0,1fr) 720px 380px;gap:10px}
-.grid{display:contents}
-.grid>.col:first-child{order:1}
-.rcp-wrap{order:2}
-.grid>.col:last-child{order:3}
-.col{align-content:start}
-.col{display:grid;gap:10px;min-width:0}
-.wd{background:var(--wg);border:1px solid #11161f;border-radius:4px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3)}
-.wd>header{display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(var(--wh2),var(--wh));padding:4px 10px;font-weight:700;font-size:14px;text-shadow:0 1px 1px rgba(0,0,0,.55);min-height:28px}
-.wd>header small{font-weight:400;color:#dde3f1}
-.wb{padding:8px}
-.mons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
-.umd{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px;background:#0d1018;padding:4px 8px;border-top:3px solid #333b4f;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-shadow:none}
-.umd.pgm{border-top-color:var(--red)} .umd.pvw{border-top-color:var(--grn)}
-.cams{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.cam{all:unset;cursor:pointer;display:block;border:2px solid transparent;border-radius:2px}
-.cam.sel{border-color:var(--grn)}
-.cam:focus-visible{outline:2px solid var(--amb)}
-.cam .umd{font-size:13px;border-top-width:2px}
+/* ===== VUE ===== */
+.vue{background:var(--vue);border:1px solid #23272e;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;min-height:0;overflow:hidden}
+/* input strip */
+.strip{display:grid;grid-template-columns:repeat(4,1fr) 26px;gap:6px;padding:8px 8px 0}
+.inp{all:unset;cursor:pointer;position:relative;display:block;border:3px solid #3a0c0c;background:#000}
+.inp canvas{display:block;width:100%;aspect-ratio:16/9}
+.inp.sel{border-color:var(--gold)}
+.inp:focus-visible{outline:2px solid var(--amb)}
+.arrows{display:grid;align-content:center;gap:24px;color:#ddd;font-size:22px;text-align:center}
+.dots{display:flex;justify-content:center;gap:6px;padding:6px 0 4px;align-items:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:#3b3f46}
+.dots i.star{width:auto;height:auto;background:none;color:var(--gold);font-style:normal;font-size:14px;line-height:9px}
+/* outputs */
+.outs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 8px}
+.out{display:grid;grid-template-columns:1fr 46px;grid-template-rows:auto auto auto auto auto;gap:0}
+.ovid{position:relative;border:3px solid #2b2f36;background:#000;cursor:pointer}
+.ovid canvas{display:block;width:100%;aspect-ratio:16/9}
+.out.sel .ovid{border-color:var(--oc)}
+.spd{grid-row:1;grid-column:2;display:grid;grid-auto-rows:1fr;background:#14171b;border:1px solid #2b2f36;border-left:0}
+.spd button{all:unset;cursor:pointer;text-align:center;font:500 11px "Roboto",sans-serif;color:#cfd3d8;border-bottom:1px solid #262a30;display:grid;place-items:center}
+.spd button.on{background:#e9ecef;color:#111;font-weight:700}
+.spd button:focus-visible{outline:2px solid var(--amb)}
+.tbar{grid-column:1/-1;display:flex;align-items:center;gap:2px;background:#15181c;border:1px solid #262a30;border-top:0;height:30px;padding:0 6px}
+.tbar .mo{font:500 9px/1 "Roboto",sans-serif;color:var(--sub);margin-right:auto;display:flex;gap:6px;align-items:center}
+.tbar .mo b{display:block;color:#ddd;font-weight:500}
+.tb{all:unset;cursor:pointer;width:30px;height:24px;display:grid;place-items:center;color:#dfe3e7;border-radius:3px;font:700 11px "Roboto Condensed",sans-serif}
+.tb:hover{background:#262a30}
+.tb:focus-visible{outline:2px solid var(--amb)}
+.tb svg{width:15px;height:15px}
+.tb.w{width:auto;padding:0 7px}
+.tb.lit{color:var(--grn)}
+.tl{grid-column:1/-1;position:relative;height:20px;margin-top:8px;background:#1b1f24;cursor:crosshair;overflow:hidden}
+.tl .rec{position:absolute;top:0;bottom:0;right:0;background:var(--grn)}
+.tl.blue .rec{background:var(--blue)}
+.tl .clip{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.35)}
+.tl .mk{position:absolute;top:0;bottom:0;width:2px;background:#ffd23a}
+.tl .ev{position:absolute;top:0;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #fff;transform:translateX(-5px)}
+.tl .ph{position:absolute;top:0;bottom:0;width:2px;background:#111;box-shadow:0 0 0 1px #fff}
+.tli{grid-column:1/-1;display:grid;grid-template-columns:1fr auto 1fr;font:500 11px "Roboto",sans-serif;color:#cfd3d8;padding:3px 2px 0;font-variant-numeric:tabular-nums}
+.tli span:nth-child(2) b{margin-left:8px}
+.tli span:last-child{text-align:right}
+.pls{grid-column:1/-1;text-align:center;font:italic 11px "Roboto",sans-serif;color:var(--sub);padding:6px 0 2px}
+.pls.air{color:#ff6b62;font-style:normal;font-weight:700}
+/* lower */
+.lower{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;min-height:0;margin-top:8px;border-top:1px solid #23272e}
+.cv{display:grid;grid-template-rows:24px minmax(0,1fr) 24px 22px 30px;min-height:0;border-right:2px solid #23272e}
+.cv.gone{display:grid;place-items:center;color:var(--sub);border:2px dashed #3a3f48;margin:8px;font-size:15px}
+.srch{display:flex;align-items:center;justify-content:space-between;background:#16191d;border-bottom:1px solid #262a30;padding:0 8px;font-size:11px;color:var(--sub)}
+.pbs{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(10,1fr);grid-auto-flow:column;min-height:0}
+.sl{all:unset;cursor:pointer;position:relative;display:flex;align-items:center;gap:8px;padding:0 6px 0 34px;border-right:1px solid #2a2e35;border-bottom:1px solid #2a2e35;background:var(--cell);font-size:12px;overflow:hidden;white-space:nowrap}
+.sl:nth-child(odd){background:var(--cell2)}
+.sl i{position:absolute;left:5px;top:50%;transform:translateY(-50%);font:400 9px "Roboto",sans-serif;font-style:normal;color:var(--sub)}
+.sl.cur{box-shadow:inset 0 0 0 1px #f2f2f2}
+.sl.has{background:#1f3a52}
+.sl.has.sel{background:#2f6aa0;box-shadow:inset 0 0 0 2px #fff}
+.sl b{font-weight:700}
+.sl small{color:#b7c4d2}
+.sl:focus-visible{outline:2px solid var(--amb);outline-offset:-2px}
+.btabs,.ptabs{display:grid;grid-template-columns:repeat(4,1fr) 22px;background:#202429}
+.ptabs{grid-template-columns:repeat(10,1fr)}
+.btabs button,.ptabs button{all:unset;cursor:pointer;text-align:center;font:500 11px "Roboto",sans-serif;border-right:1px solid #30353d;color:#dfe3e7}
+.btabs button.on,.ptabs button.on{background:var(--tabon);color:#0b1520}
+.btabs button:focus-visible,.ptabs button:focus-visible{outline:2px solid var(--amb);outline-offset:-2px}
+.ib{display:flex;align-items:center;gap:10px;background:#15181c;padding:0 8px;font-size:11px}
+.ib .pbn{font-weight:700;font-size:12px}
+.ib .sp{flex:1}
+.ib button{all:unset;cursor:pointer;display:grid;justify-items:center;font-size:9px;color:#cfd3d8;line-height:1}
+.ib button svg{width:14px;height:14px;margin-bottom:2px}
+.ib button:focus-visible{outline:2px solid var(--amb)}
+.ev{display:grid;grid-template-rows:24px auto minmax(0,1fr) 22px 34px;min-height:0;border:2px solid var(--gold);border-top:0}
+.ev .eh{display:flex;justify-content:space-around;padding:6px 4px;font-size:10px;color:#cfd3d8;border-bottom:1px solid #262a30}
+.ev .eh span{display:grid;justify-items:center;gap:2px}
+.ev .eh svg{width:14px;height:14px}
+.elist{list-style:none;margin:0;padding:0;overflow:hidden}
+.elist li button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:8px;width:100%;padding:5px 8px;border-bottom:1px solid #22262c;font-size:12px}
+.elist li button:hover{background:#1f2328}
+.elist li button:focus-visible{outline:2px solid var(--amb);outline-offset:-2px}
+.elist .t{color:var(--sub);font-variant-numeric:tabular-nums}
+.elist .op{color:#ffd23a}
+.eempty{color:var(--sub);font-size:12px;padding:10px;font-style:italic}
+.epage{background:var(--tabon);color:#0b1520;font-size:11px;display:flex;align-items:center;justify-content:center}
+.etabs{display:grid;grid-template-columns:repeat(4,1fr);background:#15181c}
+.etabs span{display:grid;justify-items:center;align-content:center;font-size:9px;color:#cfd3d8}
+.etabs span.on{background:#2b5e86;color:#fff}
+.etabs svg{width:14px;height:14px}
+/* bottom status bar */
+.sbar{display:flex;align-items:center;gap:10px;background:#1a1d21;border-top:1px solid #2b2f36;height:56px;padding:0 10px}
+.rt{display:grid;justify-items:center;font-size:12px;line-height:1.1}
+.rt .caps{display:flex;gap:12px}
+.rt .caps span{display:grid;justify-items:center;font-size:8px;color:var(--sub)}
+.rt .caps b{font-size:15px;color:#fff;font-weight:500;font-variant-numeric:tabular-nums}
+.sbtn{all:unset;cursor:pointer;background:#2a2e34;border:1px solid #3a3f47;border-radius:3px;padding:10px 10px;font-size:11px;white-space:nowrap}
+.sbtn:hover{background:#343940}
+.sbtn:focus-visible,.ibtn:focus-visible{outline:2px solid var(--amb)}
+.ochips{display:grid;gap:2px}
+.ochips span{font:700 10px "Roboto Condensed",sans-serif;padding:1px 6px;border:1px solid;border-radius:2px;text-align:center}
+.dcn{display:grid;line-height:1.15}
+.dcn b{font-size:15px}
+.dcn span{font-size:13px;color:#dfe3e7}
+.sbar .sp{flex:1}
+.ibtn{all:unset;cursor:pointer;display:grid;justify-items:center;gap:3px;width:70px;padding:5px 0;border-radius:3px;font-size:10px;background:#2a2e34;border:1px solid #3a3f47}
+.ibtn svg{width:18px;height:18px}
+.ibtn.alarm{background:#d32f2f;border-color:#ff5a4f;color:#fff}
 
-/* record trains */
-.trains{display:grid;grid-template-columns:86px 1fr;gap:0 8px}
-.tl{display:grid;grid-auto-rows:24px;gap:4px;font-size:13px;font-weight:700}
-.tl div{display:flex;align-items:center;justify-content:space-between;padding:0 6px;background:var(--row);border-radius:2px}
-.tl div.sel{background:#3c7d47}
-.tl small{font-weight:400;color:var(--sub)}
-.tt{position:relative;display:grid;grid-auto-rows:24px;gap:4px}
-.trk{position:relative;background:#121722;border-radius:2px;overflow:hidden;cursor:crosshair}
-.trk .rec{position:absolute;top:5px;bottom:5px;right:0;background:#c4352b;border-radius:1px}
-.trk.blue .rec{background:var(--blue)}
-.trk.dead .rec{background:repeating-linear-gradient(45deg,#444 0 6px,#2a2a2a 6px 12px)}
-.ov{position:absolute;inset:0;pointer-events:none}
-.ov .clip{position:absolute;top:0;bottom:0;background:rgba(242,169,47,.22)}
-.ov .mk{position:absolute;top:0;bottom:0;width:2px;background:var(--amb)}
-.ov .em{position:absolute;top:-3px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #ffe14a;transform:translateX(-5px)}
-.ov .ph{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;box-shadow:0 0 6px #fff}
-.tscale{grid-column:2;display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:2px}
-
-/* clip view (PBS) */
-.tabs{display:flex;gap:4px}
-.tabs button{background:#3a4769;border:1px solid #232b40;border-radius:3px 3px 0 0;padding:1px 10px;cursor:pointer;font-weight:700;font-size:13px}
-.tabs button.on{background:#7584b0}
-.pbs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.tile{all:unset;cursor:pointer;display:grid;background:#1d2538;border:2px solid #3b4767;border-radius:3px;overflow:hidden;font-size:12px}
-.tile.sel{border-color:var(--grn)}
-.tile .th{display:flex;justify-content:space-between;background:#4a5880;padding:1px 5px;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.5)}
-.tile canvas{display:block;width:100%;aspect-ratio:16/9;background:#0b0e14}
-.tile .tf{display:flex;justify-content:space-between;padding:1px 5px;color:var(--sub);font-variant-numeric:tabular-nums}
-.tile.empty canvas{background:repeating-linear-gradient(135deg,#151b29 0 8px,#19202f 8px 16px)}
-.gone{border:2px dashed #4a5578;border-radius:4px;padding:26px;text-align:center;color:var(--sub)}
-
-/* side widgets */
-.ifb-text{font-size:17px;line-height:1.35;margin:0;min-height:3.6em}
-.ifb-sub{margin:6px 0 0;color:var(--sub);font-size:14px;min-height:1.4em}
-.cd{height:6px;background:#1b2234;border-radius:3px;margin-top:10px;overflow:hidden}
+/* ===== side ===== */
+.side{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);gap:10px;min-height:0}
+.hud{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:#14171c;border:1px solid #262a30;padding:8px 12px}
+.hud h1{font:700 22px "Roboto Condensed",sans-serif;margin-right:auto}
+.hs{display:grid;line-height:1.05}
+.hs span{font-size:11px;color:var(--sub)}
+.hs b{font:700 19px "Roboto Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.vbtn{background:#2a2e34;border:1px solid #3a3f47;border-radius:3px;padding:6px 12px;cursor:pointer;font-weight:700}
+.vbtn:hover{background:#343940}
+.card{background:#14171c;border:1px solid #262a30}
+.card>header{display:flex;justify-content:space-between;background:#20242a;padding:5px 10px;font-weight:700;font-size:13px}
+.card .in{padding:8px 12px}
+.ifb-text{font-size:17px;line-height:1.35;margin:0;min-height:3.9em}
+.ifb-sub{margin:4px 0 0;color:var(--sub);font-size:13px;min-height:1.3em}
+.cd{height:6px;background:#22262c;border-radius:3px;margin-top:8px;overflow:hidden}
 .cd div{height:100%;width:0;background:var(--amb)}
 .cd div.urgent{background:var(--red)}
-.health{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.health li{display:grid;grid-template-columns:10px 104px 1fr auto;gap:8px;align-items:center;font-size:14px;min-height:25px;padding:0 4px;border-radius:2px}
-.health li:nth-child(odd){background:rgba(255,255,255,.03)}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--grn)}
-.health li.bad{background:rgba(229,53,43,.18)}
-.health li.bad .dot{background:var(--red);box-shadow:0 0 0 3px rgba(229,53,43,.3)}
-.health li.bad .st{color:#ff8b80;font-weight:700}
-.health .nm{color:var(--sub)}
-.fixbtn{background:var(--red);color:#fff;border:0;border-radius:3px;padding:2px 8px;font-weight:700;font-size:13px;cursor:pointer}
-.feed{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.feed button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px;width:100%;padding:3px 6px;border-radius:3px;font-size:14px}
-.feed button:hover{background:var(--row)}
-.feed .ftc{color:var(--sub);font-variant-numeric:tabular-nums}
-.muted{color:var(--sub);font-size:13px;margin:6px 0 0}
+.alm{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-weight:700;background:#14171c;border:1px solid #262a30}
+.alm.on{background:#5a1612;border-color:#d32f2f;color:#ffd7d3}
+.alm:focus-visible{outline:2px solid var(--amb)}
 
 /* ===== RCP-10 hardware ===== */
 .rcp-wrap{display:grid;justify-content:center;align-content:start;overflow:hidden;min-height:0}
@@ -130,7 +170,7 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
 .sh{display:grid;grid-template-columns:90px 1fr 90px;align-items:center;padding:6px 14px 4px;border-bottom:1px solid rgba(255,255,255,.35)}
 .sh b{text-align:center;font-size:22px;letter-spacing:.02em}
 .sh .bk{font-size:14px;color:#e6ecff}
-.sh .rt{text-align:right;font-size:13px;color:#ffe9a8;font-weight:700}
+.sh .rt2{text-align:right;font-size:13px;color:#ffe9a8;font-weight:700}
 .srow{display:flex;justify-content:space-between;align-items:center;padding:4px 20px;border-bottom:1px solid rgba(255,255,255,.22);font-size:16px;min-height:29px}
 .srow .v{font-weight:700;font-variant-numeric:tabular-nums}
 .srow .chev{margin-left:10px;font-size:18px;opacity:.9}
@@ -151,7 +191,6 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
 .fk.lt::after{background:#7d8083}
 .fk.on::after{background:#79ff52;box-shadow:0 0 6px 2px rgba(120,255,80,.7)}
 .fk:active{transform:translateY(2px);box-shadow:0 1px 0 #0e0f10}
-.fk:focus-visible,.cap:focus-visible{outline:2px solid var(--amb);outline-offset:3px}
 .dk{display:grid;grid-template-columns:250px 104px 1fr;grid-template-rows:auto auto 1fr auto;gap:0 14px}
 .abcd{grid-column:1/3;display:flex;gap:4px;margin-right:-60px}
 .tr3{grid-column:3;display:flex;gap:10px;justify-content:flex-end}
@@ -168,38 +207,46 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
 .rp{grid-column:3;grid-row:2;display:flex;gap:28px;justify-content:center;padding:24px 0 0 20px}
 .jogc{grid-column:3;grid-row:3;display:grid;place-items:center;padding:26px 0 10px 10px}
 .jog{width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 45% 38%,#2d2f31,#121314 70%);box-shadow:0 0 0 3px #2b2d2f,0 10px 18px rgba(0,0,0,.6),inset 0 2px 2px rgba(255,255,255,.07);position:relative;touch-action:none;cursor:grab}
-.jog:active{cursor:grabbing}
 .jr{position:absolute;inset:0;border-radius:50%}
 .dimple{position:absolute;width:78px;height:78px;border-radius:50%;left:56px;top:34px;background:radial-gradient(circle at 55% 60%,#26282a,#0c0d0e 72%);box-shadow:inset 0 3px 6px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
-.levc{grid-column:1;grid-row:2/4;position:relative;height:420px;margin-top:20px}
-.lev{position:absolute;left:46px;top:110px;width:150px;height:300px;border-radius:16px;background:linear-gradient(180deg,#5a5d61,#4d5054);box-shadow:inset 0 2px 3px rgba(255,255,255,.12),inset 0 -2px 4px rgba(0,0,0,.4),0 2px 0 #2c2e30;touch-action:none;cursor:ns-resize}
+.levc{grid-column:1;grid-row:2/4;position:relative;height:420px;margin-top:20px;touch-action:none;cursor:ns-resize}
+.lev{position:absolute;left:46px;top:110px;width:150px;height:300px;border-radius:16px;background:linear-gradient(180deg,#5a5d61,#4d5054);box-shadow:inset 0 2px 3px rgba(255,255,255,.12),inset 0 -2px 4px rgba(0,0,0,.4),0 2px 0 #2c2e30}
 .slot{position:absolute;left:62px;top:24px;width:26px;bottom:24px;border-radius:13px;background:#101112;box-shadow:inset 0 3px 6px #000}
-.tbar{position:absolute;left:0;width:250px;height:150px;pointer-events:none}
+.tbar2{position:absolute;left:0;width:250px;height:150px;pointer-events:none}
 .grip{position:absolute;left:0;top:0;width:236px;height:52px;border-radius:26px 16px 16px 26px;background:linear-gradient(180deg,#f7f8f9,#c2c6ca 30%,#7f8489 52%,#b9bdc1 70%,#e9ebed);box-shadow:0 6px 10px rgba(0,0,0,.5)}
 .grip::before{content:"";position:absolute;left:120px;top:0;bottom:0;width:30px;background:linear-gradient(180deg,#d9dcdf,#8d9297 50%,#cfd2d5);border-left:1px solid #777;border-right:1px solid #777}
 .grip::after{content:"";position:absolute;right:6px;top:8px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#888c90,#cfd3d6 60%,#9a9ea2)}
 .shaft{position:absolute;left:130px;top:40px;width:18px;height:110px;background:linear-gradient(90deg,#6a6e72,#d5d8db 45%,#7c8085);transform:skewX(-8deg);border-radius:0 0 4px 4px}
 .foot{grid-column:1/-1;grid-row:4;display:flex;justify-content:space-between;align-items:flex-end;padding:30px 4px 0}
-.dcmark{font:500 italic 40px/1 "Exo 2",sans-serif;color:#c8b157;letter-spacing:.01em;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+.dcmark{font:500 italic 40px/1 "Exo 2",sans-serif;color:#c8b157;text-shadow:0 1px 0 rgba(0,0,0,.4)}
 .dcmark .d{font-size:56px;color:#d6bf62}
 .evmark{font:800 italic 40px/1 "Exo 2",sans-serif;color:#d9c62c;letter-spacing:-.02em;text-shadow:0 1px 0 rgba(0,0,0,.4)}
 
 /* overlays */
-.overlay{position:fixed;inset:0;background:rgba(6,9,16,.75);display:grid;place-items:center;padding:16px;z-index:20}
+.overlay{position:fixed;inset:0;background:rgba(3,5,8,.78);display:grid;place-items:center;padding:16px;z-index:20}
 .overlay[hidden]{display:none}
-.sheet{background:var(--wg);border:1px solid #11161f;border-radius:6px;width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto}
-.sheet>header{background:linear-gradient(var(--wh2),var(--wh));padding:10px 18px;text-shadow:0 1px 1px rgba(0,0,0,.55)}
-.sheet>header h2{font-size:24px}
+.sheet{background:#15181c;border:1px solid #2e333a;border-radius:6px;width:min(680px,100%);max-height:calc(100% - 20px);overflow:auto}
+.sheet>header{background:#22262c;padding:10px 18px}
+.sheet>header h2{font:700 22px "Roboto Condensed",sans-serif}
 .sheet .in{padding:14px 18px 18px}
 .sheet p{margin:8px 0}
-.controls{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:12px 0;font-size:14px}
-.controls kbd{font:600 12px "JetBrains Mono",monospace;background:#1b2234;border:1px solid #47557c;border-radius:3px;padding:1px 6px;white-space:nowrap}
-.cta{background:linear-gradient(#4cc35f,#33a046);color:#fff;border:1px solid #1f6a2c;border-radius:4px;padding:10px 20px;font-weight:700;font-size:18px;cursor:pointer;text-shadow:0 1px 1px rgba(0,0,0,.4)}
-.cta:focus-visible{outline:2px solid var(--amb);outline-offset:3px}
+.controls{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:12px 0;font-size:13.5px}
+.controls kbd{font:600 12px "JetBrains Mono",monospace;background:#0d0f13;border:1px solid #3a3f48;border-radius:3px;padding:1px 6px;white-space:nowrap}
+.note{font-size:13px;color:var(--sub)}
+.cta{background:#3aa14a;color:#fff;border:1px solid #1f6a2c;border-radius:4px;padding:10px 20px;font-weight:700;font-size:17px;cursor:pointer}
 .results{display:grid;grid-template-columns:1fr auto;gap:4px 18px;margin:12px 0}
 .results b{font-variant-numeric:tabular-nums;text-align:right}
+.health{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.health li{display:grid;grid-template-columns:10px 130px 1fr auto;gap:8px;align-items:center;font-size:14px;min-height:28px;padding:0 6px;border-radius:2px}
+.health li:nth-child(odd){background:rgba(255,255,255,.03)}
+.dot{width:9px;height:9px;border-radius:50%;background:#3ad154}
+.health li.bad{background:rgba(229,53,43,.18)}
+.health li.bad .dot{background:var(--red)}
+.health li.bad .st{color:#ff8b80;font-weight:700}
+.health .nm{color:var(--sub)}
+.fixbtn{background:var(--red);color:#fff;border:0;border-radius:3px;padding:3px 9px;font-weight:700;font-size:13px;cursor:pointer}
 .term{background:#10151c;color:#cbd5dc;border:1px solid #2b343c;border-radius:6px;width:min(680px,100%);max-height:calc(100% - 20px);overflow:auto;padding:18px 20px}
-.term h2{font-size:24px;color:#f1f3f5}
+.term h2{font:700 24px "Roboto Condensed",sans-serif;color:#f1f3f5}
 .term .sym{margin:8px 0 12px}
 .log{font:13px/1.5 "JetBrains Mono",monospace;background:#0a0d10;border:1px solid #232b32;border-radius:5px;padding:10px 12px;color:#9fb3c2;white-space:pre-wrap;word-break:break-word;margin:0}
 .log .err{color:#ff8f7a}
@@ -207,131 +254,238 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
 .opts{display:grid;gap:8px}
 .opt{text-align:left;background:#1d252c;border:1px solid #303a43;border-radius:5px;padding:9px 12px;cursor:pointer;color:#e3e8ec;font-size:15px}
 .opt:hover:not(:disabled){background:#25303a}
-.opt:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
 .opt:disabled{cursor:default;opacity:.5}
 .opt.right{opacity:1;border-color:#3f9a54;background:#1b2d22}
 .opt.wrong{border-color:#8a3b30}
 .verdict{min-height:1.5em;margin:12px 0}
 .verdict.good{color:#7fe196} .verdict.bad{color:#ff9a86}
+
+/* ===== VUE drawers: Settings, Status, Sessions ===== */
+.lower{position:relative}
+.drawer{position:absolute;inset:0;z-index:5;background:#1b1c1f;display:grid;grid-template-rows:auto minmax(0,1fr);border:1px solid #2c2f34}
+.drawer[hidden]{display:none}
+.dh{display:grid;grid-template-columns:140px 1fr 140px;align-items:center;padding:8px 14px;border-bottom:1px solid #2c2f34;min-height:40px}
+.dh b{text-align:center;font:700 17px "Roboto",sans-serif;letter-spacing:.02em}
+.dh .bk{all:unset;cursor:pointer;color:#cfd3d8;font-size:12px}
+.dh .rt{justify-self:end;font-size:12px;color:#cfd3d8}
+.db{overflow:auto;padding:2px 22px 14px}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;border-bottom:1px solid #2a2c30;font-size:13px}
+.sr.nav{cursor:pointer}
+.sr.nav:hover{background:#222428}
+.sr .rv{display:flex;align-items:center;gap:10px;color:#cfd3d8}
+.sr .chev{font-size:18px;color:#cfd3d8}
+.tg{all:unset;cursor:pointer;position:relative;width:58px;height:24px;border-radius:12px;background:#33363b;font:700 10px "Roboto",sans-serif;color:#cfd3d8;display:flex;align-items:center;padding-left:9px;box-sizing:border-box}
+.tg::after{content:"";position:absolute;top:3px;right:4px;width:18px;height:18px;border-radius:50%;background:#55595f}
+.tg[aria-checked="true"]::after{background:#43c24a}
+.tg:focus-visible,.seg button:focus-visible,.stp button:focus-visible,.stabs button:focus-visible,.rsbtn:focus-visible{outline:2px solid var(--amb)}
+.seg{display:flex;gap:8px}
+.seg button{all:unset;cursor:pointer;min-width:96px;text-align:center;padding:9px 10px;background:#26282c;border:1px solid #36393e;border-radius:3px;font-size:12px}
+.seg button.on{background:#8ccbee;color:#0b1520;border-color:#8ccbee}
+.stp{display:flex;align-items:center;gap:14px;background:#26282c;border-radius:13px;padding:2px 12px;font-size:12px}
+.stp button{all:unset;cursor:pointer;font-size:16px;color:#cfd3d8;width:12px;text-align:center}
+.stp b{min-width:64px;text-align:center;font-weight:500}
+.tf{background:#26282c;border:1px solid #36393e;color:#fff;border-radius:3px;padding:7px 9px;font:13px "Roboto",sans-serif;width:330px}
+.sw{display:inline-block;width:30px;height:18px;border-radius:3px;border:1px solid #888}
+.phases{display:grid;grid-template-columns:1fr 1fr;gap:6px 30px;font-size:12px;color:#cfd3d8;padding:14px 0}
+.lk{width:16px;height:16px}
+/* status */
+.stabs{display:flex;gap:2px;padding:6px 10px 0;border-bottom:1px solid #2c2f34;align-items:end}
+.stabs button{all:unset;cursor:pointer;padding:7px 12px;font-size:12px;border-radius:3px 3px 0 0;display:flex;align-items:center;gap:6px}
+.stabs button.on{background:#33363b}
+.stabs .rc{width:16px;height:16px;border-radius:50%;background:#d32f2f;display:inline-grid;place-items:center;font-size:10px;font-weight:700}
+.sec{font:700 11px "Roboto",sans-serif;letter-spacing:.08em;text-align:center;color:#e9ecef;padding:12px 0 8px;border-bottom:1px solid #2a2c30;margin-bottom:6px}
+.nodes{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 10px;font-size:12px;text-align:center}
+.nodes span.bad{color:#ff6b62}
+.kv{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px 18px;font-size:12px}
+.kv2{display:grid;grid-template-columns:1fr auto;gap:5px 18px;font-size:12px}
+.kv b,.kv2 b{font-weight:500}
+.kv2 .bad,.kv .bad{color:#ff6b62;font-weight:700}
+.pct{background:#2f8a3a;padding:0 6px;border-radius:2px;color:#fff}
+.iea{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;font-size:12px}
+.iea div{display:grid;grid-template-columns:1fr auto;gap:4px}
+.iea h4{grid-column:1/-1;margin:0 0 2px;font-size:12px;font-weight:700}
+.scards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scard{border:1px solid #3a3d42;border-radius:4px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;min-height:52px;background:#202226}
+.scard.bad{border-color:#d33}
+.scard b{display:block;font-size:13px}
+.scard small{font-size:11px;color:#9aa1aa}
+.scard.bad small{color:#ff6b62}
+.scard.good small{color:#64d16c}
+.rsbtn{all:unset;cursor:pointer;background:#3a3d42;border-radius:3px;padding:5px 14px;font-size:11px}
+.rsbtn.alt{background:#2a2d31}
+.rall{display:flex;justify-content:flex-end;padding:8px 0}
+.ulist{display:grid;gap:6px}
+.urow{display:flex;justify-content:space-between;align-items:center;border:1px solid #3a3d42;border-radius:4px;padding:10px 12px;background:#202226;font-size:13px}
+.urow.bad{border-color:#d33}
+.urow .pb{display:inline-block;background:#6a4ab0;color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;margin-left:6px}
+.nrow{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2c30;padding:9px 4px;font-size:13px}
+.nrow .rv{display:flex;gap:10px;align-items:center;color:#cfd3d8}
+.errs{display:grid;gap:8px;padding-top:8px}
+.err{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;border:1px solid #d33;border-radius:4px;padding:10px 12px;background:#2a1a1a}
+.err small{grid-column:1;color:#ffb4ad;font-size:12px}
+.noerr{display:grid;place-items:center;height:100%;color:#9aa1aa;font-style:italic}
+.sess{display:grid;grid-template-columns:auto auto 1fr auto;gap:12px;align-items:center;padding:8px 6px;border-bottom:1px solid #2a2c30;font-size:13px}
+.sess .rd{width:16px;height:16px;border-radius:50%;border:2px solid #9aa1aa}
+.sess.cur .rd{border-color:#43c24a;background:#43c24a}
+.sess a{color:#8ccbee;cursor:pointer;text-decoration:none}
+.sdate{font-weight:700;font-size:13px;padding:10px 4px 4px}
+/* volume popup */
+.vol{position:absolute;right:226px;bottom:62px;width:70px;height:250px;background:#000;border:1px solid #333;z-index:6;display:grid;grid-template-rows:auto auto 1fr auto;justify-items:center;padding:6px 0;font-size:10px}
+.vol[hidden]{display:none}
+.vol b{font-size:12px}
+.vol input{writing-mode:vertical-lr;direction:rtl;width:24px;height:170px;accent-color:#f2a92f}
+.ibtn.open{background:#8ccbee;color:#0b1520;border-color:#8ccbee}
+/* clip view selection */
+.sl.qsel{background:#8ccbee !important;color:#0b1520}
+.sl.qsel small{color:#20364a}
+.sl img{height:18px;width:32px;object-fit:cover;flex:none;border:1px solid #000}
+.sl .on{margin-left:auto;display:flex;gap:3px}
+.sl .on span{font:700 9px "Roboto Condensed",sans-serif;padding:1px 4px;border-radius:2px;color:#fff}
+
 @media (prefers-reduced-motion: reduce){.cap.blink{animation:none}}
 </style>
 </head>
 <body>
 <div id="stage">
-<div class="vtool">
-  <h1>VUE</h1>
-  <span class="lay">Layout: DC Replay, Channel A (Replay Op)</span>
-  <span class="sp"></span>
-  <div class="vstat"><span>Time of day</span><b id="clock">19:30:00:00</b></div>
-  <div class="vstat"><span>Show left</span><b id="remain">3:10</b></div>
-  <div class="vstat"><span>Score</span><b id="score">0</b></div>
-  <div class="vstat"><span>Clean streak</span><b id="streak">0</b></div>
-  <button class="vbtn" id="pauseBtn" type="button">Pause</button>
-</div>
-
-<div class="ws">
-  <div class="grid">
-    <div class="col">
-      <div class="mons">
-        <section class="wd"><header>Output 1 <small>PGM</small></header>
-          <canvas class="v" id="pgm" width="640" height="360" aria-label="Program output"></canvas>
-          <div class="umd pgm"><span>PGM</span><span id="pgmR">LIVE</span></div></section>
-        <section class="wd"><header>Channel A <small id="chHdr">E-E</small></header>
-          <canvas class="v" id="pvw" width="640" height="360" aria-label="Replay channel A"></canvas>
-          <div class="umd pvw"><span id="pvwL">CH A  CAM A</span><span id="pvwR">19:30:00:00</span></div></section>
-      </div>
-      <section class="wd"><header>Inputs <small>Click to select camera</small></header><div class="wb"><div class="cams" id="cams"></div></div></section>
-      <section class="wd"><header>Record Trains <small>Click a train to cue that camera</small></header>
-        <div class="wb"><div class="trains">
-          <div class="tl" id="tl"></div>
-          <div class="tt" id="tt"><div class="ov" id="ov"><div class="clip" id="clipR"></div><div class="mk" id="mkIn"></div><div class="mk" id="mkOut"></div><div id="ems"></div><div class="ph" id="ph"></div></div></div>
-          <div class="tscale"><span>90 s ago</span><span>Live</span></div>
-        </div></div></section>
-      <section class="wd" id="cvWd"><header>DreamCatcher Clip View <span class="tabs" id="tabs"></span></header>
-        <div class="wb" id="cvBody"><div class="pbs" id="pbs"></div></div></section>
+  <section class="vue" aria-label="DreamCatcher VUE" style="position:relative">
+    <div>
+      <div class="strip" id="strip"><div class="arrows" aria-hidden="true"><span>›</span><span>‹</span></div></div>
+      <div class="dots" aria-hidden="true"><i class="star">★</i><i></i><i></i><i></i><i></i></div>
     </div>
-    <div class="col">
-      <section class="wd" aria-live="polite"><header>Producer (IFB)</header><div class="wb">
-        <p class="ifb-text" id="ifbText">Stand by for kickoff.</p>
-        <div class="cd"><div id="cdBar"></div></div>
-        <p class="ifb-sub" id="ifbSub"></p></div></section>
-      <section class="wd"><header id="healthH">System Status</header><div class="wb"><ul class="health" id="health"></ul></div></section>
-      <section class="wd"><header>Stats Feed <small>GSIS</small></header><div class="wb">
-        <ol class="feed" id="feed"></ol><p class="muted" id="feedEmpty">No plays yet.</p>
-        <p class="muted">Times are approximate. Click a play to cue near it.</p></div></section>
-    </div>
-  </div>
-
-  <div class="rcp-wrap" id="rcpWrap">
-    <div class="rcp" id="rcp" aria-label="DC-RCP10 replay control panel">
-      <div class="hood">
-        <div class="sticker">IP Address<br>10.20.4.61</div>
-        <div class="bezel"><div class="scr" id="scr"></div></div>
-        <div class="silk"><span>MENU</span><span>SHIFT</span><span>F1</span><span>F2</span><span>F3</span><span>F4</span><span>F5</span><span>F6</span><span>F7</span><span>F8</span><span>F9</span><span>F10</span><span>CLEAR</span><span>ENTER</span></div>
+    <div class="outs" id="outs"></div>
+    <div class="lower" id="lower">
+      <div class="drawer" id="drawer" hidden></div>
+      <div class="cv" id="cv">
+        <div class="srch"><span>Search...</span><span>✕ Go</span></div>
+        <div class="pbs" id="pbs"></div>
+        <div class="btabs" id="btabs"></div>
+        <div class="ptabs" id="ptabs"></div>
+        <div class="ib">
+          <span class="pbn" id="pbn">1-1</span><span id="pbt">No clip selected</span><span class="sp"></span>
+          <button type="button" data-ib="anchor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M12 7v14M5 13a7 7 0 0 0 14 0"/></svg>Anchor</button>
+          <button type="button" data-ib="multi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11V5a2 2 0 0 1 4 0v6M13 10a2 2 0 0 1 4 0v4a6 6 0 0 1-12 0v-2"/></svg>Multiselect</button>
+          <button type="button" data-ib="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="1"/><path d="M12 3v10M8 7l4-4 4 4"/></svg>Send To</button>
+          <button type="button" data-ib="prot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Protection</button>
+          <button type="button" data-ib="keys"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="1"/><path d="M6 10h1M10 10h1M14 10h1M18 10h0M7 14h10"/></svg>Shortcuts</button>
+          <button type="button" data-ib="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17v.5"/></svg>Help</button>
+        </div>
       </div>
-      <div class="deck">
-        <div class="frow" id="frow"></div>
-        <div class="dk">
-          <div class="abcd">
-            <button class="cap" data-k="A" type="button"><span class="t">A’</span>A</button>
-            <button class="cap" data-k="B" type="button"><span class="t">B’</span>B</button>
-            <button class="cap" data-k="C" type="button"><span class="t">C’</span>C</button>
-            <button class="cap" data-k="D" type="button"><span class="t">D’</span>D</button>
+      <div class="ev">
+        <div class="srch"><span>Search...</span><span></span></div>
+        <div class="eh"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Stats feed</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.3l6-.7z"/></svg>Your events</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>M creates</span></div>
+        <ul class="elist" id="elist"></ul>
+        <div class="epage">Marks</div>
+        <div class="etabs"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>Job Status</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg>Clips</span><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4h11l-2 4 2 4H5"/></svg>Marks</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v13H3zM3 7l2-3h14l2 3"/></svg>Bins</span></div>
+      </div>
+    </div>
+    <div class="vol" id="volPop" hidden><b>VO...</b><span>Display 1</span><input type="range" id="volIn" min="0" max="100" value="85" aria-label="Monitor volume"><span id="volV">85</span></div>
+    <div class="sbar">
+      <div class="rt"><span>Record Time Remaining:</span><div class="caps"><span>CAP1<b id="cap1">05:46</b></span><span>CAP2<b id="cap2">05:14</b></span><span>CAP3<b id="cap3">05:20</b></span></div></div>
+      <button class="sbtn" type="button" data-sb="start">Start Captures</button>
+      <button class="sbtn" type="button" data-sb="stop">Stop Captures</button>
+      <button class="sbtn" type="button" data-sb="quick">Quick Restart</button>
+      <div class="ochips"><span style="color:var(--out1);border-color:var(--out1)">RED</span><span style="color:var(--out2);border-color:var(--out2)">BLUE</span></div>
+      <div class="dcn"><b>DC-1</b><span>Session: Home vs Away</span></div>
+      <span class="sp"></span>
+      <button class="ibtn" type="button" id="spkBtn" aria-label="Speaker Control: sound on or off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg>Speaker Control</button>
+      <button class="ibtn" type="button" id="volBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M12 4v16M18 4v16M4 14h4M10 8h4M16 12h4"/></svg>Volume</button>
+      <button class="ibtn" type="button" id="sessBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Sessions</button>
+      <button class="ibtn" type="button" id="statusBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M8 20h8M12 16v4"/></svg>Status</button>
+      <button class="ibtn" type="button" id="setBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>Settings</button>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="hud">
+      <h1>Replay Op</h1>
+      <div class="hs"><span>Time of day</span><b id="clock">19:30:00:00</b></div>
+      <div class="hs"><span>Show left</span><b id="remain">3:10</b></div>
+      <div class="hs"><span>Score</span><b id="score">0</b></div>
+      <div class="hs"><span>Streak</span><b id="streak">0</b></div>
+      <button class="vbtn" id="pauseBtn" type="button">Pause</button>
+    </div>
+    <section class="card" aria-live="polite"><header>Producer (IFB)<span id="ifbOut"></span></header><div class="in">
+      <p class="ifb-text" id="ifbText">Stand by for kickoff.</p>
+      <div class="cd"><div id="cdBar"></div></div>
+      <p class="ifb-sub" id="ifbSub"></p></div></section>
+    <button class="alm" id="almBtn" type="button"><span id="almTxt">System status: all green</span><span>Status ›</span></button>
+    <div class="rcp-wrap" id="rcpWrap">
+      <div class="rcp" id="rcp" aria-label="DC-RCP10 replay control panel">
+        <div class="hood">
+          <div class="sticker">IP Address<br>10.20.4.61</div>
+          <div class="bezel"><div class="scr" id="scr"></div></div>
+          <div class="silk"><span>MENU</span><span>SHIFT</span><span>F1</span><span>F2</span><span>F3</span><span>F4</span><span>F5</span><span>F6</span><span>F7</span><span>F8</span><span>F9</span><span>F10</span><span>CLEAR</span><span>ENTER</span></div>
+        </div>
+        <div class="deck">
+          <div class="frow" id="frow"></div>
+          <div class="dk">
+            <div class="abcd">
+              <button class="cap" data-k="oA" type="button"><span class="t">A’</span>A</button>
+              <button class="cap" data-k="oB" type="button"><span class="t">B’</span>B</button>
+              <button class="cap" data-k="oC" type="button"><span class="t">C’</span>C</button>
+              <button class="cap" data-k="oD" type="button"><span class="t">D’</span>D</button>
+            </div>
+            <div class="tr3">
+              <button class="cap" data-k="play" type="button"><span class="t">Network</span>PLAY</button>
+              <button class="cap" data-k="cue" type="button"><span class="t">Goto TC</span>Last Cue</button>
+              <button class="cap" data-k="mark" type="button"><span class="t">Fast Jog</span>Mark</button>
+            </div>
+            <div class="levc" id="levc"><div class="lev" id="lev" role="slider" aria-label="T-bar lever, playback speed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="slot"></div></div>
+              <div class="tbar2" id="tbar"><div class="shaft"></div><div class="grip"></div></div></div>
+            <div class="kcol">
+              <button class="cap" data-k="plst" type="button"><span class="t">Loop</span>PLST</button>
+              <button class="cap" data-k="browse" type="button"><span class="t">Insert</span>Browse</button>
+              <button class="cap" data-k="in" type="button"><span class="t">Goto IN</span>IN</button>
+              <button class="cap" data-k="out" type="button"><span class="t">Goto OUT</span>OUT</button>
+              <button class="cap" data-k="take" type="button"><span class="t">Lever</span>TAKE</button>
+            </div>
+            <div class="rp">
+              <button class="cap" data-k="rec" type="button"><span class="t">Return</span>RECORD</button>
+              <button class="cap" data-k="clip" type="button"><span class="t">Page</span>CLIP</button>
+            </div>
+            <div class="jogc"><div class="jog" id="jog" aria-label="Jog wheel"><div class="jr" id="jr"><div class="dimple"></div></div></div></div>
+            <div class="foot"><span class="dcmark"><span class="d">D</span>reamCatcher</span><span class="evmark">evertz</span></div>
           </div>
-          <div class="tr3">
-            <button class="cap" data-k="play" type="button"><span class="t">Network</span>PLAY</button>
-            <button class="cap" data-k="cue" type="button"><span class="t">Goto TC</span>Last Cue</button>
-            <button class="cap" data-k="mark" type="button"><span class="t">Fast Jog</span>Mark</button>
-          </div>
-          <div class="levc"><div class="lev" id="lev" role="slider" aria-label="T-bar lever, playback speed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="slot"></div></div>
-            <div class="tbar" id="tbar"><div class="shaft"></div><div class="grip"></div></div></div>
-          <div class="kcol">
-            <button class="cap" data-k="plst" type="button"><span class="t">Loop</span>PLST</button>
-            <button class="cap" data-k="browse" type="button"><span class="t">Insert</span>Browse</button>
-            <button class="cap" data-k="in" type="button"><span class="t">Goto IN</span>IN</button>
-            <button class="cap" data-k="out" type="button"><span class="t">Goto OUT</span>OUT</button>
-            <button class="cap" data-k="take" type="button"><span class="t">Lever</span>TAKE</button>
-          </div>
-          <div class="rp">
-            <button class="cap" data-k="rec" type="button"><span class="t">Return</span>RECORD</button>
-            <button class="cap" data-k="clip" type="button"><span class="t">Page</span>CLIP</button>
-          </div>
-          <div class="jogc"><div class="jog" id="jog" aria-label="Jog wheel"><div class="jr" id="jr"><div class="dimple"></div></div></div></div>
-          <div class="foot"><span class="dcmark"><span class="d">D</span>reamCatcher</span><span class="evmark">evertz</span></div>
         </div>
       </div>
     </div>
-  </div>
+  </aside>
 </div>
 
-</div>
 <div class="overlay" id="startOv">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="startH">
     <header><h2 id="startH">You’re on replay tonight</h2></header>
     <div class="in">
-      <p>When the producer calls a replay, find it on the record trains, mark IN and OUT, pick the camera, and roll it. Space plays at the lever’s speed. The panel’s PLAY rolls at real time.</p>
-      <p>The keyboard uses real DreamCatcher shortcuts. Make an event when you see a play live, then the panel’s Last Cue jumps right back to it. Backslash creates the clip in the next Clip View slot.</p>
-      <p>When the panel or System Status goes red, troubleshoot it. Black on air costs you, so pick the least disruptive fix.</p>
-      <div class="controls">
+      <p>You run two outputs, <b style="color:var(--out1)">RED</b> and <b style="color:var(--out2)">BLUE</b>. The producer tells you which output, camera and speed. Some calls want both outputs on the same play.</p>
+      <p>Pick the output (panel A or B, Ctrl+F1 / Ctrl+F2, or click it), pick its camera (click an input, Shift+A to D on the panel, or A on the keyboard), roll back on that output’s timeline and hit play. It plays from there until you go back to live, or until the producer takes it. Mark IN and OUT only when you want a clip.</p><p>The numbers beside each output are zoom levels. Sound is on: crowd, snap, whistle and your IFB. Speaker Control mutes it and Volume sets the level.</p>
+      <p>When the panel or Status goes red, troubleshoot it. Black on air costs you, so pick the least disruptive fix.</p>
+      <div class="controls" id="keysList">
+        <kbd>Ctrl+F1 / Ctrl+F2</kbd><span>Select output RED / BLUE</span>
         <kbd>[  /  ]</kbd><span>Mark IN, mark OUT</span>
         <kbd>Shift+{  /  Shift+}</kbd><span>Go to IN, go to OUT</span>
         <kbd>\</kbd><span>Create clip</span>
         <kbd>Backspace</kbd><span>Clear IN and OUT marks</span>
-        <kbd>Space or F1</kbd><span>Play or pause (at the lever’s speed)</span>
+        <kbd>Space or F1</kbd><span>Play or pause the selected output (at the lever’s speed, from wherever you are)</span>
         <kbd>Enter</kbd><span>Queue the current clip</span>
         <kbd>,  /  .</kbd><span>Jog back, jog forward (Shift+&lt; / Shift+&gt;: medium)</span>
         <kbd>Ctrl+Shift+&lt; / &gt;</kbd><span>Decrease or increase play speed</span>
         <kbd>Pause / Shift+Pause</kbd><span>Record (live, clears marks), Return (live, keeps marks)</span>
         <kbd>M / Alt+M</kbd><span>Create event, create event at live</span>
-        <kbd>1–0</kbd><span>Go to slot 1 to 10</span>
+        <kbd>1–0 / Shift+1–4</kbd><span>Go to slot 1 to 10 / select bank 1 to 4</span>
         <kbd>Shift+:</kbd><span>Go to timecode</span>
         <kbd>A</kbd><span>Alternate angles (camera A to D)</span>
         <kbd>Ctrl+Alt+R</kbd><span>Restart VUE (UI only)</span>
         <kbd>Both Shifts</kbd><span>Mark the logs</span>
       </div>
-      <p style="font-size:13px;color:var(--sub)">Most Mac keyboards have no Pause key: use the panel’s RECORD key. Pause the game with the toolbar button.</p>
+      <p class="note">Most Mac keyboards have no Pause key: use the panel’s RECORD key. Pause the game with the Pause button at the top right.</p>
       <button class="cta" id="startBtn" type="button">Start the show</button>
     </div>
+  </div>
+</div>
+<div class="overlay" id="keysOv" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="keysH">
+    <header><h2 id="keysH">Keyboard shortcuts</h2></header>
+    <div class="in"><div class="controls" id="keysCopy"></div><button class="vbtn" id="keysClose" type="button">Close</button></div>
   </div>
 </div>
 <div class="overlay" id="endOv" hidden>
@@ -345,7 +499,7 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tcH" style="width:min(360px,100%)">
     <header><h2 id="tcH">Go to Timecode</h2></header>
     <div class="in"><p>Type the timecode and press Enter. Leading digits you skip come from the current timecode.</p>
-      <input id="tcIn" inputmode="numeric" autocomplete="off" aria-label="Timecode" style="width:100%;font:700 26px 'Roboto Condensed',sans-serif;padding:8px 10px;border-radius:4px;border:1px solid #47557c;background:#11182a;color:#fff;letter-spacing:.06em"></div>
+      <input id="tcIn" inputmode="numeric" autocomplete="off" aria-label="Timecode" style="width:100%;font:700 26px 'Roboto Condensed',sans-serif;padding:8px 10px;border-radius:4px;border:1px solid #47557c;background:#0d0f13;color:#fff;letter-spacing:.06em"></div>
   </div>
 </div>
 <div class="overlay" id="conOv" hidden>
@@ -533,8 +687,8 @@ function camFor(angle, st, w){
     default:  return {cx:60, cy:26.6, s:w/126, r:0};
   }
 }
-function drawField(ctx, w, h, angle, st){
-  const cam = camFor(angle, st, w);
+function drawField(ctx, w, h, angle, st, zoom = 1){
+  const cam = camFor(angle, st, w); cam.s *= zoom;
   ctx.setTransform(1,0,0,1,0,0);
   ctx.fillStyle = '#1c3a22'; ctx.fillRect(0,0,w,h);
   ctx.translate(w/2, h/2); ctx.rotate(cam.r); ctx.scale(cam.s, cam.s); ctx.translate(-cam.cx, -cam.cy);
@@ -577,7 +731,6 @@ function drawBlack(ctx, w, h, label){
   if(label){ ctx.fillStyle = '#8a9299'; ctx.font = `600 ${Math.round(h/12)}px "Roboto Condensed", sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label, w/2, h/2); }
 }
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-
 /* ---------- faults ---------- */
 const ROWS = [
   ['server','Panel ↔ server','Connected'],
@@ -663,7 +816,7 @@ const FAULTS = [
       {t:'Restart nginx', why:'The web UI is fine. Commander is still waiting on ES.'},
     ]},
   { id:'gui_freeze', row:'gui', effect:'freeze', status:'GUI froze', title:'VUE froze',
-    symptom:'Channel A stopped updating. The panel still clicks, but you’re flying blind.',
+    symptom:'Both outputs stopped updating. The panel still clicks, but you’re flying blind.',
     log:['!vue watchdog: GUI froze (1000 ms)','!vue watchdog: GUI froze (1000 ms)','!vue watchdog: GUI froze (1000 ms)'],
     opts:[
       {t:'Ctrl+Alt+R to restart the UI only', ok:true, why:'Bottom rung of the ladder. UI’s back and the outputs never moved.'},
@@ -701,43 +854,158 @@ const FAULTS = [
 ];
 const txt = (v, f) => typeof v === 'function' ? v(f) : v;
 
+
 /* ---------- state ---------- */
+const OUTN = ['RED','BLUE'], OUTC = ['#ff3b30','#2f8cff'];
+const mkOut = (i, angle) => ({i, name:OUTN[i], color:OUTC[i], angle, live:true, playhead:0, markIn:null, markOut:null, speed:100, replay:null, clip:null, zoom:1, zoomT:1});
 let show, now = 0, running = false, paused = false, ended = false;
-let selAngle = 'A', pvwLive = true, playhead = 0, markIn = null, markOut = null, lever = 100;
-let fastJog = false, shift = false, menuOpen = false, jogRot = 0;
-let replay = null, call = null, trainStart = 0, deadAirUntil = -1;
+let outs = [mkOut(0,'A'), mkOut(1,'C')], sel = 0;
+let fastJog = false, shift = false, menuOpen = false, jogRot = 0, pagePick = false;
+let call = null, trainStart = 0, deadAirUntil = -1;
 let score = 0, streak = 0, stats;
 let faults = [], schedule = [], feed = [], marks = [], lastCue = null;
-let slots = [Array(10).fill(null), Array(10).fill(null)], page = 0, selSlot = -1;
-let lcdMsg = '', lcdUntil = 0, meter = [0,0];
+let clips = {}, page = 0, bank = 0;
+let lcdMsg = '', lcdUntil = 0, meters = [[0,0],[0,0]];
 let healthDirty = true, feedDirty = true, slotsDirty = true, conFault = null;
+const O = () => outs[sel];
+/* ---------- VUE operational settings (persist in this browser) ---------- */
+const S_DEF = {
+  syncPanel:true, mode:'Multi-Program', outCtl:'Switcher', enterSearch:false, film:false, switchIn:false, touchInput:false, saveIO:false, confirmChg:false,
+  showField:false, explicitTake:true, keypadTC:false, pauseSecOut:false, clearAll:false, dragDelay:300,
+  fastJogMult:20, scrubUnits:'Timecode',
+  secTop:100, secBottom:-100, smartLever:false, ssmEngage:false, ssmValue:17, ssmPlay:false,
+  sport:'Default', group:'DEFAULT GROUP', tagEditor:'Rename', priorityTags:'', discardCustom:true, rosters:true, rosterOnly:false, metaKeys:false, globalTags:true,
+  camMode:true, angleLetters:true, creationTime:false, sendDialog:false, thumbs:true, thumbWhich:'Middle', orient:'Horizontal', absSlot:'Off',
+  remoteInd:false, sessionInd:false, hostInd:true, confirmDelete:true, guardband:10, clipLen:10, lenFormat:'Seconds', feedName:'', namingTpl:'',
+  syncPlPage:false, dualAux:false, plConfirmDel:true, confirmPaste:false, eos:false, avSlip:false, transType:'Mix', transDur:12, maxTrans:60, transFormat:'Frames',
+  tbarMode:'Full Manual', content:'Clips', presets:'17, 25, 33, 50, 75, 99', plTpl:'Playlist %I', qplTpl:'Quick Playlist %I',
+  evClips:false, evPause:false, evFilter:false, evDelegate:'Global', evPos:'Playback', evName:'New Event',
+  allAngles:false, globalAngles:true, stickyTags:false,
+  takeType:'Mix', takeDur:16, ppFormat:'Frames', transPvw:true, tallyName:false, abcdLocal:true, abcdFollow:false, abcdLimit:5,
+  leDur:10, zoomDur:300, zoomLevels:'100, 125, 150, 175, 200, 250', autoZoom:false, overrideZoom:false, pauseKey:true, playKey:false,
+  protSess:true, inputHotkeys:false, clipRouting:false, autoMosaic:true, borderThick:8, customLayout:'Enabled'
+};
+let S = Object.assign({}, S_DEF);
+try { Object.assign(S, JSON.parse(localStorage.getItem('rop-settings') || '{}')); } catch(e) {}
+function saveS(){ try { localStorage.setItem('rop-settings', JSON.stringify(S)); } catch(e) {} }
+const zoomList = () => {
+  const z = String(S.zoomLevels).split(/[,\s]+/).map(Number).filter(n => n >= 100 && n <= 800);
+  return [...new Set(z.length ? z : [100])].sort((a,b) => a - b).slice(0, 8);
+};
+const anyReplay = () => outs.some(o => o.replay);
+const skey = (p,b,s) => `${p}-${b}-${s}`;
+const pbsName = (p,b,s) => `${p+1}${b+1}${s === 9 ? '0' : s+1}`;
 
-const ctx = { pgm: $('#pgm').getContext('2d'), pvw: $('#pvw').getContext('2d') };
-const camEls = {};
+/* ---------- build VUE ---------- */
+const tiles = {};
 for(const a of ANGLES){
   const b = document.createElement('button');
-  b.className = 'cam'; b.type = 'button'; b.setAttribute('aria-label', `Select camera ${a}`);
-  b.innerHTML = `<canvas class="v" width="320" height="180"></canvas><span class="umd"><span>CAM ${a}  IN ${INPUT_NO[a]}</span><span>${ANGLE_NAMES[a]}</span></span>`;
+  b.className = 'inp'; b.type = 'button'; b.setAttribute('aria-label', `Camera ${a}, input ${INPUT_NO[a]}: put on the selected output`);
+  b.innerHTML = '<canvas width="320" height="180"></canvas>';
   b.addEventListener('mousedown', e => e.preventDefault());
-  b.addEventListener('click', () => key(a));
-  $('#cams').appendChild(b);
-  camEls[a] = {btn:b, ctx:b.querySelector('canvas').getContext('2d')};
+  b.addEventListener('click', () => setAngle(a));
+  $('#strip').insertBefore(b, $('#strip .arrows'));
+  tiles[a] = {btn:b, ctx:b.querySelector('canvas').getContext('2d')};
 }
-// trains
-const trk = {};
-for(const a of ANGLES){
-  const l = document.createElement('div'); l.innerHTML = `CAM ${a} <small>IN ${INPUT_NO[a]}</small>`; l.dataset.a = a; $('#tl').appendChild(l);
-  const t = document.createElement('div'); t.className = 'trk'; t.innerHTML = '<div class="rec"></div>';
-  t.addEventListener('click', e => {
-    if(!running) return;
-    const r = t.getBoundingClientRect();
-    if(!panelOK()) return;
-    selAngle = a; cueTo(now - WIN + (e.clientX - r.left)/r.width*WIN);
+const ICON = {
+  goin:'<path d="M6 5v14M18 5l-9 7 9 7z"/>', back:'<path d="M15 6l-6 6 6 6"/>', play:'<path d="M7 5l12 7-12 7z"/>', pause:'<path d="M7 5h4v14H7zM14 5h4v14h-4z"/>',
+  fwd:'<path d="M9 6l6 6-6 6"/>', goout:'<path d="M18 5v14M6 5l9 7-9 7z"/>', cut:'<circle cx="6" cy="7" r="3"/><circle cx="6" cy="17" r="3"/><path d="M8.5 8.5L20 19M8.5 15.5L20 5"/>',
+  live:'<circle cx="12" cy="12" r="5" fill="currentColor"/>', refresh:'<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/>'
+};
+const ico = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+const oEls = [];
+outs.forEach((o, i) => {
+  const d = document.createElement('div');
+  d.className = 'out'; d.style.setProperty('--oc', o.color);
+  d.innerHTML = `<div class="ovid" role="button" tabindex="0" aria-label="Select output ${o.name}"><canvas width="640" height="360"></canvas></div>
+    <div class="spd"></div>
+    <div class="tbar"><span class="mo"><svg width="16" height="12" viewBox="0 0 16 12"><rect x="1" y="2" width="14" height="8" rx="1" fill="none" stroke="${o.color}" stroke-width="2"/></svg><span>${o.name}<b class="cam">CAM ${o.angle}</b></span></span>
+      <button class="tb" data-t="goin" type="button" title="Go to IN">${ico('goin')}</button>
+      <button class="tb" data-t="back" type="button" title="Jog back 1 s">${ico('back')}</button>
+      <button class="tb pp" data-t="play" type="button" title="Play or pause">${ico('play')}</button>
+      <button class="tb" data-t="fwd" type="button" title="Jog forward 1 s">${ico('fwd')}</button>
+      <button class="tb" data-t="goout" type="button" title="Go to OUT">${ico('goout')}</button>
+      <button class="tb w mi" data-t="in" type="button" title="Mark IN">IN</button>
+      <button class="tb w mo2" data-t="out" type="button" title="Mark OUT">OUT</button>
+      <button class="tb" data-t="cut" type="button" title="Create clip">${ico('cut')}</button>
+      <button class="tb lv" data-t="live" type="button" title="Record (back to live)">${ico('live')}</button></div>
+    <div class="tl"><div class="rec"></div><div class="clip"></div><div class="mk mi"></div><div class="mk mo"></div><div class="evs"></div><div class="ph"></div></div>
+    <div class="tli"><span class="l"></span><span class="c"></span><span class="r"></span></div>
+    <div class="pls">No Playlist Running</div>`;
+  $('#outs').appendChild(d);
+  const ctx = d.querySelector('canvas').getContext('2d');
+  const sv = d.querySelector('.ovid');
+  sv.addEventListener('click', () => selectOut(i));
+  sv.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopPropagation(); selectOut(i); } });
+  d.querySelector('.spd').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b || !running) return; selectOut(i);
+    const o = outs[i];
+    o.zoomT = b.dataset.s === 'zoom' ? 1 : +b.dataset.s/100;
+    flash(`${o.name} ZOOM ${Math.round(o.zoomT*100)}%`); sfx('click');
   });
-  $('#tt').insertBefore(t, $('#ov'));
-  trk[a] = {lab:l, el:t, rec:t.firstChild};
+  d.querySelectorAll('.tb').forEach(b => { b.addEventListener('mousedown', e => e.preventDefault()); b.addEventListener('click', () => { if(!running || paused) return; selectOut(i); tbAct(b.dataset.t); }); });
+  const tl = d.querySelector('.tl');
+  tl.addEventListener('click', e => {
+    if(!running) return; selectOut(i);
+    const r = tl.getBoundingClientRect();
+    cueTo(now - WIN + (e.clientX - r.left)/r.width*WIN);
+  });
+  oEls.push({root:d, ctx, tl, rec:tl.querySelector('.rec'), clip:tl.querySelector('.clip'), mi:tl.querySelector('.mk.mi'), mo:tl.querySelector('.mk.mo'), evs:tl.querySelector('.evs'), ph:tl.querySelector('.ph'),
+    l:d.querySelector('.tli .l'), c:d.querySelector('.tli .c'), r:d.querySelector('.tli .r'), pls:d.querySelector('.pls'), cam:d.querySelector('.cam'), pp:d.querySelector('.pp'),
+    spdBox:d.querySelector('.spd'), spd:[], tin:d.querySelector('.tb.mi'), tout:d.querySelector('.tb.mo2'), tlive:d.querySelector('.tb.lv')});
+});
+function buildSpeeds(){
+  oEls.forEach(e => {
+    e.spdBox.innerHTML = zoomList().map(v => `<button type="button" data-s="${v}" title="Zoom ${v}%">${v}%</button>`).join('') + '<button type="button" data-s="zoom" title="Reset zoom">Zoom</button>';
+    e.spd = [...e.spdBox.querySelectorAll('button')];
+  });
 }
-// F-key row
+buildSpeeds();
+function tbAct(t){
+  switch(t){
+    case 'goin': shift = true; return key('in');
+    case 'goout': shift = true; return key('out');
+    case 'back': return jogKey(-1);
+    case 'fwd': return jogKey(1);
+    case 'play': return playPause();
+    case 'in': shift = false; return key('in');
+    case 'out': shift = false; return key('out');
+    case 'cut': return key('enter');
+    case 'live': shift = false; return key('rec');
+  }
+}
+// Clip View grid: 4 banks (columns) x 10 slots
+const cells = [];
+for(let b=0;b<4;b++) for(let s=0;s<10;s++){
+  const c = document.createElement('button'); c.type = 'button'; c.className = 'sl';
+  c.addEventListener('click', () => { if(!running) return; selectSlot(b, s, true); });
+  c.addEventListener('dblclick', () => { if(!running) return; bank = b; recall(s); });
+  $('#pbs').appendChild(c); cells.push({b, s, el:c});
+}
+['Bank 1','Bank 2','Bank 3','Bank 4'].forEach((t,b) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = t; x.addEventListener('click', () => { bank = b; slotsDirty = true; }); $('#btabs').appendChild(x); });
+$('#btabs').insertAdjacentHTML('beforeend', '<button type="button" aria-label="More banks">›</button>');
+for(let p=0;p<10;p++){ const x = document.createElement('button'); x.type = 'button'; x.textContent = `Page ${p+1}`; x.addEventListener('click', () => { page = p; slotsDirty = true; }); $('#ptabs').appendChild(x); }
+document.querySelectorAll('.ib button').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.ib;
+  if(k === 'keys' || k === 'help') return openKeys();
+  flash(k === 'anchor' ? 'SHIFT+L SETS AN ANCHOR' : k === 'multi' ? 'MULTISELECT: ALT+S' : k === 'prot' ? 'PROTECTION: CTRL+ALT+SHIFT+P' : 'SEND TO: NOTHING CONFIGURED');
+}));
+document.querySelectorAll('.sbtn,.ibtn[data-sb]').forEach(b => b.addEventListener('click', () => {
+  if(!running) return;
+  const k = b.dataset.sb;
+  if(k === 'quick') return quickRestart();
+  flash(k === 'start' ? 'CAPTURES ALREADY RUNNING' : k === 'stop' ? 'NOT ON A LIVE SHOW. CAPTURES KEPT RUNNING' : `${k.toUpperCase()}: NOTHING TO CHANGE`);
+}));
+$('#statusBtn').addEventListener('click', () => toggleDrawer('status'));
+$('#almBtn').addEventListener('click', () => { stTab = faults.some(f => !f.resolved) ? 'Errors' : 'General'; openDrawer('status'); });
+$('#setBtn').addEventListener('click', () => toggleDrawer('settings'));
+$('#sessBtn').addEventListener('click', () => toggleDrawer('sessions'));
+$('#volBtn').addEventListener('click', () => { const v = $('#volPop'); v.hidden = !v.hidden; $('#volBtn').classList.toggle('open', !v.hidden); });
+$('#volIn').addEventListener('input', e => { $('#volV').textContent = e.target.value; });
+function openKeys(){ $('#keysCopy').innerHTML = $('#keysList').innerHTML; $('#keysOv').hidden = false; $('#keysClose').focus(); }
+$('#keysClose').addEventListener('click', () => $('#keysOv').hidden = true);
+
+// F-key row and panel caps
 const FROW = ['menu','shift','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','clear','enter'];
 const fkeys = {};
 for(const k of FROW){
@@ -754,31 +1022,25 @@ document.querySelectorAll('.cap').forEach(c => {
   c.addEventListener('mousedown', e => e.preventDefault());
   c.addEventListener('click', () => key(c.dataset.k));
 });
-// clip view
-const tiles = [];
-for(let i=0;i<10;i++){
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'tile empty';
-  b.innerHTML = `<span class="th"><span>F${i+1}</span><span class="nm"></span></span><canvas width="160" height="90"></canvas><span class="tf"><span class="ca">Empty</span><span class="du"></span></span>`;
-  b.addEventListener('click', () => recall(i));
-  $('#pbs').appendChild(b); tiles.push(b);
-}
-const tabs = [0,1].map(p => { const b = document.createElement('button'); b.type = 'button'; b.textContent = `Page ${p+1}`; b.addEventListener('click', () => { page = p; slotsDirty = true; }); $('#tabs').appendChild(b); return b; });
 
 function active(effect){ return faults.find(f => !f.resolved && f.def.effect === effect); }
 function activeId(id){ return faults.find(f => !f.resolved && f.def.id === id); }
 function deadCam(){ const f = active('nocam'); return f ? f.angle : null; }
 function flash(m, secs=2){ lcdMsg = m; lcdUntil = now + secs; }
 function panelOK(){ if(active('panel')){ flash('PANEL OFFLINE'); return false; } return true; }
+function selectOut(i){ if(sel !== i){ sel = i; shift = false; } }
+function setAngle(a){ if(!running || paused) return; O().angle = a; O().clip = null; slotsDirty = true; flash(`${O().name}: CAM ${a}  ${ANGLE_NAMES[a]}`); }
+function setSpeed(v){ O().speed = clamp(v, 0, 100); if(O().replay) O().replay.speed = O().speed; }
 
 function startShow(){
+  initAudio();
   show = buildShow((Math.random()*1e9)|0);
   now = 0; running = true; paused = false; ended = false;
-  selAngle = 'A'; pvwLive = true; playhead = 0; markIn = markOut = null; lever = 100;
-  fastJog = false; shift = false; menuOpen = false; replay = null; call = null; trainStart = 0; deadAirUntil = -1;
+  outs = [mkOut(0,'A'), mkOut(1,'C')]; sel = 0;
+  fastJog = false; shift = false; menuOpen = false; pagePick = false; call = null; trainStart = 0; deadAirUntil = -1;
   score = 0; streak = 0; feed = []; faults = []; marks = []; lastCue = null;
-  slots = [Array(10).fill(null), Array(10).fill(null)]; page = 0; selSlot = -1;
+  clips = {}; page = 0; bank = 0; cvSel = null; drawer = null; $('#drawer').hidden = true;
   stats = {aired:0, clean:0, missed:0, fixed:0, faults:0, dead:0, best:0, wrong:0};
-  // one panel fault plus two others on different rows
   const pf = FAULTS.find(f => f.id === pick(PANEL_FAULTS));
   const rest = shuffle(FAULTS.filter(f => !PANEL_FAULTS.includes(f.id))).slice(0, 2);
   const order = shuffle([pf, ...rest]);
@@ -786,27 +1048,32 @@ function startShow(){
   schedule = order.map((def,i) => ({t:times[i], def, fired:false}));
   setIFB('Stand by. Kickoff’s done, first drive coming up.', '');
   healthDirty = feedDirty = slotsDirty = true;
-  $('#startOv').hidden = true; $('#endOv').hidden = true;
+  ['#startOv','#endOv','#keysOv'].forEach(s => $(s).hidden = true);
   $('#pauseBtn').textContent = 'Pause';
 }
 function setIFB(main, sub){ $('#ifbText').textContent = main; if(sub !== undefined) $('#ifbSub').textContent = sub; }
 const spdText = s => s === 100 ? 'real time' : s === 50 ? 'half speed' : `${s} percent`;
 
-/* ---------- panel keys ---------- */
+/* ---------- actions ---------- */
 function scrub(d){
   if(!panelOK()) return;
   if(active('blue')){ flash('TIME UNKNOWN: CANNOT SCRUB'); return; }
-  if(pvwLive){ pvwLive = false; playhead = now; }
-  playhead = clamp(playhead + d*(fastJog ? 5 : 1), trainStart, now);
+  const o = O();
+  if(o.replay){ flash(`${o.name} IS ON AIR`); return; }
+  if(o.live){ o.live = false; o.playhead = now; }
+  o.playhead = clamp(o.playhead + d*(fastJog ? Math.max(1, S.fastJogMult/4) : 1), trainStart, now);
 }
 function cueTo(t){
   if(!running || paused) return;
   if(active('blue')){ flash('TIME UNKNOWN: CANNOT CUE'); return; }
-  pvwLive = false; playhead = clamp(t, trainStart, now); lastCue = playhead;
-  flash(`CUED ${tc(playhead)}`);
+  const o = O();
+  if(o.replay){ flash(`${o.name} IS ON AIR`); return; }
+  o.live = false; o.playhead = clamp(t, trainStart, now); lastCue = o.playhead;
+  flash(`${o.name} CUED ${tc(o.playhead)}`);
 }
 function key(k){
   if(!running || paused || ended || conFault) return;
+  sfx('click');
   if(k === 'menu'){ menuOpen = !menuOpen; return; }
   if(menuOpen && /^F\d+$/.test(k)){
     const n = +k.slice(1);
@@ -817,136 +1084,171 @@ function key(k){
   }
   if(!panelOK()) return;
   const sh = shift; if(k !== 'shift') shift = false;
+  const o = O();
+  if(/^F\d+$/.test(k)){
+    const n = +k.slice(1) - 1;
+    if(pagePick){ pagePick = false; page = n; slotsDirty = true; return flash(`PAGE ${n+1}`); }
+    if(sh){ if(n < 4){ bank = n; slotsDirty = true; return flash(`BANK ${n+1}`); } return flash(`BANK ${n+1} NOT IN THIS LAYOUT`); }
+    return recall(n);
+  }
   switch(k){
-    case 'shift': shift = !shift; return;
-    case 'A': case 'B': case 'C': case 'D': selAngle = k; selSlot = -1; if(sh) flash(`CAM ${k}’ (SAME FEED)`); return;
+    case 'shift': shift = !sh; return;
+    case 'oA': case 'oB': case 'oC': case 'oD': {
+      const L = k[1];
+      if(sh) return setAngle(L);
+      if(L === 'A' || L === 'B'){ selectOut(L === 'A' ? 0 : 1); return flash(`OUTPUT ${O().name} SELECTED`); }
+      return flash(`NO OUTPUT ${L} ON THIS SERVER`);
+    }
     case 'in':
-      if(sh){ goIn(); return; }
-      markIn = playhead; if(markOut != null && markOut <= markIn) markOut = null; selSlot = -1;
-      flash(`IN ${tc(markIn)}`); return;
+      if(sh) return goIn();
+      if(o.replay) return flash(`${o.name} IS ON AIR`);
+      o.markIn = o.playhead; if(o.markOut != null && o.markOut <= o.markIn) o.markOut = null; o.clip = null;
+      return flash(`${o.name} IN ${tc(o.markIn)}`);
     case 'out':
-      if(sh){ if(markOut == null) return flash('NO OUT POINT'); if(markOut < trainStart) return flash('OUT POINT GONE'); pvwLive = false; playhead = markOut; return; }
-      if(markIn != null && playhead <= markIn) return flash('OUT MUST BE AFTER IN');
-      markOut = playhead; selSlot = -1; flash(`OUT ${tc(markOut)}`); return;
-    case 'clip': if(sh){ page = (page+1)%2; slotsDirty = true; flash(`CLIP VIEW PAGE ${page+1}`); return; } goIn(); return;
+      if(sh){ if(o.markOut == null) return flash('NO OUT POINT'); if(o.markOut < trainStart) return flash('OUT POINT GONE'); if(o.replay) return flash(`${o.name} IS ON AIR`); o.live = false; o.playhead = o.markOut; return; }
+      if(o.replay) return flash(`${o.name} IS ON AIR`);
+      if(o.markIn != null && o.playhead <= o.markIn) return flash('OUT MUST BE AFTER IN');
+      o.markOut = o.playhead; o.clip = null; return flash(`${o.name} OUT ${tc(o.markOut)}`);
+    case 'clip': if(sh){ pagePick = true; return flash('PAGE: PRESS F1 TO F10'); } return goIn();
     case 'rec':
-      pvwLive = true; playhead = now;
-      if(sh) flash('RETURN: LIVE, MARKS KEPT');
-      else { markIn = markOut = null; selSlot = -1; flash('RECORD: LIVE, MARKS CLEARED'); }
-      return;
+      if(o.replay){ o.replay.abort = true; }
+      o.live = true; o.playhead = now;
+      if(sh) return flash(`${o.name} RETURN: LIVE, MARKS KEPT`);
+      (S.clearAll ? outs : [o]).forEach(x => { x.markIn = x.markOut = null; x.clip = null; });
+      slotsDirty = true; return flash(S.clearAll ? 'RECORD: LIVE, MARKS CLEARED ON ALL TRAINS' : `${o.name} RECORD: LIVE, MARKS CLEARED`);
     case 'mark':
-      if(sh){ fastJog = !fastJog; flash(fastJog ? 'FAST JOG ON' : 'FAST JOG OFF'); return; }
-      { const t = pvwLive ? now : playhead; marks.push(t); lastCue = t; flash(`MARK ${tc(t)}`); } return;
+      if(sh){ fastJog = !fastJog; return flash(fastJog ? 'FAST JOG ON' : 'FAST JOG OFF'); }
+      return eventAt(false);
     case 'cue':
-      if(sh) return flash('GOTO TC: USE LAST CUE OR THE FEED');
+      if(sh) return openTC();
       if(lastCue == null) return flash('NO CUE YET. PRESS MARK');
       if(lastCue < trainStart) return flash('CUE NO LONGER ON TRAIN');
       if(active('blue')) return flash('TIME UNKNOWN: CANNOT CUE');
-      pvwLive = false; playhead = lastCue; flash(`LAST CUE ${tc(lastCue)}`); return;
-    case 'play': if(sh) return flash('NETWORK PLAY NOT CONFIGURED'); roll(100); return;
-    case 'take': if(sh) return flash('LEVER CONTROLS SPEED ON TAKE'); roll(lever); return;
+      if(o.replay) return flash(`${o.name} IS ON AIR`);
+      o.live = false; o.playhead = lastCue; return flash(`${o.name} LAST CUE ${tc(lastCue)}`);
+    case 'play': if(sh) return flash('NETWORK PLAY NOT CONFIGURED'); return roll(o, 100);
+    case 'take': if(sh) return flash('LEVER SETS THE SPEED FOR TAKE'); return roll(o, o.speed);
     case 'plst': case 'browse': return flash(sh ? 'NOT USED ON THIS SHOW' : 'NO PLAYLIST TONIGHT');
-    case 'clear': markIn = markOut = null; selSlot = -1; flash('MARKS CLEARED'); return;
+    case 'clear': o.markIn = o.markOut = null; o.clip = null; slotsDirty = true; return flash(`${o.name} MARKS CLEARED`);
     case 'enter': saveClip(true); return;
-    default:
-      if(/^F\d+$/.test(k)) recall(+k.slice(1) - 1);
   }
 }
 function goIn(){
-  if(markIn == null) return flash('NO IN POINT');
-  if(markIn < trainStart) return flash('IN POINT GONE');
+  const o = O();
+  if(o.markIn == null) return flash('NO IN POINT');
+  if(o.markIn < trainStart) return flash('IN POINT GONE');
   if(active('blue')) return flash('TIME UNKNOWN: CANNOT CUE');
-  pvwLive = false; playhead = markIn; lastCue = markIn;
+  if(o.replay) return flash(`${o.name} IS ON AIR`);
+  o.live = false; o.playhead = o.markIn; lastCue = o.markIn;
 }
 function saveClip(announce){
-  if(markIn == null || markOut == null){ if(announce) flash('MARK IN AND OUT FIRST'); return -1; }
-  if(selSlot >= 0){ if(announce) flash('CLIP ALREADY SAVED'); return selSlot; }
-  for(let p=0;p<2;p++){
-    const i = slots[p].indexOf(null);
-    if(i >= 0){
-      slots[p][i] = {in:markIn, out:markOut, a:selAngle, n:`${p+1}-${p2(i+1)}`};
-      page = p; selSlot = i; slotsDirty = true;
-      if(announce) flash(`SAVED ${slots[p][i].n}  F${i+1}`);
-      drawThumb(p, i);
-      return i;
+  const o = O();
+  if(o.markIn == null || o.markOut == null){ if(announce) flash('MARK IN AND OUT FIRST'); return null; }
+  if(o.clip && clips[o.clip]){ if(announce) flash(`ALREADY SAVED AS ${clips[o.clip].n}`); return o.clip; }
+  for(let b = bank; b < bank + 4; b++){
+    const bb = b % 4;
+    for(let s=0;s<10;s++){
+      const k = skey(page, bb, s);
+      if(!clips[k]){
+        clips[k] = {in:o.markIn, out:o.markOut, a:o.angle, n:pbsName(page, bb, s), made:now};
+        o.clip = k; bank = bb; slotsDirty = true;
+        if(announce) flash(`CLIP ${clips[k].n} CREATED`);
+        return k;
+      }
     }
   }
-  if(announce) flash('CLIP VIEW FULL'); return -1;
+  if(announce) flash('PAGE FULL. PICK ANOTHER PAGE'); return null;
 }
-function recall(i){
+function recall(s){
   if(!running || paused || conFault) return;
   if(!panelOK()) return;
-  const s = slots[page][i];
-  if(!s) return flash(`F${i+1}: EMPTY SLOT`);
-  if(s.in < trainStart) return flash('MEDIA OFFLINE');
-  markIn = s.in; markOut = s.out; selAngle = s.a; selSlot = i;
-  pvwLive = false; playhead = s.in; lastCue = s.in; slotsDirty = true;
-  flash(`RECALL ${s.n}`);
-}
-const thumbs = [[],[]];
-function drawThumb(p, i){
-  const s = slots[p][i]; if(!s) return;
-  const c = document.createElement('canvas'); c.width = 160; c.height = 90;
-  const cx = c.getContext('2d');
-  if(deadCam() === s.a) drawBlack(cx, 160, 90, 'NO VIDEO'); else drawField(cx, 160, 90, s.a, stateAt((s.in + s.out)/2));
-  thumbs[p][i] = c;
+  const k = skey(page, bank, s), c = clips[k], o = O();
+  if(!c) return flash(`SLOT ${s+1}: EMPTY`);
+  if(c.in < trainStart) return flash('MEDIA OFFLINE');
+  if(o.replay) return flash(`${o.name} IS ON AIR`);
+  o.markIn = c.in; o.markOut = c.out; o.angle = c.a; o.clip = k;
+  o.live = false; o.playhead = c.in; lastCue = c.in; slotsDirty = true;
+  flash(`${o.name}: CLIP ${c.n} QUEUED`);
 }
 
-function roll(speed){
+function roll(o, speed){
   if(active('noplay')) return flash('COMMANDER NOT RESPONDING');
-  if(replay) return flash('ALREADY ON AIR');
-  if(markIn == null) return flash('MARK IN FIRST');
-  if(markOut == null) return flash('MARK OUT FIRST');
-  if(markIn < trainStart) return flash('CLIP NO LONGER ON TRAIN');
-  saveClip(false);
-  replay = {a:selAngle, pos:markIn, in:markIn, out:markOut, speed, hold:0, verdict:null};
-  stats.aired++;
-  if(call){
-    replay.verdict = evaluate(call, replay);
-    setIFB(`Rolling camera ${replay.a} at ${spdText(speed)}.`, ''); call = null;
-  } else {
-    replay.verdict = {pts:-60, clean:false, msg:'I didn’t ask for a replay. Get off my air.'};
-    setIFB('What is this? I didn’t call for that.', '');
+  if(o.replay) return flash(`${o.name} ALREADY PLAYING`);
+  const both = o.markIn != null && o.markOut != null;
+  let from, to = null;
+  if(both){ from = o.markIn; to = o.markOut; }
+  else if(o.markIn != null){ from = o.markIn; }
+  else {
+    if(o.live) return flash(`${o.name} IS LIVE. ROLL BACK FIRST`);
+    from = o.playhead;
   }
-  flash(speed === 100 ? 'PLAY' : `TAKE ${speed}%`);
+  if(from < trainStart) return flash('MEDIA NO LONGER ON TRAIN');
+  if(both){ const cur = sel; sel = o.i; saveClip(false); sel = cur; }
+  const r = {a:o.angle, pos:from, in:from, out:to, open:to == null, speed, hold:0, paused:false, pausedFor:0, aired:0};
+  o.replay = r; o.live = false; stats.aired++;
+  const got = takeCallPart(o.i);
+  if(got){ r.call = got.call; r.part = got.part; r.wrongOut = got.wrongOut; setIFB(`Rolling ${o.name} on camera ${r.a} at ${spdText(speed)}.`, pendingText()); }
+  else setIFB(`What’s ${o.name} doing? I didn’t call for that.`, '');
+  sfx('click');
+  flash(`${o.name} ${speed === 100 ? 'PLAY' : 'TAKE ' + speed + '%'}${r.open ? ' FROM ' + tc(from) : ''}`);
 }
-
-function evaluate(c, r){
-  const pl = c.play, ps = pl.s, pe = pl.e, len = pe - ps;
-  if(deadCam() === r.a) return {pts:0, clean:false, msg:`You rolled camera ${r.a}. It’s black. We aired black.`};
+function takeCallPart(oi){
+  if(!call) return null;
+  let part = call.parts.find(p => !p.done && p.o === oi), wrongOut = false;
+  if(!part){ part = call.parts.find(p => !p.done); wrongOut = !!part; }
+  if(!part) return null;
+  part.done = true;
+  const c = call;
+  if(call.parts.every(p => p.done)) call = null;
+  return {call:c, part, wrongOut};
+}
+function pendingText(){
+  if(!call) return '';
+  const p = call.parts.filter(x => !x.done).map(x => `${OUTN[x.o]} on ${x.angle}, ${spdText(x.speed)}`);
+  return p.length ? 'Still need: ' + p.join('; ') : '';
+}
+function evaluate(c, part, r, wrongOut){
+  const pl = c.play, ps = pl.s, pe = pl.e, len = pe - ps, on = OUTN[part.o];
+  if(deadCam() === r.a) return {pts:0, clean:false, msg:`Camera ${r.a} is black. We aired black.`};
   const ov = Math.max(0, Math.min(r.out, pe) - Math.max(r.in, ps)), cov = ov/len;
   const pre = Math.max(0, ps - r.in), post = Math.max(0, r.out - pe);
   const tight = clamp(1 - (Math.max(0, pre-2.5) + Math.max(0, post-2.5))/10, .35, 1);
-  const angleOk = r.a === c.angle, sd = Math.abs(r.speed - c.speed);
-  const spdF = clamp(1 - sd/60, .4, 1), timeLeft = clamp(1 - (now - c.t0)/CALL_LEN, 0, 1);
+  const angleOk = r.a === part.angle, sd = Math.abs(r.speed - part.speed);
+  const spdF = clamp(1 - sd/60, .4, 1), timeLeft = clamp(1 - (now - c.t0)/c.len, 0, 1);
   const q = cov*cov*tight;
-  let pts = Math.round(1000*q*(angleOk?1:.5)*spdF*(.75+.25*timeLeft));
+  let pts = Math.round(1000*q*(angleOk?1:.5)*(wrongOut?.5:1)*spdF*(.75+.25*timeLeft));
   if(cov < .15) pts = 0;
   let msg;
   if(cov < .15) msg = `That wasn’t ${pl.short}. That was nothing.`;
   else if(cov < .6) msg = `You missed most of ${pl.short}.`;
+  else if(wrongOut) msg = `Wrong output. I asked for ${on}.`;
   else if(r.in > ps + .35) msg = 'You came in late. We missed the snap.';
-  else if(!angleOk) msg = `I asked for camera ${c.angle}, not ${r.a}.`;
-  else if(sd > 10) msg = `That wasn’t ${spdText(c.speed)}.`;
+  else if(!angleOk) msg = `I asked for camera ${part.angle} on ${on}, not ${r.a}.`;
+  else if(sd > 10) msg = `That wasn’t ${spdText(part.speed)}.`;
   else if(pre > 4) msg = 'Way too much standing around up front.';
   else if(post > 4) msg = 'We sat on that way too long after the whistle.';
-  else if(q > .85) msg = pick(['Beautiful. That’s the one.','Clean. Thank you.','That’s air. Nice.','Perfect, keep that up.']);
+  else if(q > .85) msg = pick([`Beautiful, ${on}. That’s the one.`,'Clean. Thank you.','That’s air. Nice.','Perfect, keep that up.']);
   else msg = 'Usable. Tighten it up next time.';
-  return {pts, clean: q > .8 && angleOk && sd <= 10, msg};
+  return {pts, clean: q > .8 && angleOk && !wrongOut && sd <= 10, msg};
 }
-function finishReplay(){
-  const v = replay.verdict;
+function finishReplay(o){
+  const r = o.replay;
+  const played = {a:r.a, in:r.in, out:r.open ? r.pos : r.out, speed:r.speed};
+  const v = r.part ? (played.out - played.in < .3 ? {pts:0, clean:false, msg:'That barely aired. Roll it again.'} : evaluate(r.call, r.part, played, r.wrongOut))
+                   : {pts:-60, clean:false, msg:`${o.name}? I didn’t call for that. Get off my air.`};
+  sfx(v.pts >= 600 ? 'good' : v.pts > 0 ? 'ok' : 'bad');
   score += v.pts;
   if(v.clean){ streak++; stats.clean++; } else streak = 0;
   stats.best = Math.max(stats.best, v.pts);
-  setIFB(v.msg, v.pts > 0 ? `+${v.pts} points` : v.pts < 0 ? `${v.pts} points` : 'No points');
-  replay = null;
+  setIFB(`${o.name}: ${v.msg}`, (v.pts > 0 ? `+${v.pts} points` : v.pts < 0 ? `${v.pts} points` : 'No points') + (call ? '. ' + pendingText() : ''));
+  o.replay = null;
 }
 
 /* ---------- fault console ---------- */
 function fireFault(def){
+  sfx('alarm');
   const f = {def, t:now, resolved:false, tried:new Set(), opts:shuffle(def.opts.slice()), angle:null};
-  if(def.effect === 'nocam') f.angle = pick(ANGLES.filter(a => a !== 'A' && a !== selAngle));
+  if(def.effect === 'nocam') f.angle = pick(ANGLES.filter(a => a !== O().angle));
   faults.push(f); stats.faults++; healthDirty = true; slotsDirty = true;
   flash(`ALARM: ${txt(def.title, f).toUpperCase()}`, 3);
 }
@@ -977,8 +1279,8 @@ function consequence(c){
   if(c === 'black6') deadAirUntil = Math.max(deadAirUntil, now + 6);
   else if(c === 'black15') deadAirUntil = Math.max(deadAirUntil, now + 15);
   else if(c === 'clear'){
-    trainStart = now; markIn = markOut = null; playhead = now; pvwLive = true; replay = null; marks = []; lastCue = null;
-    slots = [Array(10).fill(null), Array(10).fill(null)]; selSlot = -1; slotsDirty = true;
+    trainStart = now; marks = []; lastCue = null; clips = {}; cvSel = null; slotsDirty = true;
+    outs.forEach(o => { o.markIn = o.markOut = null; o.playhead = now; o.live = true; o.replay = null; o.clip = null; });
   }
 }
 function choose(f, o, i, btn){
@@ -1000,66 +1302,96 @@ function choose(f, o, i, btn){
     v.textContent = o.why + '  −120'; v.className = 'verdict bad';
   }
 }
+function quickRestart(){
+  deadAirUntil = Math.max(deadAirUntil, now + 6);
+  let fixed = 0;
+  for(const f of faults){ if(!f.resolved && (f.def.id === 'gui_freeze' || f.def.id === 'audio_buf')){ f.resolved = true; stats.fixed++; fixed++; } }
+  healthDirty = true;
+  flash(fixed ? 'QUICK RESTART: FIXED IT, BUT OUTPUTS WENT BLACK' : 'QUICK RESTART: OUTPUTS BLACK, NOTHING FIXED', 3);
+}
 
 /* ---------- loop ---------- */
 function update(dt){
   now += dt;
-  if(pvwLive) playhead = now;
-  playhead = clamp(playhead, trainStart, now);
-  if(replay){
-    if(replay.paused) {}
-    else if(replay.pos < replay.out) replay.pos = Math.min(replay.out, replay.pos + dt*Math.max(replay.speed,5)/100);
-    else { replay.hold += dt; if(replay.hold > .7) finishReplay(); }
-  }
-  for(const pl of show.plays){
-    if(!pl.announced && now >= pl.e + .8){
-      pl.announced = true;
-      feed.unshift({t: pl.s + (rnd()-.5)*2, desc: pl.desc}); feedDirty = true;
-      if(call){ stats.missed++; score -= 150; streak = 0; }
-      const dead = deadCam();
-      const ang = pick(ANGLES.filter(a => a !== dead)), spd = pick([25,50,50,75,100]);
-      call = {play:pl, angle:ang, speed:spd, t0:now};
-      setIFB(pick([
-        `Got ${pl.short}? Give me camera ${ang}, ${spdText(spd)}.`,
-        `Let me see ${pl.short} on ${ang}, ${spdText(spd)}. Ready when you are.`,
-        `Replay! ${pl.short[0].toUpperCase()+pl.short.slice(1)}, camera ${ang}, ${spdText(spd)}.`,
-      ]), pl.desc);
+  for(const o of outs){
+    o.zoom += (o.zoomT - o.zoom)*Math.min(1, dt*3000/Math.max(50, S.zoomDur));
+    if(o.live) o.playhead = now;
+    o.playhead = clamp(o.playhead, trainStart, now);
+    const r = o.replay;
+    if(r){
+      if(r.abort){ finishReplay(o); continue; }
+      r.aired += dt;
+      if(r.paused){ r.pausedFor += dt; if(r.pausedFor > (r.open ? 4 : 6)){ setIFB('Dead frame. Back to live.', ''); finishReplay(o); } continue; }
+      r.pausedFor = 0;
+      const end = r.open ? now : r.out;
+      if(r.pos < end){ r.pos = Math.min(end, r.pos + dt*Math.max(r.speed,5)/100); o.playhead = r.pos; }
+      if(r.open){
+        if(r.pos >= now - .05){ o.live = true; finishReplay(o); continue; }
+        const lim = r.part ? r.part.play.e + 2.5 : null;
+        if((lim && r.pos > lim) || (!r.part && r.aired > 8)){ finishReplay(o); continue; }
+      } else if(r.pos >= r.out){ r.hold += dt; if(r.hold > .7) finishReplay(o); }
     }
   }
-  if(call && now - call.t0 > CALL_LEN){
-    stats.missed++; score -= 150; streak = 0; call = null;
-    setIFB('Too late. We’re moving on.', '−150 points');
+  for(const pl of show.plays){
+    if(!pl.snapped && now >= pl.s){ pl.snapped = true; liveSfx('snap'); }
+    if(!pl.blown && now >= pl.e + .25){ pl.blown = true; liveSfx('whistle'); if(pl.td) liveSfx('cheer'); }
+    if(!pl.announced && now >= pl.e + .8){
+      pl.announced = true;
+      feed.unshift({t: pl.s + (rnd()-.5)*2, desc: pl.desc, gsis:true}); feedDirty = true;
+      if(call){ call.parts.filter(p => !p.done).forEach(() => { stats.missed++; score -= 150; }); streak = 0; }
+      const dead = deadCam(), ok = ANGLES.filter(a => a !== dead);
+      const a1 = pick(ok), s1 = pick([25,50,50,75,100]);
+      if(rnd() < .35){
+        const a2 = pick(ok.filter(a => a !== a1)), s2 = pick([50,75,100]);
+        sfx('ifb');
+      call = {play:pl, t0:now, len:CALL_LEN + 10, parts:[{o:0, angle:a1, speed:s1, done:false}, {o:1, angle:a2, speed:s2, done:false}]};
+        setIFB(`${pl.short[0].toUpperCase() + pl.short.slice(1)}, both outputs! RED on camera ${a1}, ${spdText(s1)}. BLUE on camera ${a2}, ${spdText(s2)}.`, pl.desc);
+      } else {
+        const oi = rnd() < .5 ? 0 : 1;
+        sfx('ifb');
+        call = {play:pl, t0:now, len:CALL_LEN, parts:[{o:oi, angle:a1, speed:s1, done:false}]};
+        setIFB(pick([
+          `${OUTN[oi]}, give me ${pl.short} on camera ${a1}, ${spdText(s1)}.`,
+          `${OUTN[oi]}: ${pl.short}, camera ${a1}, ${spdText(s1)}. Ready when you are.`,
+          `Replay on ${OUTN[oi]}! ${pl.short[0].toUpperCase()+pl.short.slice(1)}, camera ${a1}, ${spdText(s1)}.`,
+        ]), pl.desc);
+      }
+    }
+  }
+  if(call && now - call.t0 > call.len){
+    const n = call.parts.filter(p => !p.done).length;
+    stats.missed += n; score -= 150*n; streak = 0; call = null;
+    setIFB('Too late. We’re moving on.', `−${150*n} points`); sfx('bad');
   }
   for(const s of schedule){ if(!s.fired && now >= s.t){ s.fired = true; fireFault(s.def); } }
   for(const f of faults){ if(!f.resolved) score -= (f.def.drain || 4)*dt; }
-  if(now < deadAirUntil || (replay && deadCam() === replay.a)){ score -= 40*dt; stats.dead += dt; }
-  if(now >= SHOW_LEN && !replay) endShow();
+  if(now < deadAirUntil || outs.some(o => o.replay && deadCam() === o.replay.a)){ score -= 40*dt; stats.dead += dt; }
+  if(now >= SHOW_LEN && !anyReplay()) endShow();
 }
 function endShow(){
   running = false; ended = true; closeConsole();
   const s = Math.round(score);
+  let hi = 0; try { hi = +localStorage.getItem('rop-hi') || 0; if(s > hi){ hi = s; localStorage.setItem('rop-hi', String(s)); } } catch(e) {}
   $('#endTitle').textContent =
     s >= 5000 ? 'Lead replay op. They want you on the big game crew.' :
     s >= 3000 ? 'Solid shift. The producer bought you a coffee.' :
     s >= 1200 ? 'You got through it. The producer has notes.' :
     s >= 0 ? 'Rough night. Maybe Ctrl+Alt+R yourself.' : 'The TD is drafting the incident report.';
-  const rows = [['Final score', s],['Replays aired', stats.aired],['Clean replays', stats.clean],['Calls missed', stats.missed],
+  const rows = [['Final score', s],['Personal best', hi],['Replays aired', stats.aired],['Clean replays', stats.clean],['Calls missed', stats.missed],
     ['Best replay', stats.best],['Faults fixed', `${stats.fixed} of ${stats.faults}`],['Wrong fixes tried', stats.wrong],['Seconds of black on air', Math.round(stats.dead)]];
   $('#results').innerHTML = rows.map(([k,v]) => `<span>${k}</span><b>${v}</b>`).join('');
   $('#endOv').hidden = false; $('#againBtn').focus();
 }
 
-/* ---------- RCP-10 touchscreen (VUE) ---------- */
+/* ---------- RCP-10 touchscreen ---------- */
 const WRENCH = '<svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M12 36l16-16"/><path d="M28 20a7 7 0 1 0 6-11l-4 4-3-1-1-3 4-4a7 7 0 0 0-11 6"/><path d="M36 36L18 18"/><path d="M14 10l6 6-3 3-6-6z" fill="#fff"/><path d="M33 33l5 5"/></svg>';
 const PLUG = c => `<svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><g stroke="${c}" stroke-width="2.4" fill="none" stroke-linecap="round"><path d="M2 14l5-5M15 7l5-5M8 4l3 3M11 1l3 3"/><path d="M7 9l3-3 3 3-3 3z"/></g></svg>`;
 const OKI = '<svg width="18" height="16" viewBox="0 0 18 16" aria-hidden="true"><path d="M2 8l5 5 9-11" stroke="#8dff7c" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
 let scrLast = '';
 function renderScreen(){
-  const pf = PANEL_FAULTS.map(activeId).filter(Boolean);
+  const pf = PANEL_FAULTS.map(activeId).filter(Boolean), o = O();
   let h = '';
-  if(pf.length){
-    h += `<div class="alarm"><div class="am">${pf.map(f => `<p><b>${BANNERS[f.def.id][0]}</b><span>${BANNERS[f.def.id][1]}</span></p>`).join('')}</div><div class="aw">${WRENCH}</div></div>`;
-  }
+  if(pf.length) h += `<div class="alarm"><div class="am">${pf.map(f => `<p><b>${BANNERS[f.def.id][0]}</b><span>${BANNERS[f.def.id][1]}</span></p>`).join('')}</div><div class="aw">${WRENCH}</div></div>`;
   if(menuOpen){
     const srv = activeId('server_disc'), anyP = pf.length > 0;
     h += `<div class="sh"><span class="bk">‹ Back</span><b>ENGINEERING SETTINGS</b><span></span></div>`;
@@ -1069,170 +1401,209 @@ function renderScreen(){
     h += `<div class="ssec">FIRMWARE</div>`;
     h += `<div class="srow"><span>(F5) DC-RCP10 Firmware Version</span><span><span class="v">25.05.3</span><span class="chev">›</span></span></div>`;
   } else {
-    const modeTxt = replay ? `ON AIR  ${replay.speed}%` : pvwLive ? 'E-E (RECORD)' : 'CLIP';
-    const dur = markIn != null && markOut != null ? (markOut - markIn).toFixed(1) + ' s' : '';
-    h += `<div class="sh"><span class="bk">‹ Page ${page+1}</span><b>CHANNEL A</b><span class="rt">${shift ? 'SHIFT' : fastJog ? 'FAST JOG' : ''}</span></div>`;
-    h += `<div class="srow"><span>Camera</span><span class="v">${selAngle}  ${ANGLE_NAMES[selAngle]}${deadCam() === selAngle ? '  (NO VIDEO)' : ''}</span></div>`;
+    const modeTxt = o.replay ? `ON AIR  ${o.replay.speed}%${o.replay.paused ? ' PAUSED' : ''}` : o.live ? 'E-E (RECORD)' : 'CLIP';
+    const dur = o.markIn != null && o.markOut != null ? (o.markOut - o.markIn).toFixed(1) + ' s' : '';
+    h += `<div class="sh"><span class="bk">‹ Bank ${bank+1}</span><b style="color:${o.color}">OUTPUT ${o.name}</b><span class="rt2">${pagePick ? 'PAGE?' : shift ? 'SHIFT' : fastJog ? 'FAST JOG' : ''}</span></div>`;
+    h += `<div class="srow"><span>Camera</span><span class="v">${o.angle}  ${ANGLE_NAMES[o.angle]}${deadCam() === o.angle ? '  (NO VIDEO)' : ''}</span></div>`;
     h += `<div class="srow"><span>Mode</span><span class="v">${modeTxt}</span></div>`;
-    h += `<div class="srow"><span>Timecode</span><span class="v">${tc(replay ? replay.pos : playhead)}</span></div>`;
-    h += `<div class="srow"><span>IN / OUT</span><span class="v">${markIn != null ? tc(markIn) : '--:--:--:--'}  /  ${markOut != null ? tc(markOut) : '--:--:--:--'}  ${dur}</span></div>`;
-    h += `<div class="srow"><span>Lever</span><span class="v">${lever}%<span class="lbar"><i style="width:${lever}%"></i></span></span></div>`;
-    h += `<div class="slots">${slots[page].map((s,i) => `<span class="${s ? 'f' : ''}${i === selSlot ? ' s' : ''}">F${i+1}</span>`).join('')}</div>`;
+    h += `<div class="srow"><span>Timecode</span><span class="v">${tc(o.playhead)}</span></div>`;
+    h += `<div class="srow"><span>IN / OUT</span><span class="v">${o.markIn != null ? tc(o.markIn) : '--:--:--:--'}  /  ${o.markOut != null ? tc(o.markOut) : '--:--:--:--'}  ${dur}</span></div>`;
+    h += `<div class="srow"><span>Lever</span><span class="v">${o.speed}%<span class="lbar"><i style="width:${o.speed}%"></i></span></span></div>`;
+    h += `<div class="slots">${Array.from({length:10}, (_,s) => { const k = skey(page,bank,s); return `<span class="${clips[k] ? 'f' : ''}${o.clip === k ? ' s' : ''}">F${s+1}</span>`; }).join('')}</div>`;
   }
   if(now < lcdUntil && lcdMsg) h += `<div class="toast">${lcdMsg}</div>`;
   if(h !== scrLast){ $('#scr').innerHTML = h; scrLast = h; }
 }
 
 /* ---------- render ---------- */
-function drawMeters(c, w, h, live){
-  const noAudio = !!active('noaudio');
-  for(let i=0;i<2;i++){
-    const target = noAudio ? 0 : (live ? .5 : .62) + Math.random()*.3;
-    meter[i] = lerp(meter[i], target, .25);
-    const x = w - 22 + i*9, bh = h - 40;
-    c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x, 20, 6, bh);
-    const lv = meter[i]*bh, g = c.createLinearGradient(0, 20+bh, 0, 20);
-    g.addColorStop(0,'#3bd16b'); g.addColorStop(.75,'#e8d53a'); g.addColorStop(1,'#ec4632');
-    c.fillStyle = g; c.fillRect(x, 20+bh-lv, 6, lv);
+function drawMeters(c, x, y, h, lv, i){
+  for(let k=0;k<2;k++){
+    const target = lv ? lv + Math.random()*.25 : 0;
+    meters[i][k] = lerp(meters[i][k], target, .25);
+    const xx = x + k*8;
+    c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(xx, y, 6, h);
+    const v = clamp(meters[i][k], 0, 1)*h, g = c.createLinearGradient(0, y+h, 0, y);
+    g.addColorStop(0,'#2fd15b'); g.addColorStop(.75,'#e8d53a'); g.addColorStop(1,'#ec4632');
+    c.fillStyle = g; c.fillRect(xx, y+h-v, 6, v);
   }
+}
+function drawInputTile(a, dead, st){
+  const c = tiles[a].ctx, W = 320, H = 180;
+  if(dead) drawBlack(c, W, H, ''); else drawField(c, W, H, a, st);
+  c.font = '500 15px Roboto, sans-serif'; c.textBaseline = 'top'; c.textAlign = 'right';
+  c.fillStyle = '#fff'; c.shadowColor = '#000'; c.shadowBlur = 3; c.fillText(tc(now).slice(0,8) + '.' + tc(now).slice(9), W-8, 6);
+  c.textAlign = 'center'; c.font = '700 15px Roboto, sans-serif'; c.fillText(`IN ${INPUT_NO[a]}  ${ANGLE_NAMES[a]}`, W/2, H-48); c.shadowBlur = 0;
+  if(!dead) drawMeters(c, W-24, 30, H-86, .5, 0);
+  if(dead){
+    c.fillStyle = '#c62828'; roundRect(c, W/2-72, H-28, 144, 22, 3); c.fill();
+    c.fillStyle = '#fff'; c.font = '500 13px Roboto, sans-serif'; c.textBaseline = 'middle'; c.fillText('Input Not Capturing', W/2, H-17);
+  }
+  tiles[a].btn.classList.toggle('sel', a === O().angle);
+}
+function drawOutput(o, e){
+  const c = e.ctx, W = 640, H = 360;
+  const black = now < deadAirUntil || now < (o.blackUntil || 0) || deadCam() === (o.replay ? o.replay.a : o.angle);
+  const t = o.replay ? o.replay.pos : o.playhead;
+  if(black) drawBlack(c, W, H, ''); else drawField(c, W, H, o.replay ? o.replay.a : o.angle, stateAt(t), o.zoom);
+  c.shadowColor = '#000'; c.shadowBlur = 4; c.textBaseline = 'top';
+  c.fillStyle = '#fff'; c.font = '700 34px Roboto, sans-serif'; c.textAlign = 'left'; c.fillText(o.name, 16, 10);
+  c.font = '500 16px Roboto, sans-serif'; c.textAlign = 'right'; c.fillText(tc(now).slice(0,8) + '.' + tc(now).slice(9), W-14, 10);
+  c.textAlign = 'left'; c.font = '700 18px Roboto, sans-serif';
+  c.fillText(`CAM ${o.replay ? o.replay.a : o.angle}  IN ${INPUT_NO[o.replay ? o.replay.a : o.angle]}`, 16, H-78);
+  c.font = '500 20px Roboto, sans-serif';
+  c.fillText(tc(t).slice(0,8) + '.' + tc(t).slice(9), 16, H-54); c.fillText(tc(now).slice(0,8) + '.' + tc(now).slice(9), 16, H-30);
+  c.shadowBlur = 0;
+  if(o.replay){
+    c.fillStyle = '#e5352b'; roundRect(c, 16, 52, 96, 26, 3); c.fill();
+    c.fillStyle = '#fff'; c.font = '700 15px Roboto, sans-serif'; c.textBaseline = 'middle'; c.fillText(o.replay.paused ? 'PAUSED' : 'ON AIR', 26, 65);
+  }
+  c.shadowColor = '#000'; c.shadowBlur = 4; c.fillStyle = '#fff'; c.font = '700 16px Roboto, sans-serif'; c.textAlign = 'right'; c.textBaseline = 'top';
+  const sp = o.replay ? o.replay.speed : o.speed;
+  c.fillText(`SPEED ${sp}%${o.zoomT !== 1 ? '   ZOOM ' + Math.round(o.zoomT*100) + '%' : ''}`, W-44, 32); c.shadowBlur = 0; c.textAlign = 'left';
+  drawMeters(c, W-32, 40, H-110, black || active('noaudio') ? 0 : crowdAt(t)*(o.replay ? 1 : .9), o.i);
 }
 function render(){
   if(!show) return;
-  const W = 640, H = 360, dead = deadCam(), pc = ctx.pgm;
-  const black = now < deadAirUntil || (replay && dead === replay.a);
-  if(black){ drawBlack(pc, W, H, ''); $('#pgmR').textContent = 'BLACK'; }
-  else if(replay){
-    drawField(pc, W, H, replay.a, stateAt(replay.pos));
-    pc.fillStyle = '#f2a92f'; roundRect(pc, 18, 18, 118, 34, 4); pc.fill();
-    pc.fillStyle = '#1b1306'; pc.font = '700 24px "Roboto Condensed", sans-serif'; pc.textAlign = 'left'; pc.textBaseline = 'middle';
-    pc.fillText('REPLAY', 30, 36);
-    drawMeters(pc, W, H, false);
-    $('#pgmR').textContent = `CH A  CAM ${replay.a}  ${replay.speed}%`;
-  } else {
-    drawField(pc, W, H, 'A', stateAt(now));
-    const [h, a] = scoreAt(now);
-    pc.fillStyle = 'rgba(14,18,24,.85)'; roundRect(pc, 18, H-52, 196, 34, 4); pc.fill();
-    pc.fillStyle = HOME; pc.fillRect(18, H-52, 6, 34);
-    pc.font = '700 20px "Roboto Condensed", sans-serif'; pc.textBaseline = 'middle'; pc.textAlign = 'left';
-    pc.fillStyle = '#fff'; pc.fillText(`HOME ${h}`, 34, H-35); pc.fillText(`AWAY ${a}`, 120, H-35);
-    drawMeters(pc, W, H, true);
-    $('#pgmR').textContent = 'LIVE  CAM A';
-  }
-  if(!active('freeze')){
-    if(dead === selAngle) drawBlack(ctx.pvw, W, H, 'NO VIDEO');
-    else drawField(ctx.pvw, W, H, selAngle, stateAt(playhead));
-  }
-  $('#chHdr').textContent = replay ? 'ON AIR' : pvwLive ? 'E-E' : 'CLIP';
-  $('#pvwL').textContent = `CH A  CAM ${selAngle}`;
-  $('#pvwR').textContent = tc(playhead);
-  const live = stateAt(now);
-  for(const a of ANGLES){
-    const e = camEls[a];
-    if(dead === a) drawBlack(e.ctx, 320, 180, 'NO VIDEO'); else drawField(e.ctx, 320, 180, a, live);
-    e.btn.classList.toggle('sel', a === selAngle);
-  }
-  // trains
-  const t0 = now - WIN, X = t => clamp((t - t0)/WIN*100, 0, 100), blue = !!active('blue');
-  for(const a of ANGLES){
-    const r = trk[a];
-    r.rec.style.left = X(Math.max(trainStart, t0)) + '%';
-    r.el.classList.toggle('blue', blue); r.el.classList.toggle('dead', dead === a);
-    r.lab.classList.toggle('sel', a === selAngle);
-  }
-  $('#ph').style.left = `calc(${X(playhead)}% - 1px)`;
-  const mi = $('#mkIn'), mo = $('#mkOut'), cr = $('#clipR');
-  mi.style.display = markIn != null && markIn >= t0 ? 'block' : 'none'; if(markIn != null) mi.style.left = X(markIn) + '%';
-  mo.style.display = markOut != null && markOut >= t0 ? 'block' : 'none'; if(markOut != null) mo.style.left = X(markOut) + '%';
-  if(markIn != null && markOut != null){ cr.style.display = 'block'; cr.style.left = X(markIn) + '%'; cr.style.width = (X(markOut) - X(markIn)) + '%'; }
-  else cr.style.display = 'none';
-  const vis = marks.filter(m => m >= Math.max(t0, trainStart));
-  $('#ems').innerHTML = vis.map(m => `<div class="em" style="left:${X(m)}%"></div>`).join('');
-  // toolbar
+  const dead = deadCam(), live = stateAt(now);
+  for(const a of ANGLES) drawInputTile(a, dead === a, live);
+  const t0 = now - WIN, X = t => clamp((t - t0)/WIN*100, 0, 100), blue = !!active('blue'), frozen = !!active('freeze');
+  outs.forEach((o, i) => {
+    const e = oEls[i];
+    if(!frozen) drawOutput(o, e);
+    e.root.classList.toggle('sel', i === sel);
+    e.rec.style.left = X(Math.max(trainStart, t0)) + '%';
+    e.tl.classList.toggle('blue', blue);
+    e.ph.style.left = `calc(${X(o.replay ? o.replay.pos : o.playhead)}% - 1px)`;
+    e.mi.style.display = o.markIn != null && o.markIn >= t0 ? 'block' : 'none'; if(o.markIn != null) e.mi.style.left = X(o.markIn) + '%';
+    e.mo.style.display = o.markOut != null && o.markOut >= t0 ? 'block' : 'none'; if(o.markOut != null) e.mo.style.left = X(o.markOut) + '%';
+    if(o.markIn != null && o.markOut != null){ e.clip.style.display = 'block'; e.clip.style.left = X(o.markIn) + '%'; e.clip.style.width = (X(o.markOut) - X(o.markIn)) + '%'; }
+    else e.clip.style.display = 'none';
+    const ev = marks.filter(m => m >= Math.max(t0, trainStart)).map(m => `<div class="ev" style="left:${X(m)}%"></div>`).join('');
+    if(e.evs.__h !== ev){ e.evs.innerHTML = ev; e.evs.__h = ev; }
+    e.l.textContent = tc(Math.max(t0, trainStart)).replace(/:(\d\d)$/, '.$1');
+    const cn = o.clip && clips[o.clip] ? `CLIP ${clips[o.clip].n}` : o.live ? `E-E  IN ${INPUT_NO[o.angle]}` : `CAM ${o.angle}`;
+    e.c.innerHTML = `${tc(o.replay ? o.replay.pos : o.playhead).replace(/:(\d\d)$/, '.$1')}<b>${cn}</b>`;
+    e.r.textContent = tc(now).replace(/:(\d\d)$/, '.$1');
+    e.pls.textContent = o.replay ? `ON AIR  ${o.replay.speed}%${o.replay.paused ? '  PAUSED' : ''}` : 'No Playlist Running';
+    e.pls.classList.toggle('air', !!o.replay);
+    e.cam.textContent = `CAM ${o.angle}`;
+    e.pp.innerHTML = ico(o.replay && !o.replay.paused ? 'pause' : 'play');
+    e.spd.forEach(b => b.classList.toggle('on', +b.dataset.s === Math.round(o.zoomT*100)));
+    e.tin.classList.toggle('lit', o.markIn != null); e.tout.classList.toggle('lit', o.markOut != null); e.tlive.classList.toggle('lit', o.live && !o.replay);
+  });
+  // side
   $('#clock').textContent = tc(now);
   const rem = Math.max(0, SHOW_LEN - now);
   $('#remain').textContent = `${Math.floor(rem/60)}:${p2(Math.floor(rem%60))}`;
   $('#score').textContent = Math.round(score);
   $('#streak').textContent = streak;
+  const capm = m => `${p2(Math.floor(m/60))}:${p2(Math.floor(m%60))}`;
+  $('#cap1').textContent = capm(346 - now/60); $('#cap2').textContent = capm(314 - now/60); $('#cap3').textContent = capm(320 - now/60);
   const bar = $('#cdBar');
-  if(call){ const f = clamp(1 - (now - call.t0)/CALL_LEN, 0, 1); bar.style.width = (f*100) + '%'; bar.classList.toggle('urgent', f < .3); }
+  if(call){ const f = clamp(1 - (now - call.t0)/call.len, 0, 1); bar.style.width = (f*100) + '%'; bar.classList.toggle('urgent', f < .3); }
   else bar.style.width = '0';
-  // key lamps
-  const ok = !active('panel');
-  for(const a of ANGLES) caps[a].classList.toggle('on', ok && a === selAngle);
-  caps.in.classList.toggle('dim', ok && markIn != null);
-  caps.out.classList.toggle('dim', ok && markOut != null);
-  caps.rec.classList.toggle('on', ok && pvwLive && !replay);
-  caps.clip.classList.toggle('on', ok && !pvwLive && !replay);
+  $('#ifbOut').innerHTML = call ? call.parts.filter(p => !p.done).map(p => `<span style="color:${OUTC[p.o]};margin-left:8px">${OUTN[p.o]}</span>`).join('') : '';
+  const nAl = faults.filter(f => !f.resolved).length;
+  $('#almTxt').textContent = nAl ? `System status: ${nAl} alarm${nAl > 1 ? 's' : ''}` : 'System status: all green';
+  $('#almBtn').classList.toggle('on', nAl > 0);
+  $('#statusBtn').classList.toggle('alarm', nAl > 0 && drawer !== 'status');
+  $('#statusBtn').classList.toggle('open', drawer === 'status');
+  $('#setBtn').classList.toggle('open', drawer === 'settings');
+  $('#sessBtn').classList.toggle('open', drawer === 'sessions');
+  // lamps
+  const ok = !active('panel'), o = O();
+  caps.oA.classList.toggle('on', ok && sel === 0); caps.oB.classList.toggle('on', ok && sel === 1);
+  caps.in.classList.toggle('dim', ok && o.markIn != null);
+  caps.out.classList.toggle('dim', ok && o.markOut != null);
+  caps.rec.classList.toggle('on', ok && o.live && !o.replay);
+  caps.clip.classList.toggle('on', ok && !o.live && !o.replay);
   caps.mark.classList.toggle('dim', ok && fastJog);
-  caps.play.classList.toggle('on', ok && !!replay && replay.speed === 100);
-  caps.take.classList.toggle('on', ok && !!replay && replay.speed !== 100);
-  caps.take.classList.toggle('blink', ok && !replay && markIn != null && markOut != null && !!call);
+  caps.play.classList.toggle('on', ok && !!o.replay && o.replay.speed === 100);
+  caps.take.classList.toggle('on', ok && !!o.replay && o.replay.speed !== 100);
+  caps.take.classList.toggle('blink', ok && !o.replay && o.markIn != null && o.markOut != null && !!call && call.parts.some(p => !p.done && p.o === sel));
   fkeys.menu.classList.toggle('on', menuOpen || !ok);
-  fkeys.shift.classList.toggle('on', shift);
-  for(let i=0;i<10;i++) fkeys['F'+(i+1)].classList.toggle('on', ok && !!slots[page][i]);
+  fkeys.shift.classList.toggle('on', shift || pagePick);
+  for(let s=0;s<10;s++) fkeys['F'+(s+1)].classList.toggle('on', ok && !!clips[skey(page,bank,s)]);
   $('#jr').style.transform = `rotate(${jogRot}rad)`;
   renderLever(); renderScreen();
   if(slotsDirty) renderSlots();
-  if(healthDirty) renderHealth();
+  if(healthDirty || (drawer === 'status' && now - drawerT > 1)) renderDrawer();
   if(feedDirty) renderFeed();
+}
+let cvSel = null, delArm = null;
+const thumbCache = {};
+function thumbFor(k){
+  const c = clips[k]; if(!c) return '';
+  const t = S.thumbWhich === 'In' ? c.in + .1 : S.thumbWhich === 'Out' ? c.out - .1 : (c.in + c.out)/2;
+  const id = k + '|' + S.thumbWhich + '|' + c.a + '|' + c.in;
+  if(!thumbCache[id]){
+    const cv = document.createElement('canvas'); cv.width = 96; cv.height = 54;
+    drawField(cv.getContext('2d'), 96, 54, c.a, stateAt(t)); thumbCache[id] = cv.toDataURL('image/jpeg', .7);
+  }
+  return thumbCache[id];
+}
+function selectSlot(b, s, fromClick){
+  const k = skey(page, b, s);
+  if(fromClick && cvSel === k && clips[k]){ bank = b; return recall(s); }   // click a selected clip again to queue it
+  bank = b; cvSel = k; slotsDirty = true;
+  const c = clips[k];
+  flash(c ? `CLIP ${c.n} SELECTED. ENTER OR CLICK AGAIN TO QUEUE` : `SLOT ${slotLabel(b, s)} (EMPTY)`);
+}
+const slotLabel = (b, s) => S.absSlot === 'Off' ? `${b+1}-${s+1}` : String(b*10 + s + (S.absSlot === '1 based' ? 1 : 0));
+function deleteSel(){
+  if(!cvSel || !clips[cvSel]) return flash('NO CLIP SELECTED');
+  if(S.confirmDelete && delArm !== cvSel){ delArm = cvSel; return flash(`DELETE ${clips[cvSel].n}? PRESS DEL AGAIN`, 3); }
+  const n = clips[cvSel].n; delete clips[cvSel]; outs.forEach(o => { if(o.clip === cvSel) o.clip = null; });
+  delArm = null; slotsDirty = true; flash(`CLIP ${n} DELETED`);
 }
 function renderSlots(){
   slotsDirty = false;
-  const gone = !!activeId('no_clipview');
-  $('#cvWd').hidden = false;
-  if(gone){ $('#cvBody').innerHTML = '<div class="gone">Empty layout cell. The Clip View widget isn’t in this layout.</div>'; $('#tabs').hidden = true; return; }
-  $('#tabs').hidden = false;
-  if(!$('#pbs')){ $('#cvBody').innerHTML = ''; const d = document.createElement('div'); d.className = 'pbs'; d.id = 'pbs'; tiles.forEach(t => d.appendChild(t)); $('#cvBody').appendChild(d); }
-  tabs.forEach((b,p) => b.classList.toggle('on', p === page));
-  tiles.forEach((b,i) => {
-    const s = slots[page][i], c = b.querySelector('canvas'), cx = c.getContext('2d');
-    b.classList.toggle('empty', !s); b.classList.toggle('sel', i === selSlot && !!s);
-    b.querySelector('.nm').textContent = s ? s.n : '';
-    b.querySelector('.ca').textContent = s ? `CAM ${s.a}` : 'Empty';
-    b.querySelector('.du').textContent = s ? (s.out - s.in).toFixed(1) + ' s' : '';
-    cx.clearRect(0,0,160,90);
-    if(s && thumbs[page][i]) cx.drawImage(thumbs[page][i], 0, 0);
-  });
-}
-function renderHealth(){
-  healthDirty = false;
-  const ul = $('#health'); ul.innerHTML = ''; let n = 0;
-  for(const [k, name, ok] of ROWS){
-    const f = faults.find(x => !x.resolved && x.def.row === k);
-    const li = document.createElement('li'); li.className = f ? 'bad' : '';
-    li.innerHTML = `<span class="dot"></span><span class="nm">${name}</span><span class="st"></span>`;
-    li.querySelector('.st').textContent = f ? txt(f.def.status, f) : ok;
-    if(f){ n++; const b = document.createElement('button'); b.className = 'fixbtn'; b.type = 'button'; b.textContent = 'Troubleshoot'; b.addEventListener('click', () => { if(running) openConsole(f); }); li.appendChild(b); }
-    else li.appendChild(document.createElement('span'));
-    ul.appendChild(li);
+  const gone = !!activeId('no_clipview'), cv = $('#cv');
+  cv.classList.toggle('gone', gone);
+  if(gone){ if(!cv.__gone){ cv.__kids = [...cv.children]; cv.__kids.forEach(k => k.hidden = true); cv.insertAdjacentHTML('beforeend', '<span class="gonetxt">Empty layout cell. The Clip View widget isn’t in this layout.</span>'); cv.__gone = 1; } return; }
+  if(cv.__gone){ cv.__kids.forEach(k => k.hidden = false); cv.querySelector('.gonetxt').remove(); cv.__gone = 0; }
+  [...$('#btabs').children].forEach((b,i) => b.classList.toggle('on', i === bank));
+  [...$('#ptabs').children].forEach((b,i) => b.classList.toggle('on', i === page));
+  for(const {b, s, el} of cells){
+    const k = skey(page, b, s), c = clips[k];
+    const on = outs.filter(o => o.clip === k).map(o => `<span style="background:${o.color}">${o.name}</span>`).join('');
+    el.classList.toggle('has', !!c); el.classList.toggle('qsel', cvSel === k); el.classList.remove('sel');
+    el.setAttribute('aria-label', c ? `Clip ${c.n}, camera ${c.a}` : `Empty slot ${slotLabel(b, s)}`);
+    el.innerHTML = `<i>${slotLabel(b, s)}</i>` + (c
+      ? `${S.thumbs ? `<img alt="" src="${thumbFor(k)}">` : ''}<b>${c.n}</b><small>${S.angleLetters ? 'CAM ' + c.a + '  ' : ''}${(c.out - c.in).toFixed(1)} s${S.creationTime ? '  ' + tc(c.made ?? c.out).slice(0,8) : ''}</small>${on ? `<span class="on">${on}</span>` : ''}`
+      : (b === 0 && s === 5 && !Object.keys(clips).length ? '<small style="font-style:italic">Press \\ to create a clip</small>' : ''));
   }
-  $('#healthH').textContent = n ? `System Status: ${n} alarm${n>1?'s':''}` : 'System Status';
+  const ck = cvSel && clips[cvSel];
+  const [cb, cs] = cvSel ? cvSel.split('-').slice(1).map(Number) : [bank, 0];
+  $('#pbn').textContent = cvSel ? slotLabel(cb, cs) : `${page+1}-${bank+1}`;
+  $('#pbt').textContent = ck ? `Clip ${ck.n} selected  CAM ${ck.a}  ${(ck.out - ck.in).toFixed(1)} s. Enter queues it on ${O().name}` : 'No clip selected';
 }
 function renderFeed(){
   feedDirty = false;
-  const ol = $('#feed'); ol.innerHTML = '';
-  $('#feedEmpty').hidden = feed.length > 0;
-  for(const it of feed.slice(0,6)){
+  const ul = $('#elist'); ul.innerHTML = '';
+  const items = [...feed, ...marks.map(t => ({t, desc:'Operator event', op:true}))].sort((a,b) => b.t - a.t).slice(0, 12);
+  if(!items.length){ ul.innerHTML = '<li class="eempty">No marks yet. Stats feed plays and your M events land here.</li>'; return; }
+  for(const it of items){
     const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
-    b.innerHTML = `<span class="ftc">~${tc(it.t).slice(0,8)}</span><span></span>`; b.lastChild.textContent = it.desc;
+    b.innerHTML = `<span class="t">${it.gsis ? '~' : ''}${tc(it.t).slice(0,8)}</span><span class="${it.op ? 'op' : ''}"></span>`;
+    b.lastChild.textContent = it.op ? S.evName : it.desc;
     b.addEventListener('click', () => { if(panelOK()) cueTo(it.t); });
-    li.appendChild(b); ol.appendChild(li);
+    li.appendChild(b); ul.appendChild(li);
   }
 }
 
 /* ---------- T-bar ---------- */
-const lev = $('#lev'), tbar = $('#tbar');
+const lev = $('#lev'), tbar = $('#tbar'), levc = $('#levc');
 function renderLever(){
-  tbar.style.top = (110 + 24 + (1 - lever/100)*252 - 26) + 'px';
-  lev.setAttribute('aria-valuenow', lever);
+  tbar.style.top = (110 + 24 + (1 - O().speed/100)*252 - 26) + 'px';
+  lev.setAttribute('aria-valuenow', O().speed);
 }
 function leverFromY(y){
   const r = lev.getBoundingClientRect(), s = r.height/300;
   const local = (y - r.top)/s;
-  lever = Math.round(clamp(1 - (local - 24)/252, 0, 1)*100);
+  setSpeed(Math.round(clamp(1 - (local - 24)/252, 0, 1)*100));
 }
 let levDrag = false;
-const levc = lev.parentElement;
 levc.addEventListener('pointerdown', e => { if(!running || paused) return; levDrag = true; levc.setPointerCapture(e.pointerId); leverFromY(e.clientY); });
 levc.addEventListener('pointermove', e => { if(levDrag) leverFromY(e.clientY); });
 levc.addEventListener('pointerup', () => levDrag = false);
@@ -1258,11 +1629,11 @@ jog.addEventListener('wheel', e => {
   jogRot += d*.8; scrub(d);
 }, {passive:false});
 
-/* ---------- keyboard ---------- */
-/* keyboard: real DreamCatcher shortcuts (VUE Dreamcatcher Keyboard Shortcuts sheet) */
+/* ---------- keyboard: real DreamCatcher shortcuts ---------- */
 const shiftDown = {ShiftLeft:false, ShiftRight:false};
 addEventListener('keyup', e => { if(e.code in shiftDown) shiftDown[e.code] = false; });
 addEventListener('blur', () => { shiftDown.ShiftLeft = shiftDown.ShiftRight = false; });
+const anyOverlay = () => ['#keysOv'].some(s => !$(s).hidden);
 addEventListener('keydown', e => {
   if(e.code in shiftDown){
     shiftDown[e.code] = true;
@@ -1271,11 +1642,13 @@ addEventListener('keydown', e => {
   }
   if(!$('#tcOv').hidden) return;
   if(!$('#conOv').hidden){ if(e.key === 'Escape') closeConsole(); return; }
+  if(anyOverlay()){ if(e.key === 'Escape'){ $('#keysOv').hidden = true; } return; }
   if(!$('#startOv').hidden || !$('#endOv').hidden) return;
   const tag = e.target && e.target.tagName;
   if(tag === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
   if(!running || paused || conFault) return;
   const k = e.key, c = e.code, ctrl = e.ctrlKey || e.metaKey;
+  if(ctrl && (k === 'F1' || k === 'F2')){ e.preventDefault(); selectOut(k === 'F1' ? 0 : 1); flash(`OUTPUT ${O().name} SELECTED`); return; }
   if(ctrl && e.altKey && c === 'KeyR'){ e.preventDefault(); restartUI(); return; }
   if(ctrl && e.shiftKey && c === 'Comma'){ e.preventDefault(); stepSpeed(-1); return; }
   if(ctrl && e.shiftKey && c === 'Period'){ e.preventDefault(); stepSpeed(1); return; }
@@ -1290,46 +1663,52 @@ addEventListener('keydown', e => {
   if(c === 'Period'){ e.preventDefault(); jogKey(e.shiftKey ? 1 : 1/FPS); return; }
   if(c === 'BracketLeft'){ e.preventDefault(); shift = e.shiftKey; key('in'); return; }
   if(c === 'BracketRight'){ e.preventDefault(); shift = e.shiftKey; key('out'); return; }
-  if(c === 'Backslash'){ e.preventDefault(); key('enter'); return; }
-  if(k === 'Backspace'){ e.preventDefault(); key('clear'); return; }
+  if(c === 'Backslash'){ e.preventDefault(); shift = false; key('enter'); return; }
+  if(k === 'Backspace'){ e.preventDefault(); shift = false; key('clear'); return; }
   if(c === 'KeyM'){ e.preventDefault(); eventAt(false); return; }
   if(c === 'KeyA'){ e.preventDefault(); if(e.shiftKey) flash('ANGLES: A WIDE  B TIGHT  C END ZONE  D HIGH 50'); else cycleAngle(); return; }
   if(c === 'KeyC'){ e.preventDefault(); flash('CAMERA MODE: USE A TO ALTERNATE ANGLES'); return; }
   const dm = /^Digit(\d)$/.exec(c);
   if(dm){ e.preventDefault(); const n = dm[1] === '0' ? 10 : +dm[1];
-    if(e.shiftKey){ if(n <= 2){ page = n - 1; slotsDirty = true; flash(`BANK ${n}`); } else flash(`BANK ${n} IS EMPTY`); }
-    else recall(n - 1);
+    if(e.shiftKey){ if(n <= 4){ bank = n - 1; slotsDirty = true; flash(`BANK ${n}`); } else flash(`BANK ${n} NOT IN THIS LAYOUT`); }
+    else { shift = false; selectSlot(bank, n - 1, false); }
     return; }
-  if(k === 'ArrowLeft' || k === 'ArrowRight'){ e.preventDefault(); page = (page + 1) % 2; slotsDirty = true; flash(`BANK ${page + 1}`); return; }
-  if(k === 'Escape'){ selSlot = -1; slotsDirty = true; flash('SELECTION CANCELLED'); return; }
+  if(k === 'ArrowLeft' || k === 'ArrowRight'){ e.preventDefault(); bank = (bank + (k === 'ArrowRight' ? 1 : 3)) % 4; slotsDirty = true; flash(`BANK ${bank + 1}`); return; }
+  if(k === 'Delete'){ e.preventDefault(); deleteSel(); return; }
+  if(k === 'Escape'){ if(drawer){ closeDrawer(); return; } cvSel = null; slotsDirty = true; flash('SELECTION CANCELLED'); return; }
 });
 function jogKey(d){ jogRot += d*2; scrub(d); }
-function cycleAngle(){
+function cycleAngle(){ if(!panelOK()) return; setAngle(ANGLES[(ANGLES.indexOf(O().angle) + 1) % 4]); }
+function eventAt(liveNow){
   if(!panelOK()) return;
-  selAngle = ANGLES[(ANGLES.indexOf(selAngle) + 1) % 4]; selSlot = -1;
-  flash(`ANGLE ${selAngle}  ${ANGLE_NAMES[selAngle]}`);
-}
-function eventAt(live){
-  if(!panelOK()) return;
-  const t = live || pvwLive ? now : playhead;
-  marks.push(t); lastCue = t; flash(`${live ? 'EVENT AT LIVE' : 'EVENT'} ${tc(t)}`);
+  const o = O(), t = liveNow || o.live || S.evPos === 'Live' ? now : o.playhead;
+  marks.push(t); lastCue = t; feedDirty = true;
+  if(S.evClips){
+    const len = S.clipLen * (S.lenFormat === 'Minutes' ? 60 : 1);
+    const a = Math.max(trainStart, t - len/2), b = Math.min(now, a + len);
+    const keep = [o.markIn, o.markOut, o.clip]; o.markIn = a; o.markOut = b; o.clip = null;
+    const k = saveClip(false); if(k) clips[k].made = t;
+    if(!k){ [o.markIn, o.markOut, o.clip] = keep; }
+    return flash(k ? `${S.evName.toUpperCase()} ${tc(t)}: CLIP ${clips[k].n}` : `EVENT ${tc(t)} (PAGE FULL)`);
+  }
+  if(S.evPause && o.replay){ o.replay.paused = true; }
+  flash(`${liveNow ? 'EVENT AT LIVE' : S.evName.toUpperCase()} ${tc(t)}`);
 }
 function cueCurrent(){
   if(!panelOK()) return;
-  if(selSlot >= 0 && slots[page][selSlot]) return recall(selSlot);
-  if(markIn == null) return flash('NOTHING TO QUEUE');
-  goIn(); flash(`QUEUED ${tc(markIn)}`);
+  const o = O();
+  if(cvSel && clips[cvSel]){ const [p, b, sl] = cvSel.split('-').map(Number); page = p; bank = b; return recall(sl); }
+  if(o.clip && clips[o.clip]) return recall(+o.clip.split('-')[2]);
+  if(o.markIn == null) return flash('NOTHING TO QUEUE');
+  goIn(); flash(`${o.name} QUEUED ${tc(o.markIn)}`);
 }
 function playPause(){
   if(!panelOK()) return;
-  if(replay){ replay.paused = !replay.paused; flash(replay.paused ? 'PAUSED ON AIR' : 'PLAYING'); return; }
-  roll(lever);
+  const o = O();
+  if(o.replay){ o.replay.paused = !o.replay.paused; flash(`${o.name} ${o.replay.paused ? 'PAUSED' : 'PLAYING'}`); return; }
+  roll(o, o.speed);
 }
-function stepSpeed(dir){
-  lever = clamp(lever + dir*10, 0, 100);
-  if(replay) replay.speed = lever;
-  flash(`PLAY SPEED ${lever}%`);
-}
+function stepSpeed(dir){ setSpeed(O().speed + dir*10); flash(`${O().name} SPEED ${O().speed}%`); }
 function restartUI(){
   const f = activeId('gui_freeze');
   if(f){
@@ -1338,11 +1717,10 @@ function restartUI(){
     score += pts; flash(`CTRL+ALT+R: VUE RESTARTED  +${pts}`, 3);
   } else flash('CTRL+ALT+R: VUE RESTARTED (UI ONLY)');
 }
-/* Go to Timecode (Shift+:) */
 function openTC(){
   if(!panelOK()) return;
   if(active('blue')) return flash('TIME UNKNOWN: CANNOT CUE');
-  const i = $('#tcIn'); i.value = ''; i.placeholder = tc(playhead).replace(/:/g, '');
+  const i = $('#tcIn'); i.value = ''; i.placeholder = tc(O().playhead).replace(/:/g, '');
   $('#tcOv').hidden = false; i.focus();
 }
 function closeTC(){ $('#tcOv').hidden = true; }
@@ -1354,7 +1732,7 @@ $('#tcIn').addEventListener('keydown', e => {
   const d = $('#tcIn').value.replace(/\D/g, '').slice(-8);
   closeTC();
   if(!d) return;
-  const cur = tc(playhead).replace(/:/g, '');
+  const cur = tc(O().playhead).replace(/:/g, '');
   const full = cur.slice(0, 8 - d.length) + d;
   const [hh, mm, ss, ff] = [0,2,4,6].map(i => +full.slice(i, i+2));
   const t = hh*3600 + mm*60 + ss + ff/FPS - TC_BASE;
@@ -1375,12 +1753,263 @@ $('#conClose').addEventListener('click', closeConsole);
 $('#startBtn').addEventListener('click', startShow);
 $('#againBtn').addEventListener('click', startShow);
 
-/* ---------- fit the panel ---------- */
-const rcp = $('#rcp'), rcpWrap = $('#rcpWrap');
-const stage = $('#stage');
+/* ---------- sound (Web Audio, all synthesized) ---------- */
+let AC = null, master, prog, crowdG, crowdF, sfxG, soundOn = true;
+try { soundOn = localStorage.getItem('rop-sound') !== 'off'; } catch(e) {}
+const volume = () => +$('#volIn').value/100;
+function crowdAt(t){
+  if(!show) return .2;
+  for(const sg of show.segs){
+    if(t >= sg.s && t < sg.e){
+      if(sg.k === 'idle') return .22 + .04*Math.sin(t*.7);
+      if(sg.k === 'play'){ const p = (t - sg.s)/(sg.e - sg.s); return .3 + .5*p; }
+      const q = (t - sg.s)/(sg.e - sg.s), pl = sg.pl;
+      const peak = pl.td ? 1 : (Math.abs(pl.gain) > 15 || pl.type === 'pick' || pl.type === 'sack') ? .8 : .55;
+      return .22 + (peak - .22)*(1 - q);
+    }
+  }
+  return .22;
+}
+function initAudio(){
+  if(AC){ if(AC.state === 'suspended') AC.resume(); return; }
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; }
+  master = AC.createGain(); master.gain.value = soundOn ? volume() : 0; master.connect(AC.destination);
+  prog = AC.createGain(); prog.connect(master);
+  sfxG = AC.createGain(); sfxG.gain.value = .55; sfxG.connect(master);
+  const len = AC.sampleRate*4, buf = AC.createBuffer(2, len, AC.sampleRate);
+  for(let ch = 0; ch < 2; ch++){
+    const d = buf.getChannelData(ch); let b0 = 0, b1 = 0, b2 = 0;
+    for(let i = 0; i < len; i++){
+      const w = Math.random()*2 - 1;
+      b0 = .99765*b0 + w*.099; b1 = .963*b1 + w*.2965; b2 = .57*b2 + w*1.0526;
+      d[i] = (b0 + b1 + b2 + w*.1848)*.11*(1 + .25*Math.sin(i/AC.sampleRate*2*Math.PI*(0.3 + ch*.17)));
+    }
+  }
+  const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+  const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = .5;
+  crowdF = AC.createBiquadFilter(); crowdF.type = 'lowpass'; crowdF.frequency.value = 4000;
+  crowdG = AC.createGain(); crowdG.gain.value = 0;
+  src.connect(bp); bp.connect(crowdF); crowdF.connect(crowdG); crowdG.connect(prog); src.start();
+}
+function tone(f, type, dur, g, dest, when = 0, f2){
+  if(!AC) return;
+  const t = AC.currentTime + when, o = AC.createOscillator(), a = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(g, t + .005); a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(a); a.connect(dest); o.start(t); o.stop(t + dur + .02);
+}
+function noiseBurst(dur, g, freq, dest, when = 0, type = 'lowpass'){
+  if(!AC) return;
+  const t = AC.currentTime + when, n = AC.createBufferSource(), b = AC.createBuffer(1, Math.ceil(AC.sampleRate*dur), AC.sampleRate);
+  const d = b.getChannelData(0); for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+  n.buffer = b; const f = AC.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+  const a = AC.createGain(); a.gain.setValueAtTime(g, t); a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  n.connect(f); f.connect(a); a.connect(dest); n.start(t);
+}
+function sfx(k){
+  if(!AC || !soundOn) return;
+  if(k === 'click') tone(2600, 'square', .018, .035, sfxG);
+  else if(k === 'ifb'){ tone(1050, 'sine', .07, .18, sfxG); tone(1400, 'sine', .07, .18, sfxG, .09); }
+  else if(k === 'alarm'){ for(let i = 0; i < 4; i++) tone(i % 2 ? 660 : 880, 'square', .12, .09, sfxG, i*.16); }
+  else if(k === 'good'){ [660, 880, 1320].forEach((f,i) => tone(f, 'sine', .14, .16, sfxG, i*.08)); }
+  else if(k === 'ok'){ [660, 880].forEach((f,i) => tone(f, 'sine', .12, .13, sfxG, i*.08)); }
+  else if(k === 'bad') tone(180, 'sawtooth', .35, .08, sfxG, 0, 120);
+}
+function liveSfx(k){
+  if(!AC || !soundOn || active('noaudio')) return;
+  if(anyReplay()) return;                      // program is showing a replay, not the live venue sound
+  if(k === 'snap'){ noiseBurst(.09, .5, 700, prog); tone(95, 'sine', .18, .35, prog, 0, 55); }
+  else if(k === 'whistle'){
+    const t = AC.currentTime, a = AC.createGain(), lfo = AC.createOscillator(), lg = AC.createGain();
+    lfo.frequency.value = 38; lg.gain.value = .05; lfo.connect(lg); lg.connect(a.gain);
+    a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(.09, t + .03); a.gain.setValueAtTime(.09, t + .55); a.gain.exponentialRampToValueAtTime(.0001, t + .75);
+    [2900, 3080].forEach(f => { const o = AC.createOscillator(); o.frequency.value = f; o.connect(a); o.start(t); o.stop(t + .8); });
+    a.connect(prog); lfo.start(t); lfo.stop(t + .8);
+  }
+  else if(k === 'cheer'){ noiseBurst(2.2, .45, 1400, prog, 0, 'bandpass'); tone(233, 'sawtooth', 1.2, .05, prog, .3); tone(311, 'sawtooth', 1.2, .04, prog, .3); }
+}
+function audioTick(){
+  if(!AC) return;
+  const t = AC.currentTime;
+  master.gain.setTargetAtTime(soundOn ? volume() : 0, t, .05);
+  const rep = outs.filter(o => o.replay).sort((a,b) => b.replay.aired - a.replay.aired).pop();
+  const pt = rep ? rep.replay.pos : now;
+  const lvl = (!running || paused || now < deadAirUntil || active('noaudio')) ? 0 : crowdAt(pt)*.8;
+  crowdG.gain.setTargetAtTime(lvl, t, .2);
+  crowdF.frequency.setTargetAtTime(rep ? 500 + 3500*Math.max(rep.replay.speed, 5)/100 : 4000, t, .1);
+}
+function setSound(on){
+  soundOn = on; try { localStorage.setItem('rop-sound', on ? 'on' : 'off'); } catch(e) {}
+  initAudio(); $('#spkBtn').classList.toggle('open', on);
+  flash(on ? 'SPEAKER ON' : 'SPEAKER MUTED');
+}
+$('#spkBtn').addEventListener('click', () => setSound(!soundOn));
+$('#spkBtn').classList.toggle('open', soundOn);
+addEventListener('pointerdown', initAudio, {once:true});
+
+/* ---------- VUE drawers: Settings, Status, Sessions ---------- */
+let drawer = null, drawerT = 0, stTab = 'General', setPath = ['root'];
+const LINK = c => `<svg class="lk" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round"><path d="M9 15l6-6M10 6l1-1a4 4 0 0 1 6 6l-1 1M14 18l-1 1a4 4 0 0 1-6-6l1-1"/>${c === '#ff4a4a' ? '<path d="M4 4l16 16"/>' : ''}</svg>`;
+const INFO = '<svg class="lk" viewBox="0 0 24 24" fill="none" stroke="#cfd3d8" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>';
+const PAGES = {
+  root:{t:'SETTINGS AND DIAGNOSTICS', rows:[['l','Operational','','op'],['l','Engineering','','eng']]},
+  op:{t:'OPERATIONAL SETTINGS', rows:[['l','System','','system'],['l','Dial','','dial'],['l','T-Bar Lever','','tbar'],['l','Tagging','','tagging'],['l','Clips','','clips'],['l','Playlists','','playlists'],['l','Events','','events'],['l','Bins','','bins'],['l','Program/Preview','','pp'],['l','Live Edit','','le'],['l','Inputs','','inputs'],['l','Outputs','','outputs'],['l','Zoom','','zoom'],['l','Sessions','','sessions'],['l','Mosaic','','mosaic']]},
+  system:{t:'SYSTEM SETTINGS', rows:[['t','Sync Panel State with Server State','syncPanel'],['s','Mode','mode',['Multi-Program','Program/Preview']],['s','Output Control Mode','outCtl',['Toggle','Switcher'],1],
+    ['t','Press Enter to Search','enterSearch'],['t','Film Effect','film'],['t','Switch To In','switchIn'],['t','Touch Input Selection','touchInput',1],['t','Save Expected IO State','saveIO'],['t','Confirm Changes Dialog','confirmChg'],
+    ['t','Show Field on Timecodes','showField'],['t','Explicit Take','explicitTake'],['t','Show Keypad on "Go To Timecode" Dialog','keypadTC'],['t','Pause on Secondary Out Marks','pauseSecOut'],['t','Clear Marks on All Trains','clearAll'],
+    ['l','Visible Remote Storage','i',null],['l','Eject Clip Settings','',null],['l','Default Export Angles','Primary Only',null],['l','Default Archive Angles','All Available',null],['l','DVE & Crop','',null],['n','Drag Delay','dragDelay',50,0,1000,'']]},
+  dial:{t:'DIAL SETTINGS', rows:[['n','Fast Jog Multiplier','fastJogMult',1,1,40,''],['s','Scrub Units','scrubUnits',['Timecode','Frame']]]},
+  tbar:{t:'T-BAR SETTINGS', rows:[['n','Secondary Lever Range Top','secTop',10,0,200,''],['n','Secondary Lever Range Bottom','secBottom',10,-200,0,''],['t','Smart Lever Engage','smartLever'],['t','SSM Lever Engage','ssmEngage'],['n','SSM Lever Value','ssmValue',1,1,100,''],['t','SSM Play Engage','ssmPlay'],['phases']]},
+  tagging:{t:'TAGGING SETTINGS', rows:[['l','Sport','Default',null],['l','Group','DEFAULT GROUP',null],['s','Show tag editor on new clip','tagEditor',['Off','Tag','Rename']],['x','Priority Tags','priorityTags'],['t','Discard custom input when naming','discardCustom'],['t','Show rosters for the default sport','rosters'],['t','Roster Only Tagging','rosterOnly'],['t','Use Metadata Keys','metaKeys'],['t','Use Global Tags','globalTags']]},
+  clips:{t:'CLIP SETTINGS', rows:[['t','Cam Mode','camMode'],['t','Show Angle Letters','angleLetters'],['t','Show Creation Time','creationTime'],['t','Show Send Clips Dialog','sendDialog',1],['t','Show Thumbnails on Clip View','thumbs'],['s','Thumbnail to Show','thumbWhich',['In','Middle','Out']],['s','Clip View Orientation','orient',['Horizontal','Vertical']],['s','Absolute slot numbering','absSlot',['Off','0 based','1 based']],
+    ['l','Custom Inputs','4 Selected',null],['t','Show Remote Indicators','remoteInd'],['t','Show Session Indicators','sessionInd'],['t','Show Hostname Indicator','hostInd'],['t','Confirm Delete Dialog','confirmDelete'],['n','Clip Guardband Size','guardband',1,0,60,'sec'],['n','Default Clip Length','clipLen',1,1,60,'sec'],['s','Clip Length Format','lenFormat',['Seconds','Minutes']],['x','Clip Feed Name','feedName'],['x','Clip Naming Template','namingTpl']]},
+  playlists:{t:'PLAYLIST SETTINGS', rows:[['t','Sync Playlist Page with Clip Page','syncPlPage'],['t','Dual AUX Playlist Outputs','dualAux'],['t','Confirm Delete Dialog','plConfirmDel'],['t','Confirm Paste Dialog','confirmPaste'],['t','Default EOS Enabled','eos'],['t','Audio/Video Slip Enabled','avSlip'],['l','Default Transition Type','Mix',null],['n','Default Transition Duration','transDur',1,0,120,'frames'],['n','Maximum Transition Duration','maxTrans',1,0,300,'frames'],['s','Transition Duration Format','transFormat',['Frames','Seconds']],['c','Default Transition Colour','#ffffff'],['l','Transition Colours','',null],['s','Tbar Control Mode','tbarMode',['Single Clip','Full Manual']],['s','Content Selection','content',['Clips','Playlists']],['x','Clip Speed Presets (B, C, D, B’, C’, D’)','presets'],['x','Playlist Naming Template','plTpl'],['x','Quick Playlist Naming Template','qplTpl']]},
+  events:{t:'EVENT SETTINGS', rows:[['t','Create Clips for Events','evClips'],['t','Pause at Events','evPause'],['t','Filter Events by Input','evFilter'],['s','Event Delegate Filter','evDelegate',['Output','Global']],['s','Default Event Position','evPos',['Playback','Live']],['x','Event Default Name','evName']]},
+  bins:{t:'BIN SETTINGS', rows:[['t','Show All Angles by Default for New Bins','allAngles'],['t','Use Global Show All Angles','globalAngles'],['t','Custom Bin Sticky Tags','stickyTags']]},
+  pp:{t:'PROGRAM/PREVIEW SETTINGS', rows:[['l','Take Transition Type','Mix',null],['c','Take Transition Colour','#000000'],['n','Take Transition Duration','takeDur',1,0,120,'frames'],['s','Transition Duration Format','ppFormat',['Frames','Seconds']],['t','Transition Preview Output','transPvw'],['t','Tally Input Name Colour','tallyName'],['t','ABCD Local Inputs Only','abcdLocal'],['t','ABCD Input Follow','abcdFollow'],['n','ABCD Input Limit','abcdLimit',1,1,16,'']]},
+  le:{t:'LIVE EDIT SETTINGS', rows:[['n','Default Transition Duration','leDur',1,0,120,'frames']]},
+  zoom:{t:'ZOOM SETTINGS', rows:[['n','Zoom Duration','zoomDur',50,0,2000,'ms'],['x','Zoom Levels','zoomLevels'],['t','Auto-Zoom','autoZoom'],['t','Override Zoom','overrideZoom'],['t','Pause On First Keyframe','pauseKey'],['t','Playtrack On First Keyframe','playKey']]},
+  sessions:{t:'SESSION SETTINGS', rows:[['t','Play Protected Sessions','protSess'],['t','Use Input Hotkeys','inputHotkeys']]},
+  mosaic:{t:'MOSAIC SETTINGS', rows:[['t','Clip Routing Enabled','clipRouting'],['t','Auto-Increment Mosaic Editor','autoMosaic'],['n','Border Thickness','borderThick',1,0,20,''],['c','Border Colour','#000000'],['l','Custom Layout','Enabled',null]]},
+  inputs:{t:'INPUT SETTINGS', rt:'Edit Input Names', custom:'inputs'},
+  outputs:{t:'OUTPUT SETTINGS', rt:'Edit Output Names', custom:'outputs'},
+  eng:{t:'ENGINEERING SETTINGS', rows:[['l','Network','',null],['l','I/O Configuration','',null],['l','PTP / Timing','',null],['l','Licensing','',null],['l','Cluster','',null]]},
+};
+function openDrawer(k){ drawer = k; if(k === 'settings' && setPath.length === 0) setPath = ['root']; $('#drawer').hidden = false; renderDrawer(); }
+function closeDrawer(){ drawer = null; $('#drawer').hidden = true; }
+function toggleDrawer(k){ if(drawer === k) closeDrawer(); else { if(k === 'settings') setPath = ['root']; openDrawer(k); } }
+const fmtVal = (r) => `${S[r[2]]}${r[6] ? ' ' + r[6] : ''}`;
+function rowHTML(r){
+  const [type, label] = r;
+  if(type === 't') return `<div class="sr"><span>${label}${r[3] ? ' ' + INFO : ''}</span><button class="tg" role="switch" aria-checked="${!!S[r[2]]}" aria-label="${label}" data-k="${r[2]}">${S[r[2]] ? 'ON' : 'OFF'}</button></div>`;
+  if(type === 's') return `<div class="sr"><span>${label}${r[4] ? ' ' + INFO : ''}</span><div class="seg" role="radiogroup" aria-label="${label}">${r[3].map(o => `<button type="button" role="radio" aria-checked="${S[r[2]] === o}" class="${S[r[2]] === o ? 'on' : ''}" data-k="${r[2]}" data-v="${o}">${o}</button>`).join('')}</div></div>`;
+  if(type === 'n') return `<div class="sr"><span>${label}</span><div class="stp"><button type="button" aria-label="Decrease ${label}" data-k="${r[2]}" data-d="-${r[3]}">−</button><b>${fmtVal(r)}</b><button type="button" aria-label="Increase ${label}" data-k="${r[2]}" data-d="${r[3]}">+</button></div></div>`;
+  if(type === 'x') return `<div class="sr"><span>${label}</span><input class="tf" data-k="${r[2]}" value="${String(S[r[2]]).replace(/"/g,'&quot;')}" aria-label="${label}"></div>`;
+  if(type === 'c') return `<div class="sr"><span>${label}</span><span class="rv"><span class="sw" style="background:${r[2]}"></span><span class="chev">›</span></span></div>`;
+  if(type === 'l') return `<div class="sr nav" role="button" tabindex="0" data-nav="${r[3] || ''}" data-lbl="${label}"><span>${label}</span><span class="rv">${r[2] === 'i' ? INFO : r[2]}<span class="chev">›</span></span></div>`;
+  if(type === 'phases') return `<div class="phases"><span>2 Phase - 50% Play Speed</span><span>6 Phase - 17% Play Speed</span><span>3 Phase - 33% Play Speed</span><span>8 Phase - 12% Play Speed</span><span>4 Phase - 25% Play Speed</span><span>10 Phase - 10% Play Speed</span></div>`;
+  return '';
+}
+function settingsBody(){
+  const pg = PAGES[setPath[setPath.length - 1]];
+  if(pg.custom === 'inputs'){
+    const dead = deadCam();
+    return ANGLES.map(a => `<div class="sr"><span>IN ${INPUT_NO[a]}  ${ANGLE_NAMES[a]}</span><span class="rv"><i style="color:#9aa1aa">LM-CAPTURE-01: Input ${INPUT_NO[a]}</i>${LINK(dead === a ? '#ff4a4a' : '#64d16c')}<span class="chev">›</span></span></div>`).join('')
+      + ['IN 13','IN 14'].map((n,i) => `<div class="sr"><span>${n}</span><span class="rv"><i style="color:#9aa1aa">LM-CAPTURE-02: Input ${i+1}</i>${LINK('#ff4a4a')}<span class="chev">›</span></span></div>`).join('');
+  }
+  if(pg.custom === 'outputs') return outs.map(o => `<div class="sr"><span style="font-family:'JetBrains Mono',monospace">${o.name}</span><span class="rv" style="font-family:'JetBrains Mono',monospace">IN ${INPUT_NO[o.replay ? o.replay.a : o.angle]}<span class="chev">›</span></span></div>`).join('');
+  return pg.rows.map(rowHTML).join('');
+}
+const hm = m => `${Math.floor(m/60)} h ${Math.floor(m%60)} m`;
+function statusBody(){
+  const nAl = faults.filter(f => !f.resolved).length;
+  const has = id => !!activeId(id), dead = deadCam(), panelBad = !!active('panel');
+  const tabs = ['General','Inputs','Outputs','Users','Network','Errors'];
+  const head = `<div class="stabs" role="tablist">${tabs.map((t,i) => `${i === 1 && nAl ? `<span class="rc" title="${nAl} alarm${nAl>1?'s':''}">${nAl}</span>` : ''}<button type="button" role="tab" aria-selected="${stTab === t}" class="${stTab === t ? 'on' : ''}" data-tab="${t}">${t}</button>`).join('')}</div>`;
+  let b = '';
+  if(stTab === 'General'){
+    const caps = [346, 314, 320].map(m => m - now/60), avg = caps.reduce((a,c) => a + c, 0)/3;
+    b += `<p style="font-size:12px;margin:8px 0" class="${has('nvme_hot') ? 'bad' : ''}">${has('nvme_hot') ? '<span style="color:#ff6b62;font-weight:700">Critical temperature: nvme0 71 °C</span>' : 'Critical temperature: none'}</p>`;
+    b += `<div class="sec">CONNECTED NODES</div><div class="nodes">${['LM-PLAYOUT-01','LM-CAPTURE-01','LM-CAPTURE-02','LM-CAPTURE-03','LM-PLAYOUT-02','LM-PLAYOUT-03','LM-PLAYOUT-04','LM-CLIP'].map(n => `<span class="${n === 'LM-PLAYOUT-03' && has('dclocate') ? 'bad' : ''}">${n}${n === 'LM-PLAYOUT-03' && has('dclocate') ? ' (not in search)' : ''}</span>`).join('')}<span style="grid-column:1/-1">LM-CMS</span></div>`;
+    b += `<div class="sec">STORAGE INFORMATION</div><div class="kv"><span>Avg train remaining</span><b>${hm(avg)}</b><span>Total remaining</span><b>${hm(caps.reduce((a,c) => a + c, 0))}</b><span>Total record storage</span><b>${hm(18*60)}</b><span>Internal storage usage</span><b><span class="pct">1%</span></b></div>`;
+    b += `<div class="sec">PTP STATUS</div><div class="kv2"><span>Interface</span><b>bond-0</b><span>PTP Domain</span><b>127</b><span>Port State</span><b class="${has('blue_train') ? 'bad' : ''}">${has('blue_train') ? 'LISTENING' : 'SLAVE'}</b><span>UTC Offset</span><b>37</b><span>UTC Valid</span><b class="${has('blue_train') ? 'bad' : ''}">${has('blue_train') ? 'false' : 'true'}</b></div>`;
+    b += `<div class="sec">ST2110 PTP STATUS</div><div class="kv2"><span>mvkEthernet0</span><b>${has('blue_train') ? '<span class="bad">Unlocked</span>' : 'FollowerLocked'}</b><span>mvkEthernet1</span><b>${has('blue_train') ? '<span class="bad">Unlocked</span>' : 'FollowerLocked'}</b></div>`;
+    const n = Object.keys(clips).length;
+    b += `<div class="sec">GENERAL INFORMATION</div><div class="kv2"><b>Clips</b><span></span><span>Local machine</span><b>${n}</b><span>All machines</span><b>${n + 22014}</b><span>Clips for current user DC-1</span><b>${n}</b><b>Playlists</b><span></span><span>Local machine</span><b>0</b><span>All machines</span><b>153</b></div>`;
+    const exF = has('nas_arp') ? 3 : 0;
+    b += `<div class="sec">IMPORTS, EXPORTS AND ARCHIVES</div><div class="iea"><div><h4>Imports</h4><span>In Progress</span><b>0</b><span>Failed</span><b>0</b><span>Total</span><b>0</b></div><div><h4>Exports</h4><span>In Progress</span><b>0</b><span>Failed</span><b class="${exF ? 'bad' : ''}" style="${exF ? 'color:#ff6b62' : ''}">${exF}</b><span>Total</span><b>${6 + exF}</b></div><div><h4>Archives</h4><span>In Progress</span><b>0</b><span>Failed</span><b>0</b><span>Total</span><b>0</b></div></div>`;
+  } else if(stTab === 'Inputs'){
+    b += `<div class="rall"><button class="rsbtn" type="button" data-rs="allin">Restart All Inputs</button></div><div class="scards">`;
+    b += ANGLES.map(a => `<div class="scard ${dead === a ? 'bad' : 'good'}"><div><b>IN ${INPUT_NO[a]}  ${ANGLE_NAMES[a]}</b><small>${dead === a ? 'Not Capturing' : 'Capturing'}</small></div><button class="rsbtn" type="button" data-rs="in" data-a="${a}">Restart</button></div>`).join('');
+    b += ['IN2-5','IN2-6'].map(n => `<div class="scard bad"><div><b>${n}</b><small>Disconnected</small></div><button class="rsbtn" type="button" data-rs="unused">Restart</button></div>`).join('') + '</div>';
+  } else if(stTab === 'Outputs'){
+    b += `<div class="rall"><button class="rsbtn" type="button" data-rs="allout">Restart All Outputs</button></div><div class="scards">`;
+    b += outs.map((o,i) => `<div class="scard"><div><b style="color:${o.color}">${o.name}</b><small>${o.replay ? 'On air' : o.live ? 'E-E' : 'Cued'}</small></div><button class="rsbtn" type="button" data-rs="out" data-o="${i}">Restart</button></div>`).join('');
+    b += [1,2,3,4,5,6].map(n => `<div class="scard"><div><b>MontageOutput${n}</b></div><button class="rsbtn" type="button" data-rs="montage">Restart</button></div>`).join('') + '</div>';
+  } else if(stTab === 'Users'){
+    b += '<div class="ulist" style="padding-top:8px">' + ['DC-1 (You)','DC-3','DC-4','DC-5','DC-6','DC-CLIP','DC-LIVE-EDIT-1','DC-LIVE-EDIT-2'].map((u,i) => `<div class="urow"><span>${u}${i === 1 ? '<span class="pb">P</span>' : ''}</span>${LINK('#64d16c')}</div>`).join('')
+      + `<div class="urow ${panelBad ? 'bad' : ''}"><span>DC-RCP10 (10.20.4.61)${panelBad ? ' <small style="color:#ff6b62">panel disconnected</small>' : ''}</span>${LINK(panelBad ? '#ff4a4a' : '#64d16c')}</div></div>`;
+  } else if(stTab === 'Network'){
+    const rows = [['bond-0','200.200.200.111',1],['ENET-1','10.45.21.96',1],['ENET-2','',0],['ENET-21','',1],['ENET-22','',1],['mvkEthernet0','10.45.31.37',1],['mvkEthernet1','10.45.32.37',1]];
+    b += rows.map(([n, ip, ok]) => `<div class="nrow"><span>${n}</span><span class="rv">${ip}${INFO}${LINK(ok ? '#64d16c' : '#ff4a4a')}</span></div>`).join('');
+    if(has('nas_arp')) b += `<div class="nrow"><span style="color:#ff6b62">NAS 10.20.8.15 (exports)</span><span class="rv" style="color:#ff6b62">Destination host unreachable${LINK('#ff4a4a')}</span></div>`;
+  } else {
+    const act = faults.filter(f => !f.resolved);
+    if(!act.length) return head + '<div class="noerr" style="min-height:300px">No Errors to Display</div>';
+    b += '<div class="errs">' + act.map(f => `<div class="err"><b>${txt(f.def.title, f)}</b><button class="fixbtn" type="button" data-fix="${faults.indexOf(f)}">Troubleshoot</button><small>${txt(f.def.status, f)}. ${txt(f.def.symptom, f)}</small></div>`).join('') + '</div>';
+  }
+  return head + `<div>${b}</div>`;
+}
+function sessionsBody(){
+  const past = [['2025-08-28',[['ESPN FOOTBALL','08:12:10','11:12:10']]],['2025-03-22',[['SOCCER','17:11:47','20:11:47']]],['2025-02-14',[['ACRO','12:37:46','15:37:46']]],['2024-12-05',[['BASEBALL','11:00:58','14:00:58'],['TRAINING','10:59:28','13:59:28'],['SOFTBALL','10:59:28','13:59:28']]],['2024-11-25',[['VOLLEYBALL','11:27:58','14:27:58']]]];
+  let b = '<div class="srch" style="margin:6px 0">Search...</div>';
+  b += `<div class="sdate">2026-11-14</div><div class="sess cur"><span class="rd"></span><span style="color:#64d16c;font-weight:700">Joined</span><span>HOME VS AWAY (admin)</span><span style="color:#9aa1aa;font-size:12px">Start: 19:30:00, End: running</span></div>`;
+  for(const [d, list] of past){ b += `<div class="sdate">${d}</div>` + list.map(([n,s,e]) => `<div class="sess"><span class="rd"></span><a role="button" tabindex="0" data-join="${n}">Join</a><span>${n} (admin)</span><span style="color:#9aa1aa;font-size:12px">Start: ${s}, End: ${e}</span></div>`).join(''); }
+  return b;
+}
+function renderDrawer(){
+  healthDirty = false;
+  if(!drawer) return;
+  drawerT = now;
+  const d = $('#drawer');
+  const focusKey = document.activeElement && d.contains(document.activeElement) && document.activeElement.matches('input.tf') ? document.activeElement.dataset.k : null;
+  if(focusKey) return;   // don’t rebuild while typing
+  let title = '', back = '', rt = '', body = '';
+  if(drawer === 'settings'){
+    const pg = PAGES[setPath[setPath.length - 1]]; title = pg.t; rt = pg.rt || ''; body = settingsBody();
+    if(setPath.length > 1) back = '‹ Back';
+  } else if(drawer === 'status'){ title = 'STATUS'; body = statusBody(); back = '‹ Close'; }
+  else { title = 'DREAMCATCHER SESSIONS'; body = sessionsBody(); back = '‹ Close'; }
+  const html = `<div class="dh"><button class="bk" type="button" data-back="1">${back || '‹ Close'}</button><b>${title}</b><span class="rt">${rt}</span></div><div class="db">${body}</div>`;
+  if(d.__h === html) return;
+  const st = d.querySelector('.db') ? d.querySelector('.db').scrollTop : 0, same = d.__p === title + stTab;
+  d.innerHTML = html; d.__h = html; d.__p = title + stTab;
+  if(same) d.querySelector('.db').scrollTop = st;
+}
+function applyS(k){
+  saveS();
+  if(k === 'zoomLevels') buildSpeeds();
+  slotsDirty = true;
+}
+$('#drawer').addEventListener('click', e => {
+  const t = e.target.closest('button,[data-nav],[data-join],a'); if(!t) return;
+  if(t.dataset.back){ if(drawer === 'settings' && setPath.length > 1){ setPath.pop(); renderDrawer(); } else closeDrawer(); return; }
+  if(t.dataset.tab){ stTab = t.dataset.tab; renderDrawer(); return; }
+  if(t.dataset.fix !== undefined){ const f = faults[+t.dataset.fix]; if(f && running) openConsole(f); return; }
+  if(t.dataset.join){ flash(`JOIN ${t.dataset.join}? NOT IN THE MIDDLE OF A SHOW`); return; }
+  if(t.dataset.rs) return restartFromStatus(t.dataset.rs, t.dataset);
+  if(t.dataset.nav !== undefined && t.matches('[data-nav]')){
+    if(t.dataset.nav){ setPath.push(t.dataset.nav); renderDrawer(); }
+    else flash(setPath[setPath.length-1] === 'eng' ? 'ENGINEERING LOGIN REQUIRED' : `${t.dataset.lbl.toUpperCase()}: NOTHING TO CHANGE TONIGHT`);
+    return;
+  }
+  const k = t.dataset.k; if(!k) return;
+  if(t.classList.contains('tg')) S[k] = !S[k];
+  else if(t.dataset.v !== undefined) S[k] = t.dataset.v;
+  else if(t.dataset.d) S[k] = Math.round((+S[k] + +t.dataset.d)*100)/100;
+  applyS(k); renderDrawer();
+});
+$('#drawer').addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-nav],[data-join]')){ e.preventDefault(); e.target.click(); } });
+$('#drawer').addEventListener('change', e => { const i = e.target.closest('input.tf'); if(!i) return; S[i.dataset.k] = i.value; applyS(i.dataset.k); i.blur(); renderDrawer(); });
+function restartFromStatus(kind, ds){
+  if(!running) return;
+  if(kind === 'in' || kind === 'allin'){
+    const dead = deadCam();
+    if(kind === 'in' && ds.a !== dead) return flash(`IN ${INPUT_NO[ds.a]} RESTARTED. IT WAS FINE`);
+    return flash(dead ? `IN ${INPUT_NO[dead]} RESTARTED. STILL NO VIDEO: CHECK THE SOURCE FORMAT` : 'ALL INPUTS RESTARTED');
+  }
+  if(kind === 'out' || kind === 'allout'){
+    const list = kind === 'out' ? [outs[+ds.o]] : outs;
+    list.forEach(o => { o.blackUntil = now + 3; if(o.replay){ o.replay.abort = true; } });
+    return flash(`${list.map(o => o.name).join(' AND ')} RESTARTED: 3 SECONDS OF BLACK`);
+  }
+  flash(kind === 'unused' ? 'NOTHING PLUGGED INTO THAT INPUT' : 'MONTAGE OUTPUT RESTARTED');
+}
+
+/* ---------- fit ---------- */
+const stage = $('#stage'), rcp = $('#rcp'), rcpWrap = $('#rcpWrap');
 function fit(){
-  const k = Math.min(innerWidth/1920, innerHeight/1080);
-  stage.style.setProperty('--k', k);
+  stage.style.setProperty('--k', Math.min(innerWidth/1920, innerHeight/1080));
   const s = Math.min(1, rcpWrap.clientWidth/760, rcpWrap.clientHeight/rcp.offsetHeight);
   rcp.style.transform = `scale(${s})`;
 }
@@ -1390,13 +2019,13 @@ if(document.fonts) document.fonts.ready.then(fit);
 /* ---------- boot ---------- */
 show = buildShow(42);
 stats = {aired:0, clean:0, missed:0, fixed:0, faults:0, dead:0, best:0, wrong:0};
-renderHealth(); fit();
+fit();
 let last = performance.now(), demoT = 0;
 function frame(ts){
   const dt = Math.min(.1, (ts - last)/1000); last = ts;
   if(running && !paused) update(dt);
-  else if(!running && !ended){ demoT += dt; now = demoT % 60; playhead = now; }
-  render();
+  else if(!running && !ended){ demoT += dt; now = demoT % 60; outs.forEach(o => o.playhead = now); }
+  render(); audioTick();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
