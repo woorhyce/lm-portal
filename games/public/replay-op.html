@@ -309,21 +309,27 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="startH">
     <header><h2 id="startH">You’re on replay tonight</h2></header>
     <div class="in">
-      <p>When the producer calls a replay, find it on the record trains, mark IN and OUT, pick the camera, and roll it. TAKE rolls at the lever’s speed. PLAY rolls at real time.</p>
-      <p>Hit Mark when you see a play happen live, then Last Cue jumps right back to it. ENTER saves the marked clip to the next Clip View slot, and F1 to F10 recall slots.</p>
+      <p>When the producer calls a replay, find it on the record trains, mark IN and OUT, pick the camera, and roll it. Space plays at the lever’s speed. The panel’s PLAY rolls at real time.</p>
+      <p>The keyboard uses real DreamCatcher shortcuts. Make an event when you see a play live, then the panel’s Last Cue jumps right back to it. Backslash creates the clip in the next Clip View slot.</p>
       <p>When the panel or System Status goes red, troubleshoot it. Black on air costs you, so pick the least disruptive fix.</p>
       <div class="controls">
-        <kbd>1–4</kbd><span>Camera A to D</span>
-        <kbd>I / O</kbd><span>Mark IN, mark OUT</span>
-        <kbd>G</kbd><span>Goto IN</span>
-        <kbd>R</kbd><span>RECORD (back to E-E live)</span>
-        <kbd>M / C</kbd><span>Mark, Last Cue</span>
-        <kbd>Space</kbd><span>TAKE at lever speed (Shift+Space: PLAY real time)</span>
-        <kbd>← →</kbd><span>Jog a frame (Shift: one second). F toggles Fast Jog</span>
-        <kbd>↑ ↓</kbd><span>Lever up or down 5%</span>
-        <kbd>Enter / F1–F10</kbd><span>Save clip, recall slot</span>
-        <kbd>P</kbd><span>Pause</span>
+        <kbd>[  /  ]</kbd><span>Mark IN, mark OUT</span>
+        <kbd>Shift+{  /  Shift+}</kbd><span>Go to IN, go to OUT</span>
+        <kbd>\</kbd><span>Create clip</span>
+        <kbd>Backspace</kbd><span>Clear IN and OUT marks</span>
+        <kbd>Space or F1</kbd><span>Play or pause (at the lever’s speed)</span>
+        <kbd>Enter</kbd><span>Queue the current clip</span>
+        <kbd>,  /  .</kbd><span>Jog back, jog forward (Shift+&lt; / Shift+&gt;: medium)</span>
+        <kbd>Ctrl+Shift+&lt; / &gt;</kbd><span>Decrease or increase play speed</span>
+        <kbd>Pause / Shift+Pause</kbd><span>Record (live, clears marks), Return (live, keeps marks)</span>
+        <kbd>M / Alt+M</kbd><span>Create event, create event at live</span>
+        <kbd>1–0</kbd><span>Go to slot 1 to 10</span>
+        <kbd>Shift+:</kbd><span>Go to timecode</span>
+        <kbd>A</kbd><span>Alternate angles (camera A to D)</span>
+        <kbd>Ctrl+Alt+R</kbd><span>Restart VUE (UI only)</span>
+        <kbd>Both Shifts</kbd><span>Mark the logs</span>
       </div>
+      <p style="font-size:13px;color:var(--sub)">Most Mac keyboards have no Pause key: use the panel’s RECORD key. Pause the game with the toolbar button.</p>
       <button class="cta" id="startBtn" type="button">Start the show</button>
     </div>
   </div>
@@ -333,6 +339,13 @@ canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
     <header><h2 id="endH">That’s a wrap</h2></header>
     <div class="in"><p id="endTitle"></p><div class="results" id="results"></div>
       <button class="cta" id="againBtn" type="button">Run another show</button></div>
+  </div>
+</div>
+<div class="overlay" id="tcOv" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tcH" style="width:min(360px,100%)">
+    <header><h2 id="tcH">Go to Timecode</h2></header>
+    <div class="in"><p>Type the timecode and press Enter. Leading digits you skip come from the current timecode.</p>
+      <input id="tcIn" inputmode="numeric" autocomplete="off" aria-label="Timecode" style="width:100%;font:700 26px 'Roboto Condensed',sans-serif;padding:8px 10px;border-radius:4px;border:1px solid #47557c;background:#11182a;color:#fff;letter-spacing:.06em"></div>
   </div>
 </div>
 <div class="overlay" id="conOv" hidden>
@@ -816,7 +829,11 @@ function key(k){
       if(markIn != null && playhead <= markIn) return flash('OUT MUST BE AFTER IN');
       markOut = playhead; selSlot = -1; flash(`OUT ${tc(markOut)}`); return;
     case 'clip': if(sh){ page = (page+1)%2; slotsDirty = true; flash(`CLIP VIEW PAGE ${page+1}`); return; } goIn(); return;
-    case 'rec': pvwLive = true; playhead = now; return;
+    case 'rec':
+      pvwLive = true; playhead = now;
+      if(sh) flash('RETURN: LIVE, MARKS KEPT');
+      else { markIn = markOut = null; selSlot = -1; flash('RECORD: LIVE, MARKS CLEARED'); }
+      return;
     case 'mark':
       if(sh){ fastJog = !fastJog; flash(fastJog ? 'FAST JOG ON' : 'FAST JOG OFF'); return; }
       { const t = pvwLive ? now : playhead; marks.push(t); lastCue = t; flash(`MARK ${tc(t)}`); } return;
@@ -990,7 +1007,8 @@ function update(dt){
   if(pvwLive) playhead = now;
   playhead = clamp(playhead, trainStart, now);
   if(replay){
-    if(replay.pos < replay.out) replay.pos = Math.min(replay.out, replay.pos + dt*Math.max(replay.speed,5)/100);
+    if(replay.paused) {}
+    else if(replay.pos < replay.out) replay.pos = Math.min(replay.out, replay.pos + dt*Math.max(replay.speed,5)/100);
     else { replay.hold += dt; if(replay.hold > .7) finishReplay(); }
   }
   for(const pl of show.plays){
@@ -1020,13 +1038,12 @@ function update(dt){
 function endShow(){
   running = false; ended = true; closeConsole();
   const s = Math.round(score);
-  let hi = 0; try { hi = +localStorage.getItem('rop-hi') || 0; if(s > hi){ hi = s; localStorage.setItem('rop-hi', String(s)); } } catch(e) {}
   $('#endTitle').textContent =
     s >= 5000 ? 'Lead replay op. They want you on the big game crew.' :
     s >= 3000 ? 'Solid shift. The producer bought you a coffee.' :
     s >= 1200 ? 'You got through it. The producer has notes.' :
     s >= 0 ? 'Rough night. Maybe Ctrl+Alt+R yourself.' : 'The TD is drafting the incident report.';
-  const rows = [['Final score', s],['Personal best', hi],['Replays aired', stats.aired],['Clean replays', stats.clean],['Calls missed', stats.missed],
+  const rows = [['Final score', s],['Replays aired', stats.aired],['Clean replays', stats.clean],['Calls missed', stats.missed],
     ['Best replay', stats.best],['Faults fixed', `${stats.fixed} of ${stats.faults}`],['Wrong fixes tried', stats.wrong],['Seconds of black on air', Math.round(stats.dead)]];
   $('#results').innerHTML = rows.map(([k,v]) => `<span>${k}</span><b>${v}</b>`).join('');
   $('#endOv').hidden = false; $('#againBtn').focus();
@@ -1242,31 +1259,110 @@ jog.addEventListener('wheel', e => {
 }, {passive:false});
 
 /* ---------- keyboard ---------- */
+/* keyboard: real DreamCatcher shortcuts (VUE Dreamcatcher Keyboard Shortcuts sheet) */
+const shiftDown = {ShiftLeft:false, ShiftRight:false};
+addEventListener('keyup', e => { if(e.code in shiftDown) shiftDown[e.code] = false; });
+addEventListener('blur', () => { shiftDown.ShiftLeft = shiftDown.ShiftRight = false; });
 addEventListener('keydown', e => {
+  if(e.code in shiftDown){
+    shiftDown[e.code] = true;
+    if(shiftDown.ShiftLeft && shiftDown.ShiftRight && running && !paused && !e.repeat) flash('MARK THE LOGS: OP_MARK IN VUE.LOG');
+    return;
+  }
+  if(!$('#tcOv').hidden) return;
   if(!$('#conOv').hidden){ if(e.key === 'Escape') closeConsole(); return; }
   if(!$('#startOv').hidden || !$('#endOv').hidden) return;
   const tag = e.target && e.target.tagName;
   if(tag === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
-  if(!running) return;
-  const k = e.key;
-  const fm = /^F(\d+)$/.exec(k);
-  if(fm && +fm[1] <= 10){ e.preventDefault(); key(k); return; }
-  if(k === 'p' || k === 'P'){ togglePause(); return; }
-  if(k >= '1' && k <= '4') key(ANGLES[+k - 1]);
-  else if(k === 'i' || k === 'I') key('in');
-  else if(k === 'o' || k === 'O') key('out');
-  else if(k === 'g' || k === 'G'){ shift = true; key('in'); }
-  else if(k === 'r' || k === 'R' || k === 'l' || k === 'L') key('rec');
-  else if(k === 'm' || k === 'M') key('mark');
-  else if(k === 'c' || k === 'C') key('cue');
-  else if(k === 'f' || k === 'F'){ shift = true; key('mark'); }
-  else if(k === 'x' || k === 'X') key('clear');
-  else if(k === 'Enter'){ e.preventDefault(); key('enter'); }
-  else if(k === ' '){ e.preventDefault(); key(e.shiftKey ? 'play' : 'take'); }
-  else if(k === 'ArrowLeft' || k === 'ArrowRight'){ e.preventDefault(); const d = (k === 'ArrowLeft' ? -1 : 1)*(e.shiftKey ? 1 : 1/FPS); jogRot += d*2; if(!paused) scrub(d); }
-  else if(k === 'ArrowUp'){ e.preventDefault(); lever = clamp(lever + 5, 0, 100); }
-  else if(k === 'ArrowDown'){ e.preventDefault(); lever = clamp(lever - 5, 0, 100); }
+  if(!running || paused || conFault) return;
+  const k = e.key, c = e.code, ctrl = e.ctrlKey || e.metaKey;
+  if(ctrl && e.altKey && c === 'KeyR'){ e.preventDefault(); restartUI(); return; }
+  if(ctrl && e.shiftKey && c === 'Comma'){ e.preventDefault(); stepSpeed(-1); return; }
+  if(ctrl && e.shiftKey && c === 'Period'){ e.preventDefault(); stepSpeed(1); return; }
+  if(ctrl) return;
+  if(e.altKey && c === 'KeyM'){ e.preventDefault(); eventAt(true); return; }
+  if(e.altKey) return;
+  if(k === 'Pause'){ e.preventDefault(); shift = e.shiftKey; key('rec'); return; }
+  if(k === ' ' || k === 'F1'){ e.preventDefault(); playPause(); return; }
+  if(k === 'Enter'){ e.preventDefault(); cueCurrent(); return; }
+  if(k === ':' || (e.shiftKey && c === 'Semicolon')){ e.preventDefault(); openTC(); return; }
+  if(c === 'Comma'){ e.preventDefault(); jogKey(e.shiftKey ? -1 : -1/FPS); return; }
+  if(c === 'Period'){ e.preventDefault(); jogKey(e.shiftKey ? 1 : 1/FPS); return; }
+  if(c === 'BracketLeft'){ e.preventDefault(); shift = e.shiftKey; key('in'); return; }
+  if(c === 'BracketRight'){ e.preventDefault(); shift = e.shiftKey; key('out'); return; }
+  if(c === 'Backslash'){ e.preventDefault(); key('enter'); return; }
+  if(k === 'Backspace'){ e.preventDefault(); key('clear'); return; }
+  if(c === 'KeyM'){ e.preventDefault(); eventAt(false); return; }
+  if(c === 'KeyA'){ e.preventDefault(); if(e.shiftKey) flash('ANGLES: A WIDE  B TIGHT  C END ZONE  D HIGH 50'); else cycleAngle(); return; }
+  if(c === 'KeyC'){ e.preventDefault(); flash('CAMERA MODE: USE A TO ALTERNATE ANGLES'); return; }
+  const dm = /^Digit(\d)$/.exec(c);
+  if(dm){ e.preventDefault(); const n = dm[1] === '0' ? 10 : +dm[1];
+    if(e.shiftKey){ if(n <= 2){ page = n - 1; slotsDirty = true; flash(`BANK ${n}`); } else flash(`BANK ${n} IS EMPTY`); }
+    else recall(n - 1);
+    return; }
+  if(k === 'ArrowLeft' || k === 'ArrowRight'){ e.preventDefault(); page = (page + 1) % 2; slotsDirty = true; flash(`BANK ${page + 1}`); return; }
+  if(k === 'Escape'){ selSlot = -1; slotsDirty = true; flash('SELECTION CANCELLED'); return; }
 });
+function jogKey(d){ jogRot += d*2; scrub(d); }
+function cycleAngle(){
+  if(!panelOK()) return;
+  selAngle = ANGLES[(ANGLES.indexOf(selAngle) + 1) % 4]; selSlot = -1;
+  flash(`ANGLE ${selAngle}  ${ANGLE_NAMES[selAngle]}`);
+}
+function eventAt(live){
+  if(!panelOK()) return;
+  const t = live || pvwLive ? now : playhead;
+  marks.push(t); lastCue = t; flash(`${live ? 'EVENT AT LIVE' : 'EVENT'} ${tc(t)}`);
+}
+function cueCurrent(){
+  if(!panelOK()) return;
+  if(selSlot >= 0 && slots[page][selSlot]) return recall(selSlot);
+  if(markIn == null) return flash('NOTHING TO QUEUE');
+  goIn(); flash(`QUEUED ${tc(markIn)}`);
+}
+function playPause(){
+  if(!panelOK()) return;
+  if(replay){ replay.paused = !replay.paused; flash(replay.paused ? 'PAUSED ON AIR' : 'PLAYING'); return; }
+  roll(lever);
+}
+function stepSpeed(dir){
+  lever = clamp(lever + dir*10, 0, 100);
+  if(replay) replay.speed = lever;
+  flash(`PLAY SPEED ${lever}%`);
+}
+function restartUI(){
+  const f = activeId('gui_freeze');
+  if(f){
+    f.resolved = true; stats.fixed++; healthDirty = true;
+    const pts = 250 + Math.max(0, Math.round(200 - 10*(now - f.t)));
+    score += pts; flash(`CTRL+ALT+R: VUE RESTARTED  +${pts}`, 3);
+  } else flash('CTRL+ALT+R: VUE RESTARTED (UI ONLY)');
+}
+/* Go to Timecode (Shift+:) */
+function openTC(){
+  if(!panelOK()) return;
+  if(active('blue')) return flash('TIME UNKNOWN: CANNOT CUE');
+  const i = $('#tcIn'); i.value = ''; i.placeholder = tc(playhead).replace(/:/g, '');
+  $('#tcOv').hidden = false; i.focus();
+}
+function closeTC(){ $('#tcOv').hidden = true; }
+$('#tcIn').addEventListener('keydown', e => {
+  e.stopPropagation();
+  if(e.key === 'Escape'){ e.preventDefault(); closeTC(); return; }
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const d = $('#tcIn').value.replace(/\D/g, '').slice(-8);
+  closeTC();
+  if(!d) return;
+  const cur = tc(playhead).replace(/:/g, '');
+  const full = cur.slice(0, 8 - d.length) + d;
+  const [hh, mm, ss, ff] = [0,2,4,6].map(i => +full.slice(i, i+2));
+  const t = hh*3600 + mm*60 + ss + ff/FPS - TC_BASE;
+  if(t < trainStart || t > now) return flash(`${full.replace(/(\d\d)(?=\d)/g,'$1:')} NOT ON TRAIN`);
+  cueTo(t);
+});
+$('#tcOv').addEventListener('click', e => { if(e.target.id === 'tcOv') closeTC(); });
+
 function togglePause(){
   if(!running) return;
   paused = !paused;

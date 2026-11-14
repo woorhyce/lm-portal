@@ -17,16 +17,27 @@ Four DreamCatcher training games in one place. Good for new operators, and for a
 
 ## Replay Op keys
 
+Replay Op uses the real DreamCatcher keyboard shortcuts.
+
 | Key | Does |
 |---|---|
-| 1 to 4 | Camera A to D |
-| I / O | Mark IN, mark OUT |
-| M, then C | Mark a moment live, then Last Cue jumps back to it |
-| Space | TAKE at the lever's speed (Shift+Space: PLAY at real time) |
-| ← → | Jog a frame (Shift: one second) |
-| ↑ ↓ | Lever up or down 5% |
-| Enter, F1 to F10 | Save the clip, recall a Clip View slot |
-| P | Pause |
+| [ / ] | Mark IN, mark OUT |
+| Shift+{ / Shift+} | Go to IN, go to OUT |
+| \ | Create clip (next Clip View slot) |
+| Backspace | Clear IN and OUT marks |
+| Space or F1 | Play or pause, at the lever's speed |
+| Enter | Queue the current clip |
+| , / . | Jog back, jog forward (Shift+< / Shift+>: medium) |
+| Ctrl+Shift+< / > | Decrease or increase play speed |
+| Pause / Shift+Pause | Record (live, clears marks), Return (live, keeps marks) |
+| M / Alt+M | Create event, create event at live |
+| 1 to 0 | Go to slot 1 to 10 |
+| Shift+: | Go to timecode |
+| A | Alternate angles (camera A to D) |
+| Ctrl+Alt+R | Restart VUE (UI only) |
+| Both Shift keys | Mark the logs |
+
+Most Mac keyboards have no Pause key: use the panel's RECORD key instead.
 
 ## Notes
 
