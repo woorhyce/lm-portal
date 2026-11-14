@@ -42,7 +42,7 @@ export default {
 
     if (url.pathname === "/api/tools") {
       const { results } = await env.DB.prepare(
-        "SELECT * FROM tools WHERE enabled = 1 ORDER BY sort, name"
+        "SELECT t.*, (SELECT MAX(r.date) FROM releases r WHERE r.slug = t.slug) AS last_release FROM tools t WHERE t.enabled = 1 ORDER BY t.sort, t.name"
       ).all();
       const tools = results.map((t) => ({
         ...t,

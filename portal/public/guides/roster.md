@@ -29,5 +29,7 @@ Builds a whole game package at once: **home roster**, **away roster** and a **pl
 
 ## Notes
 
-- Supported: football, basketball, soccer, volleyball, baseball, softball, lacrosse, field hockey, hockey, tennis. Wrestling, track & field, gymnastics and bowling are marked with an asterisk in the tool; check their output closely.
+- Fully supported: football, basketball, soccer, volleyball, baseball, softball, lacrosse, field hockey, hockey.
+- Partly supported (asterisk in the tool): wrestling (weight class in the Number column, class year in the third), track & field (no numbers, event group in the third column), gymnastics (no number or position, class year), bowling (no position, class year).
+- Tennis isn't supported yet; send a sample paste so it can be added.
 - Everything runs in your browser; rosters aren't uploaded anywhere.

@@ -6,34 +6,26 @@
 <title>Live-Media Tool Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('lmmon-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js"></script>
 <style>
 :root{
-  --bg:#141a26; --panel:#171e2c; --card:#1a2231; --line:#283246; --text:#e8ecf3; --muted:#9aa5b8;
-  --accent:#7aa7ef; --accent-ink:#0e1a30; --warn-bg:#3a2a12; --warn:#f2b866; --local-bg:#152a2a; --local:#6fd3c4;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-}
-:root[data-theme="light"]{
-  --bg:#f4f6fa; --panel:#ffffff; --card:#ffffff; --line:#dde3ec; --text:#152033; --muted:#5c6880;
-  --accent:#2f6bd8; --accent-ink:#ffffff; --warn-bg:#fdf0db; --warn:#9a5b00; --local-bg:#ddf4f0; --local:#0d6b5e;
+  --panel:var(--rail-bg); --card:var(--surface); --text:var(--ink); --muted:var(--ink-soft);
+  --warn-bg:var(--caution-soft); --warn:var(--caution-ink); --local-bg:var(--good-soft); --local:var(--good-txt);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+.identity-bar .identity-bar .who + .theme-switch{margin-left:18px}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-header{display:flex;align-items:center;gap:16px;height:48px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line)}
-.logo{font:600 17px var(--mono);letter-spacing:.12em}
-.logo b{color:var(--accent);font-weight:600}
-.sub{font:600 11px var(--mono);letter-spacing:.12em;color:var(--muted);padding-left:16px;border-left:1px solid var(--line)}
-.spacer{flex:1}
 .who{font-size:12px;color:var(--muted)}
-.theme{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 10px;font:12px var(--sans);cursor:pointer}
-.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100% - 48px)}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100% - var(--bar-h))}
 nav{background:var(--panel);border-right:1px solid var(--line);padding:16px 0}
 nav h3{font:600 10px var(--mono);letter-spacing:.12em;color:var(--muted);margin:8px 14px}
 nav button,nav a{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--text);font:600 13px var(--sans);text-align:left;text-decoration:none;cursor:pointer}
-nav button.on{background:rgba(122,167,239,.1);box-shadow:inset 3px 0 var(--accent)}
+nav button.on{background:var(--accent-soft);box-shadow:inset 3px 0 var(--accent)}
 nav .n{margin-left:auto;font:11px var(--mono);color:var(--muted)}
 nav a{font-weight:400;font-size:12.5px}
 nav h3.recent{margin-top:24px}
@@ -42,10 +34,10 @@ main{padding:28px 32px;max-width:1500px}
 .top h1{margin:0;font-size:22px}
 .count{color:var(--muted);font-size:12px}
 .search{margin-left:auto;width:min(320px,100%);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:13px var(--sans)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
 .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;min-height:210px}
 .head{display:flex;gap:12px;align-items:center}
-.ico{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:rgba(122,167,239,.1);color:var(--accent);flex:none}
+.ico{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
 .ico svg{width:20px;height:20px}
 .name{font-weight:600;font-size:15px}
 .cat{font:11px var(--mono);color:var(--muted);letter-spacing:.06em}
@@ -54,16 +46,17 @@ main{padding:28px 32px;max-width:1500px}
 .tag.file{background:var(--warn-bg);color:var(--warn)}
 .tag.local{background:var(--local-bg);color:var(--local)}
 .desc{color:var(--muted);font-size:13px;margin:12px 0 14px;flex:1}
-.foot{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.foot{display:flex;align-items:center;flex-wrap:wrap;row-gap:8px;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 .ver{font:600 12px var(--mono)}
 .date{font-size:12px;color:var(--muted)}
-.open{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 14px;border-radius:999px}
+.open{margin-left:auto;background:var(--save);color:var(--on-accent);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 14px;border-radius:999px}
 .dls{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
-.dl{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 13px;border-radius:999px}
+.dl{display:inline-flex;align-items:center;gap:6px;background:var(--save);color:var(--on-accent);text-decoration:none;font-weight:600;font-size:12.5px;padding:6px 13px;border-radius:999px}
 .dl svg{width:14px;height:14px}
 .vd{display:flex;flex-direction:column;line-height:1.3;white-space:nowrap}
 .open,.notes-btn{white-space:nowrap}
 .notes-btn{background:none;border:1px solid var(--line);color:var(--muted);font:600 12px var(--sans);padding:5px 11px;border-radius:999px;cursor:pointer}
+.notes-btn .nb-date{margin-left:6px;padding-left:7px;border-left:1px solid var(--line);font:600 11px var(--mono);color:var(--ink-soft)}
 .notes-btn:hover{color:var(--text);border-color:var(--muted)}
 dialog{width:min(560px,92vw);max-height:80vh;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}
 dialog::backdrop{background:rgba(5,8,14,.6)}
@@ -101,12 +94,9 @@ dialog.wide{width:min(820px,94vw)}
 </head>
 <body>
 <div id="banner" class="banner" hidden>Showing sample data. The tools API isn’t reachable from this page.</div>
-<header>
-  <div class="logo">LIVE-<b>MEDIA</b></div>
-  <div class="sub">TOOL LIBRARY</div>
-  <div class="spacer"></div>
-  <div class="who" id="who"></div>
-  <button class="theme" id="theme">Light</button>
+<header class="identity-bar" id="identityBar">
+  <div class="identity-brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 181.40 20" role="img" aria-label="Live Media"><g transform="translate(7,5)" fill="none" stroke-width="1.45" stroke-linecap="square" stroke-linejoin="round"><path d="M0,0 V7.4 Q0,10 2.6,10 H17" transform="translate(0.00,0)" stroke="#ffffff"/><path d="M0,0 V10" transform="translate(21.60,0)" stroke="#ffffff"/><path d="M0,0 L8.5,10 L17,0" transform="translate(26.20,0)" stroke="#ffffff"/><path d="M17,0 H2.6 Q0,0 0,2.6 V7.4 Q0,10 2.6,10 H17" transform="translate(47.80,0)" stroke="#ffffff"/><path d="M0,5.0 H14" transform="translate(47.80,0)" stroke="#ffffff"/><path d="M0,5.0 H7" transform="translate(69.40,0)" stroke="#3d8bea"/><path d="M0,10 V2.6 Q0,0 2.6,0 H14.4 Q17,0 17,2.6 V10" transform="translate(81.00,0)" stroke="#3d8bea"/><path d="M8.5,0 V10" transform="translate(81.00,0)" stroke="#3d8bea"/><path d="M17,0 H2.6 Q0,0 0,2.6 V7.4 Q0,10 2.6,10 H17" transform="translate(102.60,0)" stroke="#3d8bea"/><path d="M0,5.0 H14" transform="translate(102.60,0)" stroke="#3d8bea"/><path d="M0,0 H14.4 Q17,0 17,2.6 V7.4 Q17,10 14.4,10 H0 Z" transform="translate(124.20,0)" stroke="#3d8bea"/><path d="M0,0 V10" transform="translate(145.80,0)" stroke="#3d8bea"/><path d="M0,10 V2.6 Q0,0 2.6,0 H14.4 Q17,0 17,2.6 V10" transform="translate(150.40,0)" stroke="#3d8bea"/><path d="M0,5.8 H17" transform="translate(150.40,0)" stroke="#3d8bea"/></g></svg><span class="brand-suffix">Tool Library</span></div>
+  <span class="who" id="who"></span>
 </header>
 <div class="layout">
   <nav>
@@ -151,8 +141,8 @@ const ICONS = {
   box:'<rect x="4" y="4" width="16" height="16" rx="2"/>'
 };
 const SAMPLE = [
- {slug:'admin',name:'LM Admin Tools',category:'Admin',description:'Per diem, RMA, travel requests, trip reports, vacation, travel dates and weekly summary builders.',version:'2.2',updated:'2026-10-16',icon:'briefcase',url:'#'},
- {slug:'commissioning',name:'LM Commissioning',category:'Commissioning',description:'Project-based commissioning: server, Matrox and I/O setup, Operational Settings, and Package & Deploy for per-server .efp files.',version:'latest',icon:'wrench',file_needed:true,url:'#'},
+ {slug:'admin',name:'LM Admin Tools',category:'Admin',description:'Per diem, RMA, travel requests, trip reports, vacation, travel dates and weekly summary builders.',version:'2.2',updated:'2026-10-16',last_release:'2026-10-16',icon:'briefcase',url:'#'},
+ {slug:'commissioning',name:'LM Commissioning',category:'Commissioning',description:'Project-based commissioning: server, Matrox and I/O setup, Operational Settings, and Package & Deploy for per-server .efp files.',version:'2.50',updated:'2026-11-13',last_release:'2026-11-13',icon:'wrench',url:'#'},
  {slug:'health',name:'LM Health Report',category:'Monitoring',description:'Installable DreamCatcher cluster health check (.efp). Pick the build for the server: Trusty or Live Media.',version:'latest',icon:'heart',downloads:[{label:'Trusty',url:'#'},{label:'Live Media',url:'#'}]},
  {slug:'monitoring',name:'LM Monitoring',category:'Monitoring',description:'Live, read-only 2110 view of DreamCatcher Matrox cards from the NMOS API. IO map, Red/Blue lanes, SDP compare across servers.',version:'1.0.80',updated:'2026-11-10',icon:'pulse',local_only:true,url:'#'},
  {slug:'core-builder',name:'LM Core Builder',category:'Documentation',description:'Draws rear and front plates for an LM-CORE build: model, input card, SDI I/O config and front PCIe slot. Exports PNG.',version:'0.1',updated:'2026-10-30',icon:'grid',file_needed:true,url:'#'},
@@ -166,6 +156,7 @@ const SAMPLE = [
 let tools = [], cat = 'All tools';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtShort = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
 const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
 const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]||ICONS.box}</svg>`;
 
@@ -189,8 +180,8 @@ function render(){
       <p class="desc">${esc(t.description)}</p>
       ${t.downloads ? `<div class="dls">${t.downloads.map(d => `<a class="dl" href="${esc(d.url)}" download>${svg('download')}${esc(d.label)}</a>`).join('')}</div>` : ''}
       <div class="foot"><div class="vd"><span class="ver">${/^\d/.test(t.version)?'v'+esc(t.version):'Latest'}</span>
-        <span class="date">${fmtDate(t.updated)}</span></div>
-        <button class="notes-btn" data-notes="${esc(t.slug)}" style="margin-left:auto">Release notes</button>
+        </div>
+        <button class="notes-btn" data-notes="${esc(t.slug)}" style="margin-left:auto">Release notes${(t.last_release||t.updated) ? `<span class="nb-date">${fmtShort(t.last_release||t.updated)}</span>` : ''}</button>
         ${t.downloads ? '' : `<a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a>`}</div>
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
@@ -255,15 +246,15 @@ $('grid').addEventListener('click', e => { const b = e.target.closest('[data-not
 $('dlg-close').onclick = () => $('dlg').close();
 $('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
 
-function setTheme(t){ document.documentElement.dataset.theme = t; $('theme').textContent = t==='dark'?'Light':'Dark';
-  try{ localStorage.setItem('lm-theme', t) }catch{} }
-let saved; try{ saved = localStorage.getItem('lm-theme') }catch{}
-setTheme(saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
-$('theme').onclick = () => {
-  const t = document.documentElement.dataset.theme==='dark'?'light':'dark';
-  setTheme(t);
-  fetch('/api/prefs', {method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify({theme:t})}).catch(()=>{});
-};
+let serverTheme = null;
+function setTheme(t){ serverTheme = t; LMUI.setTheme(t); }
+new MutationObserver(() => {
+  const t = document.documentElement.getAttribute('data-theme');
+  if ((t === 'light' || t === 'dark') && t !== serverTheme) {
+    serverTheme = t;
+    fetch('/api/prefs', {method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify({theme:t})}).catch(()=>{});
+  }
+}).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
 
 (async () => {
   try {

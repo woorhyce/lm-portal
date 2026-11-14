@@ -2,26 +2,16 @@
 <html lang="en">
 <head>
 <script src="/lm-sync.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js" data-suffix="Roster Converter"></script>
 <meta charset="UTF-8">
 <title>Roster → Vueweb CSV</title>
 <style>
   :root{
-    --bg:#12181f;
-    --bg-alt:#1a222c;
-    --panel:#1c252f;
-    --panel-header:#232d38;
-    --line:#2f3944;
-    --ink:#e7edf3;
-    --ink-dim:#8f9aa6;
-    --field:#161d25;
-    --accent:#2b8ce0;      /* Media Suite blue */
-    --accent-dim:#1f6bb0;
-    --topbar:#0c2340;      /* deep navy header band */
-    --topbar-line:#173963;
-    --ok:#4fb477;
-    --err:#e2664f;
-    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --bg-alt:var(--rail-bg); --panel:var(--surface); --panel-header:var(--rail-bg);
+    --ink-dim:var(--ink-soft); --field:var(--bg); --accent-dim:var(--accent);
+    --topbar:var(--banner); --topbar-line:var(--line); --ok:var(--good-txt);
   }
   *{box-sizing:border-box;}
   body{
@@ -39,18 +29,18 @@
   }
   .topbar .brand{
     display:flex; align-items:center; gap:10px;
-    font-weight:700; letter-spacing:.08em; font-size:15px; color:#fff;
+    font-weight:700; letter-spacing:.08em; font-size:15px; color:var(--ink);
     text-transform:uppercase;
   }
   .brand-mark{
     width:26px; height:26px; border-radius:6px;
     background:linear-gradient(135deg, var(--accent), #1a4d80);
     display:flex; align-items:center; justify-content:center;
-    font-size:13px; font-weight:800; color:#fff;
+    font-size:13px; font-weight:800; color:var(--ink);
   }
   .topbar .divider{ width:1px; height:20px; background:var(--topbar-line); margin:0 4px; }
-  .topbar .crumb{ color:#7fa8d0; font-size:13px; font-family:var(--mono); }
-  .topbar .crumb strong{ color:#fff; font-weight:600; }
+  .topbar .crumb{ color:var(--ink-soft); font-size:13px; font-family:var(--mono); }
+  .topbar .crumb strong{ color:var(--ink); font-weight:600; }
 
   .wrap{ width:100%; max-width:960px; margin:0 auto; padding:28px 20px 0; }
 
@@ -62,7 +52,7 @@
     cursor:pointer; background:none; border-top:none; border-left:none; border-right:none;
     font-family:var(--sans);
   }
-  .modetab.active{ color:#fff; border-bottom-color:var(--accent); }
+  .modetab.active{ color:var(--ink); border-bottom-color:var(--accent); }
   .modepanel{ display:none; }
   .modepanel.active{ display:block; }
 
@@ -71,23 +61,23 @@
     font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--accent); margin:0 0 6px;
   }
-  h1{ font-size:22px; margin:0 0 8px; letter-spacing:-0.01em; color:#fff; font-weight:600; }
+  h1{ font-size:22px; margin:0 0 8px; letter-spacing:-0.01em; color:var(--ink); font-weight:600; }
   p.sub{ margin:0; color:var(--ink-dim); font-size:13.5px; line-height:1.55; max-width:64ch; }
 
   .steps{
-    margin-top:16px; background:#132433; border:1px solid #21415c; border-radius:6px;
+    margin-top:16px; background:var(--accent-soft); border:1px solid var(--line); border-radius:6px;
     padding:14px 18px;
   }
   .steps-title{
     font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em;
-    color:#6fb2ea; font-weight:700; margin-bottom:8px;
+    color:var(--accent-ink); font-weight:700; margin-bottom:8px;
   }
   .steps ol{ margin:0; padding-left:20px; }
-  .steps li{ font-size:13px; color:#c3d3e0; line-height:1.65; }
-  .steps strong{ color:#fff; }
+  .steps li{ font-size:13px; color:var(--ink-soft); line-height:1.65; }
+  .steps strong{ color:var(--ink); }
 
   .sports{
-    margin-top:14px; background:#161f28; border:1px solid var(--line); border-radius:6px;
+    margin-top:14px; background:var(--rail-bg); border:1px solid var(--line); border-radius:6px;
     padding:14px 18px;
   }
   .sports-title{
@@ -100,9 +90,9 @@
     font-size:12px; font-weight:600; padding:5px 11px; border-radius:20px;
     border:1px solid transparent;
   }
-  .tag.ok{ background:#152e22; color:#5fce8f; border-color:#215c3d; }
-  .tag.partial{ background:#332a14; color:#e0b23f; border-color:#5c4d1f; }
-  .tag.no{ background:#33201c; color:#e2664f; border-color:#5c332b; }
+  .tag.ok{ background:var(--good-soft); color:var(--good-txt); border-color:var(--good); }
+  .tag.partial{ background:var(--caution-soft); color:var(--caution-ink); border-color:var(--caution); }
+  .tag.no{ background:var(--warn-soft); color:var(--err); border-color:var(--err); }
   .sports-note{
     margin:10px 0 0; font-size:12px; color:var(--ink-dim); line-height:1.6;
   }
@@ -143,7 +133,7 @@
     font-size:14px; font-family:var(--sans); background:var(--field); color:var(--ink);
   }
   input[type=text]:focus, select:focus{ outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent); }
-  input[type=text]::placeholder{ color:#556170; }
+  input[type=text]::placeholder{ color:var(--ink-soft); }
   select{ cursor:pointer; }
   textarea{
     width:100%; min-height:180px; padding:10px; border:1px solid var(--line); border-radius:4px;
@@ -151,26 +141,26 @@
     background:var(--field); color:var(--ink);
   }
   textarea:focus{ outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent); }
-  textarea::placeholder{ color:#556170; }
-  .colhint{ font-size:11px; color:#6b7684; margin-top:6px; font-family:var(--mono); }
+  textarea::placeholder{ color:var(--ink-soft); }
+  .colhint{ font-size:11px; color:var(--ink-soft); margin-top:6px; font-family:var(--mono); }
 
   .format-toggle{ display:flex; gap:10px; flex-wrap:wrap; }
   .format-opt{
     flex:1; min-width:150px; border:1px solid var(--line); border-radius:5px; padding:12px 14px; cursor:pointer;
     background:var(--field);
   }
-  .format-opt.active{ border-color:var(--accent); background:#152332; }
+  .format-opt.active{ border-color:var(--accent); background:var(--accent-soft); }
   .format-opt input{ margin-right:8px; accent-color:var(--accent); }
-  .format-opt .name{ font-weight:600; font-size:13px; color:#fff; }
+  .format-opt .name{ font-weight:600; font-size:13px; color:var(--ink); }
   .format-opt .desc{ font-size:12px; color:var(--ink-dim); margin-top:3px; }
 
   button.primary{
-    background:var(--accent); color:#fff; border:none; border-radius:4px;
+    background:var(--save); color:var(--on-accent); border:none; border-radius:99px;
     padding:11px 22px; font-size:13px; font-weight:700; cursor:pointer;
     font-family:var(--sans); text-transform:uppercase; letter-spacing:.04em;
   }
   button.primary:hover{ background:var(--accent-dim); }
-  button.primary:disabled{ background:#374250; color:#7a8896; cursor:not-allowed; }
+  button.primary:disabled{ background:var(--line); color:var(--ink-soft); cursor:not-allowed; }
   button.primary.big{ padding:14px 30px; font-size:14px; }
 
   .msg{ font-size:12.5px; margin-top:10px; font-family:var(--mono); }
@@ -185,16 +175,16 @@
     font-size:11px; text-transform:uppercase; color:var(--ink-dim); letter-spacing:.06em;
     background:var(--panel-header);
   }
-  table.preview tbody tr:nth-child(even){ background:#1f2934; }
-  table.preview tbody tr:hover{ background:#223140; }
-  table.preview td[contenteditable]:focus{ outline:1.5px solid var(--accent); outline-offset:-1px; background:#152332; }
+  table.preview tbody tr:nth-child(even){ background:var(--line-soft); }
+  table.preview tbody tr:hover{ background:var(--accent-soft); }
+  table.preview td[contenteditable]:focus{ outline:1.5px solid var(--accent); outline-offset:-1px; background:var(--accent-soft); }
 
   /* Game setup two-column team layout */
   .teamgrid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   @media (max-width: 760px){ .teamgrid{ grid-template-columns:1fr; } }
   .teamcol .panel h2{ display:flex; align-items:center; gap:8px; }
-  .teamcol.home h2::before{ content:"HOME"; font-size:10px; letter-spacing:.08em; color:var(--accent); background:#152332; border:1px solid #1f4560; border-radius:3px; padding:2px 6px; }
-  .teamcol.away h2::before{ content:"AWAY"; font-size:10px; letter-spacing:.08em; color:#e0b23f; background:#332a14; border:1px solid #5c4d1f; border-radius:3px; padding:2px 6px; }
+  .teamcol.home h2::before{ content:"HOME"; font-size:10px; letter-spacing:.08em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--line); border-radius:3px; padding:2px 6px; }
+  .teamcol.away h2::before{ content:"AWAY"; font-size:10px; letter-spacing:.08em; color:var(--caution-ink); background:var(--caution-soft); border:1px solid var(--caution); border-radius:3px; padding:2px 6px; }
   .teamcol textarea{ min-height:200px; }
 
   .generate-bar{
@@ -203,19 +193,13 @@
   }
 
   footer{
-    text-align:center; font-size:11.5px; color:#5c6773; margin-top:30px;
+    text-align:center; font-size:11.5px; color:var(--ink-soft); margin-top:30px;
     padding:18px 20px 0; border-top:1px solid var(--line);
   }
-  footer .disclaimer{ margin-top:6px; color:#4a545f; font-size:11px; }
+  footer .disclaimer{ margin-top:6px; color:var(--ink-soft); font-size:11px; }
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="brand"><span class="brand-mark">RC</span>Roster Converter</div>
-  <div class="divider"></div>
-  <span class="crumb">Team Rosters to CSV / <strong>Upload to Metadata Management</strong></span>
-</div>
 
 <div class="wrap">
 
@@ -338,9 +322,9 @@
     </div>
 
     <div class="panel">
-      <h2>Preview <span style="text-transform:none; letter-spacing:0; color:#5c6773; font-weight:400;">click any cell to fix it</span></h2>
+      <h2>Preview <span style="text-transform:none; letter-spacing:0; color:var(--ink-soft); font-weight:400;">click any cell to fix it</span></h2>
       <div class="panel-body">
-        <div id="previewWrap" style="color:#5c6773; font-size:13px;">Paste roster data above to preview.</div>
+        <div id="previewWrap" style="color:var(--ink-soft); font-size:13px;">Paste roster data above to preview.</div>
         <div class="row" style="margin-top:18px;">
           <button class="primary" id="downloadBtn" disabled>Download CSV</button>
         </div>
@@ -384,7 +368,7 @@
     </div>
 
     <div class="panel">
-      <h2>Name Format &amp; Output Format <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#5c6773;">applies to both rosters</span></h2>
+      <h2>Name Format &amp; Output Format <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--ink-soft);">applies to both rosters</span></h2>
       <div class="panel-body">
         <div class="row">
           <div class="field">
@@ -448,7 +432,7 @@
             <textarea id="rawPaste_home" placeholder="Paste the home team's roster here..."></textarea>
             <div class="colhint" id="countRaw_home">0 players detected</div>
             <div class="msg" id="msg_home"></div>
-            <div id="previewWrap_home" style="color:#5c6773; font-size:12.5px; margin-top:12px; max-height:260px; overflow-y:auto;"></div>
+            <div id="previewWrap_home" style="color:var(--ink-soft); font-size:12.5px; margin-top:12px; max-height:260px; overflow-y:auto;"></div>
           </div>
         </div>
       </div>
@@ -473,7 +457,7 @@
             <textarea id="rawPaste_away" placeholder="Paste the away team's roster here..."></textarea>
             <div class="colhint" id="countRaw_away">0 players detected</div>
             <div class="msg" id="msg_away"></div>
-            <div id="previewWrap_away" style="color:#5c6773; font-size:12.5px; margin-top:12px; max-height:260px; overflow-y:auto;"></div>
+            <div id="previewWrap_away" style="color:var(--ink-soft); font-size:12.5px; margin-top:12px; max-height:260px; overflow-y:auto;"></div>
           </div>
         </div>
       </div>
@@ -841,7 +825,7 @@ document.querySelectorAll('.modetab').forEach(tab => {
 
   function renderPreview(){
     if(players.length === 0){
-      previewWrap.innerHTML = '<span style="color:#5c6773;">Paste roster data above to preview.</span>';
+      previewWrap.innerHTML = '<span style="color:var(--ink-soft);">Paste roster data above to preview.</span>';
       return;
     }
     let html = '<table class="preview"><thead><tr><th>Num</th><th>Name</th><th>Pos</th></tr></thead><tbody>';
@@ -986,7 +970,7 @@ document.querySelectorAll('.modetab').forEach(tab => {
 
     function renderPreview(){
       if(players.length === 0){
-        previewEl.innerHTML = '<span style="color:#5c6773;">Paste roster data above to preview.</span>';
+        previewEl.innerHTML = '<span style="color:var(--ink-soft);">Paste roster data above to preview.</span>';
         return;
       }
       let html = '<table class="preview"><thead><tr><th>Num</th><th>Name</th><th>Pos</th></tr></thead><tbody>';
