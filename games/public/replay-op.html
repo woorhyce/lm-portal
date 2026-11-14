@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="/lm-sync.js"></script>
+<script src="/lm-games-nav.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Replay Op: DreamCatcher VUE + RCP-10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Exo+2:ital,wght@1,500;1,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ws:#1a2030; --wg:#2a3450; --wh:#4a5880; --wh2:#5a6a96; --row:#36435f; --line:#55638a;
+  --txt:#f3f5f9; --sub:#b8c1d8; --red:#e5352b; --grn:#3ad154; --amb:#f2a92f; --blue:#3f86f2;
+  --scr1:#8796c2; --scr2:#6d7dab;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ws:#1a2030; color-scheme:dark; } }
+:root[data-theme="dark"]{ --ws:#1a2030; color-scheme:dark; }
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{overflow:hidden;margin:0;background:var(--ws);color:var(--txt);font:15px/1.4 "Roboto Condensed","Arial Narrow",sans-serif}
+button{font:inherit;color:inherit}
+h1,h2{margin:0;font-weight:700}
+.sh1{text-shadow:0 1px 1px rgba(0,0,0,.55)}
+
+/* VUE toolbar */
+.vtool{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:linear-gradient(#4f5e88,#3d4a6e);border-bottom:1px solid #222a3e;padding:6px 14px;text-shadow:0 1px 1px rgba(0,0,0,.55)}
+.vtool h1{font-size:20px;letter-spacing:.02em}
+.vtool .lay{color:var(--sub);font-size:14px}
+.vtool .sp{flex:1}
+.vstat{display:grid;line-height:1.05}
+.vstat span{font-size:11px;color:var(--sub)}
+.vstat b{font-size:20px;font-variant-numeric:tabular-nums}
+.vbtn{background:linear-gradient(#6a7aa6,#55648f);border:1px solid #2c3550;border-radius:4px;padding:5px 14px;cursor:pointer;color:#fff;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.vbtn:hover{background:linear-gradient(#7584b0,#5d6c98)}
+.vbtn:focus-visible,.tile:focus-visible,.feed button:focus-visible,.fixbtn:focus-visible,.trk:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
+
+/* widgets */
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--k,1));display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--ws)}
+.ws{min-height:0;padding:10px;display:grid;grid-template-columns:minmax(0,1fr) 720px 380px;gap:10px}
+.grid{display:contents}
+.grid>.col:first-child{order:1}
+.rcp-wrap{order:2}
+.grid>.col:last-child{order:3}
+.col{align-content:start}
+.col{display:grid;gap:10px;min-width:0}
+.wd{background:var(--wg);border:1px solid #11161f;border-radius:4px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.wd>header{display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(var(--wh2),var(--wh));padding:4px 10px;font-weight:700;font-size:14px;text-shadow:0 1px 1px rgba(0,0,0,.55);min-height:28px}
+.wd>header small{font-weight:400;color:#dde3f1}
+.wb{padding:8px}
+.mons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+canvas.v{display:block;width:100%;aspect-ratio:16/9;background:#000}
+.umd{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px;background:#0d1018;padding:4px 8px;border-top:3px solid #333b4f;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-shadow:none}
+.umd.pgm{border-top-color:var(--red)} .umd.pvw{border-top-color:var(--grn)}
+.cams{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cam{all:unset;cursor:pointer;display:block;border:2px solid transparent;border-radius:2px}
+.cam.sel{border-color:var(--grn)}
+.cam:focus-visible{outline:2px solid var(--amb)}
+.cam .umd{font-size:13px;border-top-width:2px}
+
+/* record trains */
+.trains{display:grid;grid-template-columns:86px 1fr;gap:0 8px}
+.tl{display:grid;grid-auto-rows:24px;gap:4px;font-size:13px;font-weight:700}
+.tl div{display:flex;align-items:center;justify-content:space-between;padding:0 6px;background:var(--row);border-radius:2px}
+.tl div.sel{background:#3c7d47}
+.tl small{font-weight:400;color:var(--sub)}
+.tt{position:relative;display:grid;grid-auto-rows:24px;gap:4px}
+.trk{position:relative;background:#121722;border-radius:2px;overflow:hidden;cursor:crosshair}
+.trk .rec{position:absolute;top:5px;bottom:5px;right:0;background:#c4352b;border-radius:1px}
+.trk.blue .rec{background:var(--blue)}
+.trk.dead .rec{background:repeating-linear-gradient(45deg,#444 0 6px,#2a2a2a 6px 12px)}
+.ov{position:absolute;inset:0;pointer-events:none}
+.ov .clip{position:absolute;top:0;bottom:0;background:rgba(242,169,47,.22)}
+.ov .mk{position:absolute;top:0;bottom:0;width:2px;background:var(--amb)}
+.ov .em{position:absolute;top:-3px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #ffe14a;transform:translateX(-5px)}
+.ov .ph{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;box-shadow:0 0 6px #fff}
+.tscale{grid-column:2;display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:2px}
+
+/* clip view (PBS) */
+.tabs{display:flex;gap:4px}
+.tabs button{background:#3a4769;border:1px solid #232b40;border-radius:3px 3px 0 0;padding:1px 10px;cursor:pointer;font-weight:700;font-size:13px}
+.tabs button.on{background:#7584b0}
+.pbs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tile{all:unset;cursor:pointer;display:grid;background:#1d2538;border:2px solid #3b4767;border-radius:3px;overflow:hidden;font-size:12px}
+.tile.sel{border-color:var(--grn)}
+.tile .th{display:flex;justify-content:space-between;background:#4a5880;padding:1px 5px;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.tile canvas{display:block;width:100%;aspect-ratio:16/9;background:#0b0e14}
+.tile .tf{display:flex;justify-content:space-between;padding:1px 5px;color:var(--sub);font-variant-numeric:tabular-nums}
+.tile.empty canvas{background:repeating-linear-gradient(135deg,#151b29 0 8px,#19202f 8px 16px)}
+.gone{border:2px dashed #4a5578;border-radius:4px;padding:26px;text-align:center;color:var(--sub)}
+
+/* side widgets */
+.ifb-text{font-size:17px;line-height:1.35;margin:0;min-height:3.6em}
+.ifb-sub{margin:6px 0 0;color:var(--sub);font-size:14px;min-height:1.4em}
+.cd{height:6px;background:#1b2234;border-radius:3px;margin-top:10px;overflow:hidden}
+.cd div{height:100%;width:0;background:var(--amb)}
+.cd div.urgent{background:var(--red)}
+.health{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.health li{display:grid;grid-template-columns:10px 104px 1fr auto;gap:8px;align-items:center;font-size:14px;min-height:25px;padding:0 4px;border-radius:2px}
+.health li:nth-child(odd){background:rgba(255,255,255,.03)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--grn)}
+.health li.bad{background:rgba(229,53,43,.18)}
+.health li.bad .dot{background:var(--red);box-shadow:0 0 0 3px rgba(229,53,43,.3)}
+.health li.bad .st{color:#ff8b80;font-weight:700}
+.health .nm{color:var(--sub)}
+.fixbtn{background:var(--red);color:#fff;border:0;border-radius:3px;padding:2px 8px;font-weight:700;font-size:13px;cursor:pointer}
+.feed{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.feed button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px;width:100%;padding:3px 6px;border-radius:3px;font-size:14px}
+.feed button:hover{background:var(--row)}
+.feed .ftc{color:var(--sub);font-variant-numeric:tabular-nums}
+.muted{color:var(--sub);font-size:13px;margin:6px 0 0}
+
+/* ===== RCP-10 hardware ===== */
+.rcp-wrap{display:grid;justify-content:center;align-content:start;overflow:hidden;min-height:0}
+.rcp{width:760px;transform-origin:top center;filter:drop-shadow(0 18px 24px rgba(0,0,0,.5))}
+.hood{position:relative;background:linear-gradient(180deg,#86898d,#6a6d71 18%,#5d6064);border-radius:22px 22px 4px 4px;padding:34px 34px 10px;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -2px 0 rgba(0,0,0,.25)}
+.sticker{position:absolute;top:10px;left:22px;background:#ececea;color:#3a3a3a;font:9px/1.15 "JetBrains Mono",monospace;padding:3px 7px;border-radius:5px;transform:rotate(-1.2deg);box-shadow:0 1px 1px rgba(0,0,0,.3)}
+.bezel{background:#0a0a0b;padding:9px;border-radius:7px;box-shadow:inset 0 0 0 1px #2b2b2d}
+.scr{position:relative;height:262px;overflow:hidden;background:linear-gradient(180deg,var(--scr1),var(--scr2));color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.6);font-family:"Roboto Condensed",sans-serif}
+.alarm{display:grid;grid-template-columns:1fr 78px;background:#e3392e}
+.alarm .am{padding:6px 12px 4px}
+.alarm p{margin:0 0 5px;line-height:1.15}
+.alarm b{display:block;font-size:15px}
+.alarm span{display:block;font-size:14px;font-weight:700;padding-left:18px}
+.alarm .aw{display:grid;place-items:center;border-left:1px solid rgba(255,255,255,.35);background:#e8453a}
+.sh{display:grid;grid-template-columns:90px 1fr 90px;align-items:center;padding:6px 14px 4px;border-bottom:1px solid rgba(255,255,255,.35)}
+.sh b{text-align:center;font-size:22px;letter-spacing:.02em}
+.sh .bk{font-size:14px;color:#e6ecff}
+.sh .rt{text-align:right;font-size:13px;color:#ffe9a8;font-weight:700}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:4px 20px;border-bottom:1px solid rgba(255,255,255,.22);font-size:16px;min-height:29px}
+.srow .v{font-weight:700;font-variant-numeric:tabular-nums}
+.srow .chev{margin-left:10px;font-size:18px;opacity:.9}
+.ssec{text-align:center;font-weight:700;font-size:14px;padding:5px 0 2px;border-bottom:1px solid rgba(255,255,255,.35)}
+.lbar{display:inline-block;width:110px;height:8px;background:rgba(0,0,0,.25);border-radius:4px;vertical-align:middle;margin-left:10px;overflow:hidden}
+.lbar i{display:block;height:100%;background:#7dff6e}
+.slots{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(10,1fr);gap:3px;padding:4px 8px;background:rgba(20,26,44,.45)}
+.slots span{text-align:center;font-size:12px;font-weight:700;padding:2px 0;border-radius:2px;background:rgba(255,255,255,.12)}
+.slots span.f{background:#4fb35c}
+.slots span.s{outline:2px solid #fff}
+.toast{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:rgba(15,20,35,.85);padding:3px 14px;border-radius:12px;font-weight:700;font-size:15px;white-space:nowrap}
+.silk{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:0 6px;margin-top:12px;font:500 11px "Roboto Condensed",sans-serif;color:#d6d8da;letter-spacing:.05em;text-align:center}
+.deck{background:linear-gradient(180deg,#505357,#45484b 20%,#404346);border-radius:0 0 26px 26px;padding:16px 34px 22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.frow{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:0 6px;padding-bottom:16px;border-bottom:1px solid #35383b;margin-bottom:22px}
+.fk{appearance:none;height:40px;border:0;border-radius:4px;cursor:pointer;position:relative;background:linear-gradient(180deg,#2a2b2d,#151617);box-shadow:0 3px 0 #0e0f10,inset 0 1px 0 rgba(255,255,255,.08)}
+.fk.lt{background:linear-gradient(180deg,#d9dbdd,#a9acaf);box-shadow:0 3px 0 #6c6f72,inset 0 1px 0 #fff}
+.fk::after{content:"";position:absolute;left:50%;top:13px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:#2f3133;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.fk.lt::after{background:#7d8083}
+.fk.on::after{background:#79ff52;box-shadow:0 0 6px 2px rgba(120,255,80,.7)}
+.fk:active{transform:translateY(2px);box-shadow:0 1px 0 #0e0f10}
+.fk:focus-visible,.cap:focus-visible{outline:2px solid var(--amb);outline-offset:3px}
+.dk{display:grid;grid-template-columns:250px 104px 1fr;grid-template-rows:auto auto 1fr auto;gap:0 14px}
+.abcd{grid-column:1/3;display:flex;gap:4px;margin-right:-60px}
+.tr3{grid-column:3;display:flex;gap:10px;justify-content:flex-end}
+.cap{appearance:none;width:82px;height:80px;border-radius:5px;border:1px solid #8c9094;cursor:pointer;position:relative;background:linear-gradient(180deg,#f3f4f5,#cfd2d4);box-shadow:inset 0 0 0 5px #e6e8ea,inset 0 0 0 6px #b2b6b9,0 4px 0 #2a2c2e,0 5px 6px rgba(0,0,0,.4);display:grid;place-content:center;gap:2px;color:#36393c;font:700 13px/1.05 "Roboto Condensed",sans-serif;text-align:center;padding:0 6px}
+.cap .t{font-weight:500;font-size:12px}
+.cap:active{transform:translateY(3px);box-shadow:inset 0 0 0 5px #e6e8ea,inset 0 0 0 6px #b2b6b9,0 1px 0 #2a2c2e}
+.cap.on{background:radial-gradient(circle at 50% 45%,#d6ffc8,#69e64c 70%);border-color:#4fbd3a;color:#f6fff2;text-shadow:0 0 3px rgba(0,80,0,.6);box-shadow:inset 0 0 0 5px rgba(255,255,255,.35),0 4px 0 #2a2c2e,0 0 22px 8px rgba(90,255,70,.38)}
+.cap.dim{background:radial-gradient(circle at 50% 45%,#f2fff0,#bfe9b3 75%);box-shadow:inset 0 0 0 5px #eaf8e6,inset 0 0 0 6px #9fc796,0 4px 0 #2a2c2e,0 0 12px 3px rgba(90,255,70,.2)}
+.cap.blink{animation:blink 1s steps(2,end) infinite}
+@keyframes blink{50%{background:radial-gradient(circle at 50% 45%,#d6ffc8,#69e64c 70%);color:#fff}}
+.abcd .cap{width:72px;height:78px}
+.kcol{grid-column:2;grid-row:2/4;display:grid;align-content:start;gap:4px;padding-top:26px}
+.kcol .cap{width:96px;height:84px}
+.rp{grid-column:3;grid-row:2;display:flex;gap:28px;justify-content:center;padding:24px 0 0 20px}
+.jogc{grid-column:3;grid-row:3;display:grid;place-items:center;padding:26px 0 10px 10px}
+.jog{width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 45% 38%,#2d2f31,#121314 70%);box-shadow:0 0 0 3px #2b2d2f,0 10px 18px rgba(0,0,0,.6),inset 0 2px 2px rgba(255,255,255,.07);position:relative;touch-action:none;cursor:grab}
+.jog:active{cursor:grabbing}
+.jr{position:absolute;inset:0;border-radius:50%}
+.dimple{position:absolute;width:78px;height:78px;border-radius:50%;left:56px;top:34px;background:radial-gradient(circle at 55% 60%,#26282a,#0c0d0e 72%);box-shadow:inset 0 3px 6px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
+.levc{grid-column:1;grid-row:2/4;position:relative;height:420px;margin-top:20px}
+.lev{position:absolute;left:46px;top:110px;width:150px;height:300px;border-radius:16px;background:linear-gradient(180deg,#5a5d61,#4d5054);box-shadow:inset 0 2px 3px rgba(255,255,255,.12),inset 0 -2px 4px rgba(0,0,0,.4),0 2px 0 #2c2e30;touch-action:none;cursor:ns-resize}
+.slot{position:absolute;left:62px;top:24px;width:26px;bottom:24px;border-radius:13px;background:#101112;box-shadow:inset 0 3px 6px #000}
+.tbar{position:absolute;left:0;width:250px;height:150px;pointer-events:none}
+.grip{position:absolute;left:0;top:0;width:236px;height:52px;border-radius:26px 16px 16px 26px;background:linear-gradient(180deg,#f7f8f9,#c2c6ca 30%,#7f8489 52%,#b9bdc1 70%,#e9ebed);box-shadow:0 6px 10px rgba(0,0,0,.5)}
+.grip::before{content:"";position:absolute;left:120px;top:0;bottom:0;width:30px;background:linear-gradient(180deg,#d9dcdf,#8d9297 50%,#cfd2d5);border-left:1px solid #777;border-right:1px solid #777}
+.grip::after{content:"";position:absolute;right:6px;top:8px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#888c90,#cfd3d6 60%,#9a9ea2)}
+.shaft{position:absolute;left:130px;top:40px;width:18px;height:110px;background:linear-gradient(90deg,#6a6e72,#d5d8db 45%,#7c8085);transform:skewX(-8deg);border-radius:0 0 4px 4px}
+.foot{grid-column:1/-1;grid-row:4;display:flex;justify-content:space-between;align-items:flex-end;padding:30px 4px 0}
+.dcmark{font:500 italic 40px/1 "Exo 2",sans-serif;color:#c8b157;letter-spacing:.01em;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+.dcmark .d{font-size:56px;color:#d6bf62}
+.evmark{font:800 italic 40px/1 "Exo 2",sans-serif;color:#d9c62c;letter-spacing:-.02em;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(6,9,16,.75);display:grid;place-items:center;padding:16px;z-index:20}
+.overlay[hidden]{display:none}
+.sheet{background:var(--wg);border:1px solid #11161f;border-radius:6px;width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto}
+.sheet>header{background:linear-gradient(var(--wh2),var(--wh));padding:10px 18px;text-shadow:0 1px 1px rgba(0,0,0,.55)}
+.sheet>header h2{font-size:24px}
+.sheet .in{padding:14px 18px 18px}
+.sheet p{margin:8px 0}
+.controls{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:12px 0;font-size:14px}
+.controls kbd{font:600 12px "JetBrains Mono",monospace;background:#1b2234;border:1px solid #47557c;border-radius:3px;padding:1px 6px;white-space:nowrap}
+.cta{background:linear-gradient(#4cc35f,#33a046);color:#fff;border:1px solid #1f6a2c;border-radius:4px;padding:10px 20px;font-weight:700;font-size:18px;cursor:pointer;text-shadow:0 1px 1px rgba(0,0,0,.4)}
+.cta:focus-visible{outline:2px solid var(--amb);outline-offset:3px}
+.results{display:grid;grid-template-columns:1fr auto;gap:4px 18px;margin:12px 0}
+.results b{font-variant-numeric:tabular-nums;text-align:right}
+.term{background:#10151c;color:#cbd5dc;border:1px solid #2b343c;border-radius:6px;width:min(680px,100%);max-height:calc(100% - 20px);overflow:auto;padding:18px 20px}
+.term h2{font-size:24px;color:#f1f3f5}
+.term .sym{margin:8px 0 12px}
+.log{font:13px/1.5 "JetBrains Mono",monospace;background:#0a0d10;border:1px solid #232b32;border-radius:5px;padding:10px 12px;color:#9fb3c2;white-space:pre-wrap;word-break:break-word;margin:0}
+.log .err{color:#ff8f7a}
+.term .q{margin:14px 0 8px;color:#f1f3f5;font-weight:700}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:#1d252c;border:1px solid #303a43;border-radius:5px;padding:9px 12px;cursor:pointer;color:#e3e8ec;font-size:15px}
+.opt:hover:not(:disabled){background:#25303a}
+.opt:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
+.opt:disabled{cursor:default;opacity:.5}
+.opt.right{opacity:1;border-color:#3f9a54;background:#1b2d22}
+.opt.wrong{border-color:#8a3b30}
+.verdict{min-height:1.5em;margin:12px 0}
+.verdict.good{color:#7fe196} .verdict.bad{color:#ff9a86}
+@media (prefers-reduced-motion: reduce){.cap.blink{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+<div class="vtool">
+  <h1>VUE</h1>
+  <span class="lay">Layout: DC Replay, Channel A (Replay Op)</span>
+  <span class="sp"></span>
+  <div class="vstat"><span>Time of day</span><b id="clock">19:30:00:00</b></div>
+  <div class="vstat"><span>Show left</span><b id="remain">3:10</b></div>
+  <div class="vstat"><span>Score</span><b id="score">0</b></div>
+  <div class="vstat"><span>Clean streak</span><b id="streak">0</b></div>
+  <button class="vbtn" id="pauseBtn" type="button">Pause</button>
+</div>
+
+<div class="ws">
+  <div class="grid">
+    <div class="col">
+      <div class="mons">
+        <section class="wd"><header>Output 1 <small>PGM</small></header>
+          <canvas class="v" id="pgm" width="640" height="360" aria-label="Program output"></canvas>
+          <div class="umd pgm"><span>PGM</span><span id="pgmR">LIVE</span></div></section>
+        <section class="wd"><header>Channel A <small id="chHdr">E-E</small></header>
+          <canvas class="v" id="pvw" width="640" height="360" aria-label="Replay channel A"></canvas>
+          <div class="umd pvw"><span id="pvwL">CH A  CAM A</span><span id="pvwR">19:30:00:00</span></div></section>
+      </div>
+      <section class="wd"><header>Inputs <small>Click to select camera</small></header><div class="wb"><div class="cams" id="cams"></div></div></section>
+      <section class="wd"><header>Record Trains <small>Click a train to cue that camera</small></header>
+        <div class="wb"><div class="trains">
+          <div class="tl" id="tl"></div>
+          <div class="tt" id="tt"><div class="ov" id="ov"><div class="clip" id="clipR"></div><div class="mk" id="mkIn"></div><div class="mk" id="mkOut"></div><div id="ems"></div><div class="ph" id="ph"></div></div></div>
+          <div class="tscale"><span>90 s ago</span><span>Live</span></div>
+        </div></div></section>
+      <section class="wd" id="cvWd"><header>DreamCatcher Clip View <span class="tabs" id="tabs"></span></header>
+        <div class="wb" id="cvBody"><div class="pbs" id="pbs"></div></div></section>
+    </div>
+    <div class="col">
+      <section class="wd" aria-live="polite"><header>Producer (IFB)</header><div class="wb">
+        <p class="ifb-text" id="ifbText">Stand by for kickoff.</p>
+        <div class="cd"><div id="cdBar"></div></div>
+        <p class="ifb-sub" id="ifbSub"></p></div></section>
+      <section class="wd"><header id="healthH">System Status</header><div class="wb"><ul class="health" id="health"></ul></div></section>
+      <section class="wd"><header>Stats Feed <small>GSIS</small></header><div class="wb">
+        <ol class="feed" id="feed"></ol><p class="muted" id="feedEmpty">No plays yet.</p>
+        <p class="muted">Times are approximate. Click a play to cue near it.</p></div></section>
+    </div>
+  </div>
+
+  <div class="rcp-wrap" id="rcpWrap">
+    <div class="rcp" id="rcp" aria-label="DC-RCP10 replay control panel">
+      <div class="hood">
+        <div class="sticker">IP Address<br>10.20.4.61</div>
+        <div class="bezel"><div class="scr" id="scr"></div></div>
+        <div class="silk"><span>MENU</span><span>SHIFT</span><span>F1</span><span>F2</span><span>F3</span><span>F4</span><span>F5</span><span>F6</span><span>F7</span><span>F8</span><span>F9</span><span>F10</span><span>CLEAR</span><span>ENTER</span></div>
+      </div>
+      <div class="deck">
+        <div class="frow" id="frow"></div>
+        <div class="dk">
+          <div class="abcd">
+            <button class="cap" data-k="A" type="button"><span class="t">A’</span>A</button>
+            <button class="cap" data-k="B" type="button"><span class="t">B’</span>B</button>
+            <button class="cap" data-k="C" type="button"><span class="t">C’</span>C</button>
+            <button class="cap" data-k="D" type="button"><span class="t">D’</span>D</button>
+          </div>
+          <div class="tr3">
+            <button class="cap" data-k="play" type="button"><span class="t">Network</span>PLAY</button>
+            <button class="cap" data-k="cue" type="button"><span class="t">Goto TC</span>Last Cue</button>
+            <button class="cap" data-k="mark" type="button"><span class="t">Fast Jog</span>Mark</button>
+          </div>
+          <div class="levc"><div class="lev" id="lev" role="slider" aria-label="T-bar lever, playback speed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="slot"></div></div>
+            <div class="tbar" id="tbar"><div class="shaft"></div><div class="grip"></div></div></div>
+          <div class="kcol">
+            <button class="cap" data-k="plst" type="button"><span class="t">Loop</span>PLST</button>
+            <button class="cap" data-k="browse" type="button"><span class="t">Insert</span>Browse</button>
+            <button class="cap" data-k="in" type="button"><span class="t">Goto IN</span>IN</button>
+            <button class="cap" data-k="out" type="button"><span class="t">Goto OUT</span>OUT</button>
+            <button class="cap" data-k="take" type="button"><span class="t">Lever</span>TAKE</button>
+          </div>
+          <div class="rp">
+            <button class="cap" data-k="rec" type="button"><span class="t">Return</span>RECORD</button>
+            <button class="cap" data-k="clip" type="button"><span class="t">Page</span>CLIP</button>
+          </div>
+          <div class="jogc"><div class="jog" id="jog" aria-label="Jog wheel"><div class="jr" id="jr"><div class="dimple"></div></div></div></div>
+          <div class="foot"><span class="dcmark"><span class="d">D</span>reamCatcher</span><span class="evmark">evertz</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="overlay" id="startOv">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="startH">
+    <header><h2 id="startH">You’re on replay tonight</h2></header>
+    <div class="in">
+      <p>When the producer calls a replay, find it on the record trains, mark IN and OUT, pick the camera, and roll it. TAKE rolls at the lever’s speed. PLAY rolls at real time.</p>
+      <p>Hit Mark when you see a play happen live, then Last Cue jumps right back to it. ENTER saves the marked clip to the next Clip View slot, and F1 to F10 recall slots.</p>
+      <p>When the panel or System Status goes red, troubleshoot it. Black on air costs you, so pick the least disruptive fix.</p>
+      <div class="controls">
+        <kbd>1–4</kbd><span>Camera A to D</span>
+        <kbd>I / O</kbd><span>Mark IN, mark OUT</span>
+        <kbd>G</kbd><span>Goto IN</span>
+        <kbd>R</kbd><span>RECORD (back to E-E live)</span>
+        <kbd>M / C</kbd><span>Mark, Last Cue</span>
+        <kbd>Space</kbd><span>TAKE at lever speed (Shift+Space: PLAY real time)</span>
+        <kbd>← →</kbd><span>Jog a frame (Shift: one second). F toggles Fast Jog</span>
+        <kbd>↑ ↓</kbd><span>Lever up or down 5%</span>
+        <kbd>Enter / F1–F10</kbd><span>Save clip, recall slot</span>
+        <kbd>P</kbd><span>Pause</span>
+      </div>
+      <button class="cta" id="startBtn" type="button">Start the show</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="endOv" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="endH">
+    <header><h2 id="endH">That’s a wrap</h2></header>
+    <div class="in"><p id="endTitle"></p><div class="results" id="results"></div>
+      <button class="cta" id="againBtn" type="button">Run another show</button></div>
+  </div>
+</div>
+<div class="overlay" id="conOv" hidden>
+  <div class="term" role="dialog" aria-modal="true" aria-labelledby="conH">
+    <h2 id="conH"></h2>
+    <p class="sym" id="conSym"></p>
+    <pre class="log" id="conLog"></pre>
+    <p class="q">What do you do?</p>
+    <div class="opts" id="conOpts"></div>
+    <p class="verdict" id="conVerdict" aria-live="polite"></p>
+    <button class="vbtn" id="conClose" type="button">Back to the show</button>
+  </div>
+</div>
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const SHOW_LEN = 190, FPS = 30, TC_BASE = 19*3600 + 30*60, CALL_LEN = 20, WIN = 90;
+const ANGLES = ['A','B','C','D'];
+const ANGLE_NAMES = {A:'WIDE', B:'TIGHT', C:'END ZONE', D:'HIGH 50'};
+const INPUT_NO = {A:9, B:10, C:11, D:12};
+
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,p) => a + (b-a)*p;
+const ease = p => p < .5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+const p2 = n => String(n).padStart(2,'0');
+function tc(t){
+  const tot = TC_BASE + Math.max(0,t), s = Math.floor(tot), fr = Math.floor((tot - s)*FPS);
+  return `${p2(Math.floor(s/3600)%24)}:${p2(Math.floor(s/60)%60)}:${p2(s%60)}:${p2(fr)}`;
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let rnd = Math.random;
+const pick = arr => arr[Math.floor(rnd()*arr.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- the game on the field ---------- */
+const OFF = [[-1,22.6],[-1,24.6],[-1,26.6],[-1,28.6],[-1,30.6],[-1,32.8],[-4,26.6],[-7,26.6],[-1.5,12],[-1,5],[-1,48]];
+const DEF = [[1,23.4],[1,25.6],[1,27.6],[1,29.8],[5,18],[5,26.6],[5,35],[6,5],[6,48],[12,18],[12,36]];
+const FORM = OFF.concat(DEF);
+const JERSEY = {6:7, 7:22, 9:11, 10:84, 20:31, 21:24};
+const phase = new Float32Array(22);
+
+function formation(L, out){
+  for(let i=0;i<22;i++){ out[i*2] = L + FORM[i][0]; out[i*2+1] = FORM[i][1]; }
+  return out;
+}
+
+function makePlay(L, s){
+  const r = rnd();
+  const type = r < .38 ? 'catch' : r < .66 ? 'run' : r < .84 ? 'sack' : 'pick';
+  let gain, carrier, dur, td = false;
+  if(type==='catch'){ carrier = rnd()<.5 ? 9 : 10; gain = Math.round(12 + rnd()*28); dur = 4.2 + rnd(); }
+  else if(type==='run'){ carrier = 7; gain = Math.round(3 + rnd()*14); dur = 3.2 + rnd()*.8; }
+  else if(type==='sack'){ carrier = 6; gain = -Math.round(5 + rnd()*5); dur = 2.8; }
+  else { carrier = rnd()<.5 ? 20 : 21; gain = -Math.round(14 + rnd()*30); dur = 4.4; }
+  const sx = L + FORM[carrier][0], sy = FORM[carrier][1];
+  if((type==='catch' || type==='run') && L + gain >= 108){ gain = 113 - L; td = true; }
+  let endX, y1, catchY = sy, nextL;
+  if(type==='catch'){ endX = L + gain; y1 = clamp(sy + (26.6-sy)*.35 + (rnd()-.5)*8, 3, 50); }
+  else if(type==='run'){ endX = L + gain; y1 = clamp(26.6 + (rnd()-.5)*22, 4, 49); }
+  else if(type==='sack'){ endX = sx + gain; y1 = 26.6 + (rnd()-.5)*4; }
+  else {
+    catchY = clamp(sy + (rnd()-.5)*6, 4, 49);
+    endX = sx - 3 + gain;
+    if(endX <= 10){ endX = 5; td = true; }
+    y1 = clamp(catchY + (rnd()-.5)*20, 4, 49);
+  }
+  if(td || type==='pick') nextL = 35;
+  else nextL = clamp(L + gain, 8, 100);
+  const n = JERSEY[carrier];
+  let desc, short;
+  if(type==='catch'){ desc = `#${n} ${gain}-yd catch${td?' for a touchdown':''}`; short = td ? 'the touchdown' : 'the catch'; }
+  else if(type==='run'){ desc = `#${n} ${gain}-yd run${td?' for a touchdown':''}`; short = td ? 'the touchdown' : 'the run'; }
+  else if(type==='sack'){ desc = `Sack on #7, loss of ${-gain}`; short = 'the sack'; }
+  else { desc = `Interception, #${n}${td?' takes it back for six':''}`; short = td ? 'the pick-six' : 'the pick'; }
+  return {type, s, e:s+dur, L, gain, carrier, sx, sy, endX, y1, catchY, nextL, td, desc, short, announced:false};
+}
+
+function buildShow(seed){
+  rnd = mulberry32(seed);
+  for(let i=0;i<22;i++) phase[i] = rnd()*6.283;
+  const segs = [], plays = [];
+  let t = 0, L = 25 + Math.floor(rnd()*12), first = true;
+  while(t < SHOW_LEN - 18){
+    const idle = first ? 7 : 13 + rnd()*5; first = false;
+    segs.push({k:'idle', s:t, e:t+idle, L}); t += idle;
+    const pl = makePlay(L, t); plays.push(pl);
+    segs.push({k:'play', s:pl.s, e:pl.e, L, pl}); t = pl.e;
+    segs.push({k:'reset', s:t, e:t+3.5, L:pl.nextL, pl}); t += 3.5;
+    L = pl.nextL;
+  }
+  segs.push({k:'idle', s:t, e:1e9, L});
+  for(const pl of plays){
+    const pos = new Float32Array(44), ball = {x:0,y:0,z:0};
+    playState(pl, 1, pos, ball); pl.endPos = pos; pl.endBall = {x:ball.x, y:ball.y};
+  }
+  return {segs, plays};
+}
+
+function carrierAt(pl, p){
+  const {sx, sy} = pl;
+  if(pl.type==='catch'){
+    const mx = pl.L + pl.gain*.55, my = sy + (pl.y1-sy)*.2;
+    if(p < .5){ const q = ease(p/.5); return [lerp(sx,mx,q), lerp(sy,my,q)]; }
+    const q = ease((p-.5)/.5); return [lerp(mx,pl.endX,q), lerp(my,pl.y1,q)];
+  }
+  if(pl.type==='pick'){
+    if(p < .4){ const q = p/.4; return [lerp(sx,sx-3,q), lerp(sy,pl.catchY,q)]; }
+    const q = ease((p-.4)/.6); return [lerp(sx-3,pl.endX,q), lerp(pl.catchY,pl.y1,q)];
+  }
+  const e = ease(p); return [lerp(sx,pl.endX,e), lerp(sy,pl.y1,e)];
+}
+
+function playState(pl, p, out, ball){
+  formation(pl.L, out);
+  const e = ease(p), c = pl.carrier;
+  const [cx, cy] = carrierAt(pl, p);
+  for(let i=0;i<22;i++){
+    if(i===c) continue;
+    const fx = out[i*2], fy = out[i*2+1];
+    let tx, ty;
+    if(i < 11){
+      if(pl.type==='pick'){ tx = lerp(fx, cx + 1.5 + (i%3), e*.7); ty = lerp(fy, cy + ((i%5)-2)*2, e*.7); }
+      else if(i===6){ tx = fx - (pl.type==='run' ? 1 : 3)*Math.min(1, p*3); ty = fy; }
+      else { const adv = i < 5 ? 1.5 : (i >= 8 ? Math.min(16, Math.max(4, pl.gain*.6 + 6)) : 3); tx = fx + adv*e; ty = fy + (i>=8 ? (26.6-fy)*.15*e : 0); }
+    } else {
+      const k = pl.type==='pick' ? .3 : .55 + ((i*37)%10)/40;
+      tx = lerp(fx, cx + ((i%4)-1.5)*1.6, e*k); ty = lerp(fy, cy + ((i%3)-1)*1.8, e*k);
+    }
+    out[i*2] = tx; out[i*2+1] = ty;
+  }
+  out[c*2] = cx; out[c*2+1] = cy;
+  const qx = out[12], qy = out[13];
+  let bx, by, bz = 0;
+  if(p < .08){ const q = p/.08; bx = lerp(pl.L, qx, q); by = lerp(26.6, qy, q); }
+  else if(pl.type==='catch' || pl.type==='pick'){
+    const tcatch = pl.type==='catch' ? .5 : .4, t0 = .2;
+    if(p < t0){ bx = qx; by = qy; }
+    else if(p < tcatch){ const q = (p-t0)/(tcatch-t0); const [tx,ty] = carrierAt(pl, tcatch); bx = lerp(qx,tx,q); by = lerp(qy,ty,q); bz = Math.sin(q*Math.PI)*7; }
+    else { bx = cx; by = cy; }
+  } else if(pl.type==='run'){ if(p < .15){ bx = qx; by = qy; } else { bx = cx; by = cy; } }
+  else { bx = cx; by = cy; }
+  ball.x = bx; ball.y = by; ball.z = bz;
+}
+
+const tmpPos = new Float32Array(44), tmpForm = new Float32Array(44);
+function stateAt(t){
+  const segs = show.segs;
+  let seg = segs[segs.length-1];
+  for(const s of segs){ if(t >= s.s && t < s.e){ seg = s; break; } }
+  const ball = {x:0, y:0, z:0};
+  let L = seg.L, line = true;
+  if(seg.k==='idle'){
+    formation(seg.L, tmpPos); ball.x = seg.L - .3; ball.y = 26.6;
+  } else if(seg.k==='play'){
+    playState(seg.pl, clamp((t-seg.s)/(seg.e-seg.s), 0, 1), tmpPos, ball);
+  } else {
+    const q = ease(clamp((t-seg.s)/(seg.e-seg.s), 0, 1));
+    formation(seg.L, tmpForm);
+    for(let i=0;i<44;i++) tmpPos[i] = lerp(seg.pl.endPos[i], tmpForm[i], q);
+    ball.x = lerp(seg.pl.endBall.x, seg.L - .3, q); ball.y = lerp(seg.pl.endBall.y, 26.6, q);
+    line = false;
+  }
+  const jit = seg.k==='play' ? .15 : 1;
+  for(let i=0;i<22;i++){
+    tmpPos[i*2] += Math.sin(t*1.1 + phase[i])*.25*jit;
+    tmpPos[i*2+1] += Math.cos(t*.8 + phase[i]*1.7)*.35*jit;
+  }
+  return {pos:tmpPos, ball, L, line, active: seg.k==='play'};
+}
+
+function scoreAt(t){
+  let h = 0, a = 0;
+  for(const pl of show.plays){ if(pl.td && pl.e <= t){ if(pl.type==='pick') a += 7; else h += 7; } }
+  return [h, a];
+}
+
+/* ---------- drawing ---------- */
+const HOME = '#c4243a', HOME_EDGE = '#6e0f1d', AWAY = '#f2f1ea', AWAY_EDGE = '#1f3c74';
+function camFor(angle, st, w){
+  const b = st.ball;
+  switch(angle){
+    case 'A': return {cx:clamp(b.x,24,96), cy:26.6, s:w/56, r:0};
+    case 'B': return {cx:b.x, cy:clamp(b.y,6,47), s:w/19, r:0};
+    case 'C': return {cx:clamp(b.x+8,15,105), cy:26.6, s:w/60, r:-Math.PI/2};
+    default:  return {cx:60, cy:26.6, s:w/126, r:0};
+  }
+}
+function drawField(ctx, w, h, angle, st){
+  const cam = camFor(angle, st, w);
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = '#1c3a22'; ctx.fillRect(0,0,w,h);
+  ctx.translate(w/2, h/2); ctx.rotate(cam.r); ctx.scale(cam.s, cam.s); ctx.translate(-cam.cx, -cam.cy);
+  for(let x=10; x<110; x+=5){ ctx.fillStyle = (x/5)%2 ? '#2f7a3c' : '#2a6f36'; ctx.fillRect(x, 0, 5, 53.3); }
+  ctx.fillStyle = '#8a1f2c'; ctx.fillRect(0,0,10,53.3);
+  ctx.fillStyle = '#1f3f78'; ctx.fillRect(110,0,10,53.3);
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = .2;
+  ctx.beginPath();
+  for(let x=10; x<=110; x+=5){ ctx.moveTo(x,0); ctx.lineTo(x,53.3); }
+  for(let x=11; x<110; x++){ if(x%5){ ctx.moveTo(x,22.9); ctx.lineTo(x,23.6); ctx.moveTo(x,29.7); ctx.lineTo(x,30.4); } }
+  ctx.stroke();
+  ctx.lineWidth = .4; ctx.strokeRect(0,0,120,53.3);
+  ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = '700 2.8px "Roboto Condensed", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for(let x=20; x<=100; x+=10){ const n = x<=60 ? x-10 : 110-x; ctx.fillText(String(n), x, 9); ctx.fillText(String(n), x, 44.3); }
+  if(st.line){
+    ctx.lineWidth = .35;
+    ctx.strokeStyle = 'rgba(80,140,255,.9)'; ctx.beginPath(); ctx.moveTo(st.L,0); ctx.lineTo(st.L,53.3); ctx.stroke();
+    if(st.L + 10 < 110){ ctx.strokeStyle = 'rgba(255,220,40,.95)'; ctx.beginPath(); ctx.moveTo(st.L+10,0); ctx.lineTo(st.L+10,53.3); ctx.stroke(); }
+  }
+  const P = st.pos;
+  ctx.lineWidth = .22;
+  for(let i=0;i<22;i++){
+    ctx.beginPath(); ctx.arc(P[i*2], P[i*2+1], .8, 0, 6.2832);
+    ctx.fillStyle = i < 11 ? HOME : AWAY; ctx.strokeStyle = i < 11 ? HOME_EDGE : AWAY_EDGE;
+    ctx.fill(); ctx.stroke();
+  }
+  const b = st.ball;
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(b.x, b.y, .45, .3, 0, 0, 6.2832); ctx.fill();
+  const r = 1 + b.z*.09;
+  ctx.fillStyle = '#7a4320'; ctx.beginPath(); ctx.ellipse(b.x - b.z*.08, b.y - b.z*.12, .5*r, .32*r, .5, 0, 6.2832); ctx.fill();
+  ctx.setTransform(1,0,0,1,0,0);
+  const g = ctx.createRadialGradient(w/2,h/2,h*.35,w/2,h/2,w*.62);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.35)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+}
+function drawBlack(ctx, w, h, label){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+  if(label){ ctx.fillStyle = '#8a9299'; ctx.font = `600 ${Math.round(h/12)}px "Roboto Condensed", sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label, w/2, h/2); }
+}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ---------- faults ---------- */
+const ROWS = [
+  ['server','Panel ↔ server','Connected'],
+  ['panel','Panel ↔ VUE','Connected'],
+  ['layout','VUE layout','Clip View present'],
+  ['ptp','Time / PTP','Locked, domain 127'],
+  ['inputs','Inputs','4 of 4 capturing'],
+  ['audio','Audio','Buffers healthy'],
+  ['services','Commander','Running, ES green'],
+  ['cluster','Cluster','4 of 4 in search'],
+  ['storage','NAS','Mounted'],
+  ['thermal','NVMe','52 °C'],
+  ['gui','VUE','Responsive'],
+];
+const BANNERS = {
+  server_disc:['Disconnected from DreamCatcher Server','Ensure the DreamCatcher Server is running and check Engineering settings (F2)'],
+  vue_disc:['Disconnected from VUE multiviewer','In VUE, set the DreamCatcher Panel system’s host to this panel’s IP address'],
+  no_clipview:['No Clip View Detected','In VUE, please ensure there is a DreamCatcher Clip View widget in the current layout'],
+};
+const PANEL_FAULTS = ['server_disc','vue_disc','no_clipview'];
+const FAULTS = [
+  { id:'server_disc', row:'server', effect:'panel', status:'Disconnected', title:'Panel lost the server',
+    symptom:'The RCP-10 says Disconnected from DreamCatcher Server. Someone re-addressed the server’s control port at the break.',
+    log:['!rcp10: dcserver 10.20.4.20:8400 connection refused','rcp10: Engineering settings (F2) DreamCatcher Server = 10.20.4.20','configshell: eno1 10.20.4.21/24 (changed 19:31)'],
+    opts:[
+      {t:'On the panel, open Engineering settings (F2) and point DreamCatcher Server at 10.20.4.21', ok:true, why:'The panel was still pointed at the old address. Connected.'},
+      {t:'In VUE, set the DreamCatcher Panel system’s host to the panel’s IP', why:'That’s the VUE link, and it was fine. The panel still can’t reach the server.'},
+      {t:'sudo dcs clearall', cons:'clear', why:'That wiped the trains and every clip. The panel still points at the old address.'},
+      {t:'Swap in the spare panel', why:'The spare points at the old address too. Same banner.'},
+    ]},
+  { id:'vue_disc', row:'panel', effect:'panel', status:'Disconnected', title:'Panel lost VUE',
+    symptom:'The RCP-10 says Disconnected from VUE multiviewer. The panel still reaches the server, but VUE doesn’t know where the panel is.',
+    log:['rcp10: dcserver 10.20.4.21 connected','!rcp10: no VUE session','vue: DreamCatcher Panel system host = 10.20.4.16'],
+    opts:[
+      {t:'In VUE, set the DreamCatcher Panel system’s host to 10.20.4.61, the panel’s IP', ok:true, why:'VUE was pointed at the old panel. Banner cleared.'},
+      {t:'Re-enter the server address in Engineering settings (F2)', why:'The server link is fine. VUE is the side that’s lost.'},
+      {t:'sudo dcs clearall', cons:'clear', why:'That wiped the trains and every clip. VUE still points at the old panel.'},
+      {t:'Reboot the server', cons:'black15', why:'A long stretch of black, and VUE still points at the old panel.'},
+    ]},
+  { id:'no_clipview', row:'layout', effect:'panel', status:'No Clip View', title:'No Clip View Detected',
+    symptom:'The RCP-10 says No Clip View Detected and the Clip View widget is gone. Someone loaded a graphics layout on this VUE at the break.',
+    log:['!rcp10: no DreamCatcher Clip View widget in current layout','vue: layout loaded: GFX_Op_v2'],
+    opts:[
+      {t:'Load the replay layout back, or add a DreamCatcher Clip View widget to the current one', ok:true, why:'Clip View is back in the layout and the panel picked it up.'},
+      {t:'Restart dcscommander', why:'Commander’s fine. The layout is what changed.'},
+      {t:'Re-flash the panel firmware', why:'Firmware 25.05.3 matches the server. Still no Clip View.'},
+      {t:'Full System Restart', cons:'black6', why:'The outputs went black, and VUE came back with the same graphics layout.'},
+    ]},
+  { id:'blue_train', row:'ptp', effect:'blue', status:'Time unknown', title:'The record trains went blue',
+    symptom:'Every record train turned blue and the jog won’t scrub. The server doesn’t trust its own time.',
+    log:['!ptp4l[mvk0]: port 1: UNCALIBRATED to LISTENING on ANNOUNCE_RECEIPT_TIMEOUT_EXPIRES','!phc2sys: clock not synchronized','karakproxy: LTC lost'],
+    opts:[
+      {t:'Check ptpstat, fix the domain in configshell and let timemaster resync', ok:true, why:'Blue train means time, PTP or LTC is unknown. Locked again, trains are red.'},
+      {t:'Hand-edit timemaster.conf on the box', why:'The next configshell save overwrites it. Make the change in configshell.'},
+      {t:'Make the DreamCatcher the PTP grandmaster', why:'linuxptp can’t be forced to master. Still blue.'},
+      {t:'Restart Elasticsearch', why:'Search has nothing to do with time. Still blue.'},
+    ]},
+  { id:'no_video', row:'inputs', effect:'nocam', status:f=>`CAM ${f.angle}: no video`, title:f=>`Camera ${f.angle} went black`,
+    symptom:f=>`Camera ${f.angle} is black. Routing checks out and its audio and ANC are still passing.`,
+    log:f=>[`!mvproxy: input${INPUT_NO[f.angle]} cannot updated resolution, dynamic disabled`,`mvproxy: input${INPUT_NO[f.angle]} SDI status expected 1080p59.94 current 1080i59.94`],
+    opts:[
+      {t:'Compare SDI status expected vs current and fix the source format upstream', ok:true, why:'The camera was feeding 1080i. Fixed upstream, picture’s back.'},
+      {t:'Re-route the input in Magnum', why:'Routing was never the problem. Still black.'},
+      {t:'Wrap source_ips in arrays in dc-routes.json', why:'That’s the post-upgrade 2110 break. This is a format mismatch. Still black.'},
+      {t:'Swap the Matrox card', cons:'black15', why:'You took the server down for a card that wasn’t broken.'},
+    ]},
+  { id:'audio_buf', row:'audio', effect:'noaudio', status:'Buffer errors', title:'Program audio dropped out',
+    symptom:'The audio meters on program are flat. This capture has been running for three weeks straight.',
+    log:['!mvproxy: couldn’t obtain enough audio buffers (x8312/min)','ptp4l[mvk0]: master offset -12 s2 freq +3 path delay 410'],
+    opts:[
+      {t:'Restart the Matrox daemons', ok:true, why:'Long-running 2110 capture starves the audio buffers. Daemons restarted, audio’s back.'},
+      {t:'Full System Restart', fix:true, cons:'black6', why:'It came back, but the outputs went black. There was a smaller hammer.'},
+      {t:'Unlock PTP and see what happens', why:'PTP was fine. The log says so. Audio’s still gone.'},
+      {t:'Drop dcsrepo pacing to -p 800M', why:'Pacing is for output skips, not capture audio.'},
+    ]},
+  { id:'es_red', row:'services', effect:'noplay', status:'Commander down', title:'Commander won’t start',
+    symptom:'PLAY and TAKE do nothing. dcscommander keeps restarting and giving up.',
+    log:['!dcscommander: waiting for elasticsearch, cluster status red','$ curl localhost:9200/_cat/indices','!red open clips_v3 ... index.blocks.read_only_allow_delete=true'],
+    opts:[
+      {t:'Reset the read-protected indexes in configshell and confirm every index is green', ok:true, why:'Commander only starts on a healthy ES. All green, PLAY works.'},
+      {t:'curl -XDELETE localhost:9200/*', fix:true, cons:'clear', why:'Last resort, not first. ES is green, but you deleted the clip index on a live show.'},
+      {t:'Rename the server so ES rebuilds', why:'A hostname change breaks ES. Now it’s worse.'},
+      {t:'Restart nginx', why:'The web UI is fine. Commander is still waiting on ES.'},
+    ]},
+  { id:'gui_freeze', row:'gui', effect:'freeze', status:'GUI froze', title:'VUE froze',
+    symptom:'Channel A stopped updating. The panel still clicks, but you’re flying blind.',
+    log:['!vue watchdog: GUI froze (1000 ms)','!vue watchdog: GUI froze (1000 ms)','!vue watchdog: GUI froze (1000 ms)'],
+    opts:[
+      {t:'Ctrl+Alt+R to restart the UI only', ok:true, why:'Bottom rung of the ladder. UI’s back and the outputs never moved.'},
+      {t:'Full System Restart', fix:true, cons:'black6', why:'Fixed, but the outputs went black. Start at the bottom of the ladder.'},
+      {t:'Reboot the server', fix:true, cons:'black15', why:'Fixed, after a long stretch of black. Three rungs too high.'},
+      {t:'Email lmsupport and wait for a reply', why:'Support is the top rung. The show’s live and the GUI’s still frozen.'},
+    ]},
+  { id:'nvme_hot', row:'thermal', effect:'none', status:'71 °C and climbing', title:'NVMe running hot', drain:8,
+    symptom:'System Status shows the NVMe drives at 71 °C and climbing.',
+    log:['!collectd: nvme0 temperature 71C','!collectd: nvme1 temperature 69C'],
+    opts:[
+      {t:'Check airflow and fans at the rack; keep the drives at or under 65 °C', ok:true, why:'Someone parked a road case in front of the intake. Back to 54 °C.'},
+      {t:'Ignore it, the drives are rated for 85', why:'Over 65 °C is where the trouble starts. Still climbing.'},
+      {t:'ipmitool power cycle', fix:true, cons:'black15', why:'You cooled it off by turning it off. During a live show.'},
+      {t:'Raise the alert threshold', why:'The alert is quieter. The drive is not cooler.'},
+    ]},
+  { id:'dclocate', row:'cluster', effect:'none', status:'3 of 4 in search', title:'A server vanished from search',
+    symptom:'The AP can’t find any of REPLAY-03’s clips in cluster search.',
+    log:['!dclocate.service: inactive (dead)','vueweb: cluster search, 3 of 4 nodes responded'],
+    opts:[
+      {t:'sudo systemctl restart dclocate', ok:true, why:'dclocate had stopped. REPLAY-03’s archives are back in search.'},
+      {t:'Re-add the NAS mount as Indexable', why:'That’s the fix for Internal Storage missing in VUE. Search is still 3 of 4.'},
+      {t:'sudo dcs clearall on REPLAY-03', why:'You wiped REPLAY-03’s trains. Search still can’t see it.'},
+      {t:'curl -XDELETE localhost:9200/*', why:'Last resort, not first. Still 3 of 4, and now you have more problems.'},
+    ]},
+  { id:'nas_arp', row:'storage', effect:'none', status:'Unreachable', title:'Highlight exports are failing',
+    symptom:'Exports to the NAS fail. This server was upgraded last night.',
+    log:['!mount error(115): Operation now in progress','$ traceroute 10.20.8.15','!  1  10.20.4.1  0.41 ms !H'],
+    opts:[
+      {t:'Clear the stale ARP entry on the core router', ok:true, why:'The router still had the old MAC from before the upgrade. Exports are flowing.'},
+      {t:'Re-enter the SMB credentials', why:'Error -115 is reachability, not credentials.'},
+      {t:'sudo ufw disable', why:'The server firewall isn’t it. Still !H.'},
+      {t:'Downgrade back to last week’s build', cons:'black15', why:'Long black on air, and the router still has the stale ARP.'},
+    ]},
+];
+const txt = (v, f) => typeof v === 'function' ? v(f) : v;
+
+/* ---------- state ---------- */
+let show, now = 0, running = false, paused = false, ended = false;
+let selAngle = 'A', pvwLive = true, playhead = 0, markIn = null, markOut = null, lever = 100;
+let fastJog = false, shift = false, menuOpen = false, jogRot = 0;
+let replay = null, call = null, trainStart = 0, deadAirUntil = -1;
+let score = 0, streak = 0, stats;
+let faults = [], schedule = [], feed = [], marks = [], lastCue = null;
+let slots = [Array(10).fill(null), Array(10).fill(null)], page = 0, selSlot = -1;
+let lcdMsg = '', lcdUntil = 0, meter = [0,0];
+let healthDirty = true, feedDirty = true, slotsDirty = true, conFault = null;
+
+const ctx = { pgm: $('#pgm').getContext('2d'), pvw: $('#pvw').getContext('2d') };
+const camEls = {};
+for(const a of ANGLES){
+  const b = document.createElement('button');
+  b.className = 'cam'; b.type = 'button'; b.setAttribute('aria-label', `Select camera ${a}`);
+  b.innerHTML = `<canvas class="v" width="320" height="180"></canvas><span class="umd"><span>CAM ${a}  IN ${INPUT_NO[a]}</span><span>${ANGLE_NAMES[a]}</span></span>`;
+  b.addEventListener('mousedown', e => e.preventDefault());
+  b.addEventListener('click', () => key(a));
+  $('#cams').appendChild(b);
+  camEls[a] = {btn:b, ctx:b.querySelector('canvas').getContext('2d')};
+}
+// trains
+const trk = {};
+for(const a of ANGLES){
+  const l = document.createElement('div'); l.innerHTML = `CAM ${a} <small>IN ${INPUT_NO[a]}</small>`; l.dataset.a = a; $('#tl').appendChild(l);
+  const t = document.createElement('div'); t.className = 'trk'; t.innerHTML = '<div class="rec"></div>';
+  t.addEventListener('click', e => {
+    if(!running) return;
+    const r = t.getBoundingClientRect();
+    if(!panelOK()) return;
+    selAngle = a; cueTo(now - WIN + (e.clientX - r.left)/r.width*WIN);
+  });
+  $('#tt').insertBefore(t, $('#ov'));
+  trk[a] = {lab:l, el:t, rec:t.firstChild};
+}
+// F-key row
+const FROW = ['menu','shift','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','clear','enter'];
+const fkeys = {};
+for(const k of FROW){
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'fk' + (['menu','shift','clear','enter'].includes(k) ? ' lt' : '');
+  b.setAttribute('aria-label', k.toUpperCase());
+  b.addEventListener('mousedown', e => e.preventDefault());
+  b.addEventListener('click', () => key(k));
+  $('#frow').appendChild(b); fkeys[k] = b;
+}
+const caps = {};
+document.querySelectorAll('.cap').forEach(c => {
+  caps[c.dataset.k] = c;
+  c.addEventListener('mousedown', e => e.preventDefault());
+  c.addEventListener('click', () => key(c.dataset.k));
+});
+// clip view
+const tiles = [];
+for(let i=0;i<10;i++){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'tile empty';
+  b.innerHTML = `<span class="th"><span>F${i+1}</span><span class="nm"></span></span><canvas width="160" height="90"></canvas><span class="tf"><span class="ca">Empty</span><span class="du"></span></span>`;
+  b.addEventListener('click', () => recall(i));
+  $('#pbs').appendChild(b); tiles.push(b);
+}
+const tabs = [0,1].map(p => { const b = document.createElement('button'); b.type = 'button'; b.textContent = `Page ${p+1}`; b.addEventListener('click', () => { page = p; slotsDirty = true; }); $('#tabs').appendChild(b); return b; });
+
+function active(effect){ return faults.find(f => !f.resolved && f.def.effect === effect); }
+function activeId(id){ return faults.find(f => !f.resolved && f.def.id === id); }
+function deadCam(){ const f = active('nocam'); return f ? f.angle : null; }
+function flash(m, secs=2){ lcdMsg = m; lcdUntil = now + secs; }
+function panelOK(){ if(active('panel')){ flash('PANEL OFFLINE'); return false; } return true; }
+
+function startShow(){
+  show = buildShow((Math.random()*1e9)|0);
+  now = 0; running = true; paused = false; ended = false;
+  selAngle = 'A'; pvwLive = true; playhead = 0; markIn = markOut = null; lever = 100;
+  fastJog = false; shift = false; menuOpen = false; replay = null; call = null; trainStart = 0; deadAirUntil = -1;
+  score = 0; streak = 0; feed = []; faults = []; marks = []; lastCue = null;
+  slots = [Array(10).fill(null), Array(10).fill(null)]; page = 0; selSlot = -1;
+  stats = {aired:0, clean:0, missed:0, fixed:0, faults:0, dead:0, best:0, wrong:0};
+  // one panel fault plus two others on different rows
+  const pf = FAULTS.find(f => f.id === pick(PANEL_FAULTS));
+  const rest = shuffle(FAULTS.filter(f => !PANEL_FAULTS.includes(f.id))).slice(0, 2);
+  const order = shuffle([pf, ...rest]);
+  const times = [28 + rnd()*14, 78 + rnd()*14, 126 + rnd()*16];
+  schedule = order.map((def,i) => ({t:times[i], def, fired:false}));
+  setIFB('Stand by. Kickoff’s done, first drive coming up.', '');
+  healthDirty = feedDirty = slotsDirty = true;
+  $('#startOv').hidden = true; $('#endOv').hidden = true;
+  $('#pauseBtn').textContent = 'Pause';
+}
+function setIFB(main, sub){ $('#ifbText').textContent = main; if(sub !== undefined) $('#ifbSub').textContent = sub; }
+const spdText = s => s === 100 ? 'real time' : s === 50 ? 'half speed' : `${s} percent`;
+
+/* ---------- panel keys ---------- */
+function scrub(d){
+  if(!panelOK()) return;
+  if(active('blue')){ flash('TIME UNKNOWN: CANNOT SCRUB'); return; }
+  if(pvwLive){ pvwLive = false; playhead = now; }
+  playhead = clamp(playhead + d*(fastJog ? 5 : 1), trainStart, now);
+}
+function cueTo(t){
+  if(!running || paused) return;
+  if(active('blue')){ flash('TIME UNKNOWN: CANNOT CUE'); return; }
+  pvwLive = false; playhead = clamp(t, trainStart, now); lastCue = playhead;
+  flash(`CUED ${tc(playhead)}`);
+}
+function key(k){
+  if(!running || paused || ended || conFault) return;
+  if(k === 'menu'){ menuOpen = !menuOpen; return; }
+  if(menuOpen && /^F\d+$/.test(k)){
+    const n = +k.slice(1);
+    if(n === 2) flash(activeId('server_disc') ? 'SERVER UNREACHABLE' : 'SERVER 10.20.4.21 CONNECTED');
+    else if(n === 5) flash('DC-RCP10 FIRMWARE 25.05.3');
+    else flash(`F${n}: NOTHING TO CHANGE`);
+    return;
+  }
+  if(!panelOK()) return;
+  const sh = shift; if(k !== 'shift') shift = false;
+  switch(k){
+    case 'shift': shift = !shift; return;
+    case 'A': case 'B': case 'C': case 'D': selAngle = k; selSlot = -1; if(sh) flash(`CAM ${k}’ (SAME FEED)`); return;
+    case 'in':
+      if(sh){ goIn(); return; }
+      markIn = playhead; if(markOut != null && markOut <= markIn) markOut = null; selSlot = -1;
+      flash(`IN ${tc(markIn)}`); return;
+    case 'out':
+      if(sh){ if(markOut == null) return flash('NO OUT POINT'); if(markOut < trainStart) return flash('OUT POINT GONE'); pvwLive = false; playhead = markOut; return; }
+      if(markIn != null && playhead <= markIn) return flash('OUT MUST BE AFTER IN');
+      markOut = playhead; selSlot = -1; flash(`OUT ${tc(markOut)}`); return;
+    case 'clip': if(sh){ page = (page+1)%2; slotsDirty = true; flash(`CLIP VIEW PAGE ${page+1}`); return; } goIn(); return;
+    case 'rec': pvwLive = true; playhead = now; return;
+    case 'mark':
+      if(sh){ fastJog = !fastJog; flash(fastJog ? 'FAST JOG ON' : 'FAST JOG OFF'); return; }
+      { const t = pvwLive ? now : playhead; marks.push(t); lastCue = t; flash(`MARK ${tc(t)}`); } return;
+    case 'cue':
+      if(sh) return flash('GOTO TC: USE LAST CUE OR THE FEED');
+      if(lastCue == null) return flash('NO CUE YET. PRESS MARK');
+      if(lastCue < trainStart) return flash('CUE NO LONGER ON TRAIN');
+      if(active('blue')) return flash('TIME UNKNOWN: CANNOT CUE');
+      pvwLive = false; playhead = lastCue; flash(`LAST CUE ${tc(lastCue)}`); return;
+    case 'play': if(sh) return flash('NETWORK PLAY NOT CONFIGURED'); roll(100); return;
+    case 'take': if(sh) return flash('LEVER CONTROLS SPEED ON TAKE'); roll(lever); return;
+    case 'plst': case 'browse': return flash(sh ? 'NOT USED ON THIS SHOW' : 'NO PLAYLIST TONIGHT');
+    case 'clear': markIn = markOut = null; selSlot = -1; flash('MARKS CLEARED'); return;
+    case 'enter': saveClip(true); return;
+    default:
+      if(/^F\d+$/.test(k)) recall(+k.slice(1) - 1);
+  }
+}
+function goIn(){
+  if(markIn == null) return flash('NO IN POINT');
+  if(markIn < trainStart) return flash('IN POINT GONE');
+  if(active('blue')) return flash('TIME UNKNOWN: CANNOT CUE');
+  pvwLive = false; playhead = markIn; lastCue = markIn;
+}
+function saveClip(announce){
+  if(markIn == null || markOut == null){ if(announce) flash('MARK IN AND OUT FIRST'); return -1; }
+  if(selSlot >= 0){ if(announce) flash('CLIP ALREADY SAVED'); return selSlot; }
+  for(let p=0;p<2;p++){
+    const i = slots[p].indexOf(null);
+    if(i >= 0){
+      slots[p][i] = {in:markIn, out:markOut, a:selAngle, n:`${p+1}-${p2(i+1)}`};
+      page = p; selSlot = i; slotsDirty = true;
+      if(announce) flash(`SAVED ${slots[p][i].n}  F${i+1}`);
+      drawThumb(p, i);
+      return i;
+    }
+  }
+  if(announce) flash('CLIP VIEW FULL'); return -1;
+}
+function recall(i){
+  if(!running || paused || conFault) return;
+  if(!panelOK()) return;
+  const s = slots[page][i];
+  if(!s) return flash(`F${i+1}: EMPTY SLOT`);
+  if(s.in < trainStart) return flash('MEDIA OFFLINE');
+  markIn = s.in; markOut = s.out; selAngle = s.a; selSlot = i;
+  pvwLive = false; playhead = s.in; lastCue = s.in; slotsDirty = true;
+  flash(`RECALL ${s.n}`);
+}
+const thumbs = [[],[]];
+function drawThumb(p, i){
+  const s = slots[p][i]; if(!s) return;
+  const c = document.createElement('canvas'); c.width = 160; c.height = 90;
+  const cx = c.getContext('2d');
+  if(deadCam() === s.a) drawBlack(cx, 160, 90, 'NO VIDEO'); else drawField(cx, 160, 90, s.a, stateAt((s.in + s.out)/2));
+  thumbs[p][i] = c;
+}
+
+function roll(speed){
+  if(active('noplay')) return flash('COMMANDER NOT RESPONDING');
+  if(replay) return flash('ALREADY ON AIR');
+  if(markIn == null) return flash('MARK IN FIRST');
+  if(markOut == null) return flash('MARK OUT FIRST');
+  if(markIn < trainStart) return flash('CLIP NO LONGER ON TRAIN');
+  saveClip(false);
+  replay = {a:selAngle, pos:markIn, in:markIn, out:markOut, speed, hold:0, verdict:null};
+  stats.aired++;
+  if(call){
+    replay.verdict = evaluate(call, replay);
+    setIFB(`Rolling camera ${replay.a} at ${spdText(speed)}.`, ''); call = null;
+  } else {
+    replay.verdict = {pts:-60, clean:false, msg:'I didn’t ask for a replay. Get off my air.'};
+    setIFB('What is this? I didn’t call for that.', '');
+  }
+  flash(speed === 100 ? 'PLAY' : `TAKE ${speed}%`);
+}
+
+function evaluate(c, r){
+  const pl = c.play, ps = pl.s, pe = pl.e, len = pe - ps;
+  if(deadCam() === r.a) return {pts:0, clean:false, msg:`You rolled camera ${r.a}. It’s black. We aired black.`};
+  const ov = Math.max(0, Math.min(r.out, pe) - Math.max(r.in, ps)), cov = ov/len;
+  const pre = Math.max(0, ps - r.in), post = Math.max(0, r.out - pe);
+  const tight = clamp(1 - (Math.max(0, pre-2.5) + Math.max(0, post-2.5))/10, .35, 1);
+  const angleOk = r.a === c.angle, sd = Math.abs(r.speed - c.speed);
+  const spdF = clamp(1 - sd/60, .4, 1), timeLeft = clamp(1 - (now - c.t0)/CALL_LEN, 0, 1);
+  const q = cov*cov*tight;
+  let pts = Math.round(1000*q*(angleOk?1:.5)*spdF*(.75+.25*timeLeft));
+  if(cov < .15) pts = 0;
+  let msg;
+  if(cov < .15) msg = `That wasn’t ${pl.short}. That was nothing.`;
+  else if(cov < .6) msg = `You missed most of ${pl.short}.`;
+  else if(r.in > ps + .35) msg = 'You came in late. We missed the snap.';
+  else if(!angleOk) msg = `I asked for camera ${c.angle}, not ${r.a}.`;
+  else if(sd > 10) msg = `That wasn’t ${spdText(c.speed)}.`;
+  else if(pre > 4) msg = 'Way too much standing around up front.';
+  else if(post > 4) msg = 'We sat on that way too long after the whistle.';
+  else if(q > .85) msg = pick(['Beautiful. That’s the one.','Clean. Thank you.','That’s air. Nice.','Perfect, keep that up.']);
+  else msg = 'Usable. Tighten it up next time.';
+  return {pts, clean: q > .8 && angleOk && sd <= 10, msg};
+}
+function finishReplay(){
+  const v = replay.verdict;
+  score += v.pts;
+  if(v.clean){ streak++; stats.clean++; } else streak = 0;
+  stats.best = Math.max(stats.best, v.pts);
+  setIFB(v.msg, v.pts > 0 ? `+${v.pts} points` : v.pts < 0 ? `${v.pts} points` : 'No points');
+  replay = null;
+}
+
+/* ---------- fault console ---------- */
+function fireFault(def){
+  const f = {def, t:now, resolved:false, tried:new Set(), opts:shuffle(def.opts.slice()), angle:null};
+  if(def.effect === 'nocam') f.angle = pick(ANGLES.filter(a => a !== 'A' && a !== selAngle));
+  faults.push(f); stats.faults++; healthDirty = true; slotsDirty = true;
+  flash(`ALARM: ${txt(def.title, f).toUpperCase()}`, 3);
+}
+function openConsole(f){
+  conFault = f;
+  $('#conH').textContent = txt(f.def.title, f);
+  $('#conSym').textContent = txt(f.def.symptom, f);
+  const log = $('#conLog'); log.innerHTML = '';
+  for(const line of txt(f.def.log, f)){
+    const s = document.createElement('span');
+    if(line[0] === '!'){ s.className = 'err'; s.textContent = line.slice(1); } else s.textContent = line;
+    log.appendChild(s); log.appendChild(document.createTextNode('\n'));
+  }
+  const wrap = $('#conOpts'); wrap.innerHTML = '';
+  f.opts.forEach((o, i) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.type = 'button'; b.textContent = o.t;
+    if(f.tried.has(i)){ b.disabled = true; b.classList.add('wrong'); }
+    if(f.resolved) b.disabled = true;
+    b.addEventListener('click', () => choose(f, o, i, b));
+    wrap.appendChild(b);
+  });
+  $('#conVerdict').textContent = ''; $('#conVerdict').className = 'verdict';
+  $('#conOv').hidden = false;
+  (wrap.querySelector('.opt:not(:disabled)') || $('#conClose')).focus();
+}
+function closeConsole(){ conFault = null; $('#conOv').hidden = true; }
+function consequence(c){
+  if(c === 'black6') deadAirUntil = Math.max(deadAirUntil, now + 6);
+  else if(c === 'black15') deadAirUntil = Math.max(deadAirUntil, now + 15);
+  else if(c === 'clear'){
+    trainStart = now; markIn = markOut = null; playhead = now; pvwLive = true; replay = null; marks = []; lastCue = null;
+    slots = [Array(10).fill(null), Array(10).fill(null)]; selSlot = -1; slotsDirty = true;
+  }
+}
+function choose(f, o, i, btn){
+  if(f.resolved || !running) return;
+  const v = $('#conVerdict');
+  consequence(o.cons);
+  if(o.ok || o.fix){
+    f.resolved = true; healthDirty = true; slotsDirty = true; stats.fixed++;
+    let pts = 0;
+    if(o.ok){ pts = 250 + Math.max(0, Math.round(200 - 10*(now - f.t))); btn.classList.add('right'); }
+    else btn.classList.add('wrong');
+    score += pts;
+    v.textContent = o.why + (pts ? `  +${pts}` : ''); v.className = 'verdict ' + (o.ok ? 'good' : 'bad');
+    document.querySelectorAll('#conOpts .opt').forEach(b => b.disabled = true);
+    $('#conClose').focus();
+  } else {
+    f.tried.add(i); stats.wrong++; score -= 120;
+    btn.disabled = true; btn.classList.add('wrong');
+    v.textContent = o.why + '  −120'; v.className = 'verdict bad';
+  }
+}
+
+/* ---------- loop ---------- */
+function update(dt){
+  now += dt;
+  if(pvwLive) playhead = now;
+  playhead = clamp(playhead, trainStart, now);
+  if(replay){
+    if(replay.pos < replay.out) replay.pos = Math.min(replay.out, replay.pos + dt*Math.max(replay.speed,5)/100);
+    else { replay.hold += dt; if(replay.hold > .7) finishReplay(); }
+  }
+  for(const pl of show.plays){
+    if(!pl.announced && now >= pl.e + .8){
+      pl.announced = true;
+      feed.unshift({t: pl.s + (rnd()-.5)*2, desc: pl.desc}); feedDirty = true;
+      if(call){ stats.missed++; score -= 150; streak = 0; }
+      const dead = deadCam();
+      const ang = pick(ANGLES.filter(a => a !== dead)), spd = pick([25,50,50,75,100]);
+      call = {play:pl, angle:ang, speed:spd, t0:now};
+      setIFB(pick([
+        `Got ${pl.short}? Give me camera ${ang}, ${spdText(spd)}.`,
+        `Let me see ${pl.short} on ${ang}, ${spdText(spd)}. Ready when you are.`,
+        `Replay! ${pl.short[0].toUpperCase()+pl.short.slice(1)}, camera ${ang}, ${spdText(spd)}.`,
+      ]), pl.desc);
+    }
+  }
+  if(call && now - call.t0 > CALL_LEN){
+    stats.missed++; score -= 150; streak = 0; call = null;
+    setIFB('Too late. We’re moving on.', '−150 points');
+  }
+  for(const s of schedule){ if(!s.fired && now >= s.t){ s.fired = true; fireFault(s.def); } }
+  for(const f of faults){ if(!f.resolved) score -= (f.def.drain || 4)*dt; }
+  if(now < deadAirUntil || (replay && deadCam() === replay.a)){ score -= 40*dt; stats.dead += dt; }
+  if(now >= SHOW_LEN && !replay) endShow();
+}
+function endShow(){
+  running = false; ended = true; closeConsole();
+  const s = Math.round(score);
+  let hi = 0; try { hi = +localStorage.getItem('rop-hi') || 0; if(s > hi){ hi = s; localStorage.setItem('rop-hi', String(s)); } } catch(e) {}
+  $('#endTitle').textContent =
+    s >= 5000 ? 'Lead replay op. They want you on the big game crew.' :
+    s >= 3000 ? 'Solid shift. The producer bought you a coffee.' :
+    s >= 1200 ? 'You got through it. The producer has notes.' :
+    s >= 0 ? 'Rough night. Maybe Ctrl+Alt+R yourself.' : 'The TD is drafting the incident report.';
+  const rows = [['Final score', s],['Personal best', hi],['Replays aired', stats.aired],['Clean replays', stats.clean],['Calls missed', stats.missed],
+    ['Best replay', stats.best],['Faults fixed', `${stats.fixed} of ${stats.faults}`],['Wrong fixes tried', stats.wrong],['Seconds of black on air', Math.round(stats.dead)]];
+  $('#results').innerHTML = rows.map(([k,v]) => `<span>${k}</span><b>${v}</b>`).join('');
+  $('#endOv').hidden = false; $('#againBtn').focus();
+}
+
+/* ---------- RCP-10 touchscreen (VUE) ---------- */
+const WRENCH = '<svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M12 36l16-16"/><path d="M28 20a7 7 0 1 0 6-11l-4 4-3-1-1-3 4-4a7 7 0 0 0-11 6"/><path d="M36 36L18 18"/><path d="M14 10l6 6-3 3-6-6z" fill="#fff"/><path d="M33 33l5 5"/></svg>';
+const PLUG = c => `<svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><g stroke="${c}" stroke-width="2.4" fill="none" stroke-linecap="round"><path d="M2 14l5-5M15 7l5-5M8 4l3 3M11 1l3 3"/><path d="M7 9l3-3 3 3-3 3z"/></g></svg>`;
+const OKI = '<svg width="18" height="16" viewBox="0 0 18 16" aria-hidden="true"><path d="M2 8l5 5 9-11" stroke="#8dff7c" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+let scrLast = '';
+function renderScreen(){
+  const pf = PANEL_FAULTS.map(activeId).filter(Boolean);
+  let h = '';
+  if(pf.length){
+    h += `<div class="alarm"><div class="am">${pf.map(f => `<p><b>${BANNERS[f.def.id][0]}</b><span>${BANNERS[f.def.id][1]}</span></p>`).join('')}</div><div class="aw">${WRENCH}</div></div>`;
+  }
+  if(menuOpen){
+    const srv = activeId('server_disc'), anyP = pf.length > 0;
+    h += `<div class="sh"><span class="bk">‹ Back</span><b>ENGINEERING SETTINGS</b><span></span></div>`;
+    h += `<div class="srow"><span>(F2) DreamCatcher Server</span><span>${srv ? PLUG('#ff4a4a') : OKI}<span class="chev">›</span></span></div>`;
+    h += `<div class="srow"><span>(F3) Keyboard And Mouse Control</span><span>${anyP ? PLUG('#ff4a4a') : OKI}<span class="chev">›</span></span></div>`;
+    h += `<div class="srow"><span>(F4) Router Control</span><span class="chev">›</span></div>`;
+    h += `<div class="ssec">FIRMWARE</div>`;
+    h += `<div class="srow"><span>(F5) DC-RCP10 Firmware Version</span><span><span class="v">25.05.3</span><span class="chev">›</span></span></div>`;
+  } else {
+    const modeTxt = replay ? `ON AIR  ${replay.speed}%` : pvwLive ? 'E-E (RECORD)' : 'CLIP';
+    const dur = markIn != null && markOut != null ? (markOut - markIn).toFixed(1) + ' s' : '';
+    h += `<div class="sh"><span class="bk">‹ Page ${page+1}</span><b>CHANNEL A</b><span class="rt">${shift ? 'SHIFT' : fastJog ? 'FAST JOG' : ''}</span></div>`;
+    h += `<div class="srow"><span>Camera</span><span class="v">${selAngle}  ${ANGLE_NAMES[selAngle]}${deadCam() === selAngle ? '  (NO VIDEO)' : ''}</span></div>`;
+    h += `<div class="srow"><span>Mode</span><span class="v">${modeTxt}</span></div>`;
+    h += `<div class="srow"><span>Timecode</span><span class="v">${tc(replay ? replay.pos : playhead)}</span></div>`;
+    h += `<div class="srow"><span>IN / OUT</span><span class="v">${markIn != null ? tc(markIn) : '--:--:--:--'}  /  ${markOut != null ? tc(markOut) : '--:--:--:--'}  ${dur}</span></div>`;
+    h += `<div class="srow"><span>Lever</span><span class="v">${lever}%<span class="lbar"><i style="width:${lever}%"></i></span></span></div>`;
+    h += `<div class="slots">${slots[page].map((s,i) => `<span class="${s ? 'f' : ''}${i === selSlot ? ' s' : ''}">F${i+1}</span>`).join('')}</div>`;
+  }
+  if(now < lcdUntil && lcdMsg) h += `<div class="toast">${lcdMsg}</div>`;
+  if(h !== scrLast){ $('#scr').innerHTML = h; scrLast = h; }
+}
+
+/* ---------- render ---------- */
+function drawMeters(c, w, h, live){
+  const noAudio = !!active('noaudio');
+  for(let i=0;i<2;i++){
+    const target = noAudio ? 0 : (live ? .5 : .62) + Math.random()*.3;
+    meter[i] = lerp(meter[i], target, .25);
+    const x = w - 22 + i*9, bh = h - 40;
+    c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x, 20, 6, bh);
+    const lv = meter[i]*bh, g = c.createLinearGradient(0, 20+bh, 0, 20);
+    g.addColorStop(0,'#3bd16b'); g.addColorStop(.75,'#e8d53a'); g.addColorStop(1,'#ec4632');
+    c.fillStyle = g; c.fillRect(x, 20+bh-lv, 6, lv);
+  }
+}
+function render(){
+  if(!show) return;
+  const W = 640, H = 360, dead = deadCam(), pc = ctx.pgm;
+  const black = now < deadAirUntil || (replay && dead === replay.a);
+  if(black){ drawBlack(pc, W, H, ''); $('#pgmR').textContent = 'BLACK'; }
+  else if(replay){
+    drawField(pc, W, H, replay.a, stateAt(replay.pos));
+    pc.fillStyle = '#f2a92f'; roundRect(pc, 18, 18, 118, 34, 4); pc.fill();
+    pc.fillStyle = '#1b1306'; pc.font = '700 24px "Roboto Condensed", sans-serif'; pc.textAlign = 'left'; pc.textBaseline = 'middle';
+    pc.fillText('REPLAY', 30, 36);
+    drawMeters(pc, W, H, false);
+    $('#pgmR').textContent = `CH A  CAM ${replay.a}  ${replay.speed}%`;
+  } else {
+    drawField(pc, W, H, 'A', stateAt(now));
+    const [h, a] = scoreAt(now);
+    pc.fillStyle = 'rgba(14,18,24,.85)'; roundRect(pc, 18, H-52, 196, 34, 4); pc.fill();
+    pc.fillStyle = HOME; pc.fillRect(18, H-52, 6, 34);
+    pc.font = '700 20px "Roboto Condensed", sans-serif'; pc.textBaseline = 'middle'; pc.textAlign = 'left';
+    pc.fillStyle = '#fff'; pc.fillText(`HOME ${h}`, 34, H-35); pc.fillText(`AWAY ${a}`, 120, H-35);
+    drawMeters(pc, W, H, true);
+    $('#pgmR').textContent = 'LIVE  CAM A';
+  }
+  if(!active('freeze')){
+    if(dead === selAngle) drawBlack(ctx.pvw, W, H, 'NO VIDEO');
+    else drawField(ctx.pvw, W, H, selAngle, stateAt(playhead));
+  }
+  $('#chHdr').textContent = replay ? 'ON AIR' : pvwLive ? 'E-E' : 'CLIP';
+  $('#pvwL').textContent = `CH A  CAM ${selAngle}`;
+  $('#pvwR').textContent = tc(playhead);
+  const live = stateAt(now);
+  for(const a of ANGLES){
+    const e = camEls[a];
+    if(dead === a) drawBlack(e.ctx, 320, 180, 'NO VIDEO'); else drawField(e.ctx, 320, 180, a, live);
+    e.btn.classList.toggle('sel', a === selAngle);
+  }
+  // trains
+  const t0 = now - WIN, X = t => clamp((t - t0)/WIN*100, 0, 100), blue = !!active('blue');
+  for(const a of ANGLES){
+    const r = trk[a];
+    r.rec.style.left = X(Math.max(trainStart, t0)) + '%';
+    r.el.classList.toggle('blue', blue); r.el.classList.toggle('dead', dead === a);
+    r.lab.classList.toggle('sel', a === selAngle);
+  }
+  $('#ph').style.left = `calc(${X(playhead)}% - 1px)`;
+  const mi = $('#mkIn'), mo = $('#mkOut'), cr = $('#clipR');
+  mi.style.display = markIn != null && markIn >= t0 ? 'block' : 'none'; if(markIn != null) mi.style.left = X(markIn) + '%';
+  mo.style.display = markOut != null && markOut >= t0 ? 'block' : 'none'; if(markOut != null) mo.style.left = X(markOut) + '%';
+  if(markIn != null && markOut != null){ cr.style.display = 'block'; cr.style.left = X(markIn) + '%'; cr.style.width = (X(markOut) - X(markIn)) + '%'; }
+  else cr.style.display = 'none';
+  const vis = marks.filter(m => m >= Math.max(t0, trainStart));
+  $('#ems').innerHTML = vis.map(m => `<div class="em" style="left:${X(m)}%"></div>`).join('');
+  // toolbar
+  $('#clock').textContent = tc(now);
+  const rem = Math.max(0, SHOW_LEN - now);
+  $('#remain').textContent = `${Math.floor(rem/60)}:${p2(Math.floor(rem%60))}`;
+  $('#score').textContent = Math.round(score);
+  $('#streak').textContent = streak;
+  const bar = $('#cdBar');
+  if(call){ const f = clamp(1 - (now - call.t0)/CALL_LEN, 0, 1); bar.style.width = (f*100) + '%'; bar.classList.toggle('urgent', f < .3); }
+  else bar.style.width = '0';
+  // key lamps
+  const ok = !active('panel');
+  for(const a of ANGLES) caps[a].classList.toggle('on', ok && a === selAngle);
+  caps.in.classList.toggle('dim', ok && markIn != null);
+  caps.out.classList.toggle('dim', ok && markOut != null);
+  caps.rec.classList.toggle('on', ok && pvwLive && !replay);
+  caps.clip.classList.toggle('on', ok && !pvwLive && !replay);
+  caps.mark.classList.toggle('dim', ok && fastJog);
+  caps.play.classList.toggle('on', ok && !!replay && replay.speed === 100);
+  caps.take.classList.toggle('on', ok && !!replay && replay.speed !== 100);
+  caps.take.classList.toggle('blink', ok && !replay && markIn != null && markOut != null && !!call);
+  fkeys.menu.classList.toggle('on', menuOpen || !ok);
+  fkeys.shift.classList.toggle('on', shift);
+  for(let i=0;i<10;i++) fkeys['F'+(i+1)].classList.toggle('on', ok && !!slots[page][i]);
+  $('#jr').style.transform = `rotate(${jogRot}rad)`;
+  renderLever(); renderScreen();
+  if(slotsDirty) renderSlots();
+  if(healthDirty) renderHealth();
+  if(feedDirty) renderFeed();
+}
+function renderSlots(){
+  slotsDirty = false;
+  const gone = !!activeId('no_clipview');
+  $('#cvWd').hidden = false;
+  if(gone){ $('#cvBody').innerHTML = '<div class="gone">Empty layout cell. The Clip View widget isn’t in this layout.</div>'; $('#tabs').hidden = true; return; }
+  $('#tabs').hidden = false;
+  if(!$('#pbs')){ $('#cvBody').innerHTML = ''; const d = document.createElement('div'); d.className = 'pbs'; d.id = 'pbs'; tiles.forEach(t => d.appendChild(t)); $('#cvBody').appendChild(d); }
+  tabs.forEach((b,p) => b.classList.toggle('on', p === page));
+  tiles.forEach((b,i) => {
+    const s = slots[page][i], c = b.querySelector('canvas'), cx = c.getContext('2d');
+    b.classList.toggle('empty', !s); b.classList.toggle('sel', i === selSlot && !!s);
+    b.querySelector('.nm').textContent = s ? s.n : '';
+    b.querySelector('.ca').textContent = s ? `CAM ${s.a}` : 'Empty';
+    b.querySelector('.du').textContent = s ? (s.out - s.in).toFixed(1) + ' s' : '';
+    cx.clearRect(0,0,160,90);
+    if(s && thumbs[page][i]) cx.drawImage(thumbs[page][i], 0, 0);
+  });
+}
+function renderHealth(){
+  healthDirty = false;
+  const ul = $('#health'); ul.innerHTML = ''; let n = 0;
+  for(const [k, name, ok] of ROWS){
+    const f = faults.find(x => !x.resolved && x.def.row === k);
+    const li = document.createElement('li'); li.className = f ? 'bad' : '';
+    li.innerHTML = `<span class="dot"></span><span class="nm">${name}</span><span class="st"></span>`;
+    li.querySelector('.st').textContent = f ? txt(f.def.status, f) : ok;
+    if(f){ n++; const b = document.createElement('button'); b.className = 'fixbtn'; b.type = 'button'; b.textContent = 'Troubleshoot'; b.addEventListener('click', () => { if(running) openConsole(f); }); li.appendChild(b); }
+    else li.appendChild(document.createElement('span'));
+    ul.appendChild(li);
+  }
+  $('#healthH').textContent = n ? `System Status: ${n} alarm${n>1?'s':''}` : 'System Status';
+}
+function renderFeed(){
+  feedDirty = false;
+  const ol = $('#feed'); ol.innerHTML = '';
+  $('#feedEmpty').hidden = feed.length > 0;
+  for(const it of feed.slice(0,6)){
+    const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
+    b.innerHTML = `<span class="ftc">~${tc(it.t).slice(0,8)}</span><span></span>`; b.lastChild.textContent = it.desc;
+    b.addEventListener('click', () => { if(panelOK()) cueTo(it.t); });
+    li.appendChild(b); ol.appendChild(li);
+  }
+}
+
+/* ---------- T-bar ---------- */
+const lev = $('#lev'), tbar = $('#tbar');
+function renderLever(){
+  tbar.style.top = (110 + 24 + (1 - lever/100)*252 - 26) + 'px';
+  lev.setAttribute('aria-valuenow', lever);
+}
+function leverFromY(y){
+  const r = lev.getBoundingClientRect(), s = r.height/300;
+  const local = (y - r.top)/s;
+  lever = Math.round(clamp(1 - (local - 24)/252, 0, 1)*100);
+}
+let levDrag = false;
+const levc = lev.parentElement;
+levc.addEventListener('pointerdown', e => { if(!running || paused) return; levDrag = true; levc.setPointerCapture(e.pointerId); leverFromY(e.clientY); });
+levc.addEventListener('pointermove', e => { if(levDrag) leverFromY(e.clientY); });
+levc.addEventListener('pointerup', () => levDrag = false);
+levc.addEventListener('pointercancel', () => levDrag = false);
+
+/* ---------- jog ---------- */
+const jog = $('#jog'); let jogDrag = null;
+const angleOf = e => { const r = jog.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height/2), e.clientX - (r.left + r.width/2)); };
+jog.addEventListener('pointerdown', e => { jog.setPointerCapture(e.pointerId); jogDrag = {a: angleOf(e)}; });
+jog.addEventListener('pointermove', e => {
+  if(!jogDrag) return;
+  const a = angleOf(e); let d = a - jogDrag.a;
+  if(d > Math.PI) d -= 2*Math.PI; if(d < -Math.PI) d += 2*Math.PI;
+  jogDrag.a = a; jogRot += d;
+  if(running && !paused && !conFault) scrub(d/(2*Math.PI)*1.5);
+});
+const jogEnd = () => { jogDrag = null; };
+jog.addEventListener('pointerup', jogEnd); jog.addEventListener('pointercancel', jogEnd);
+jog.addEventListener('wheel', e => {
+  e.preventDefault();
+  if(!running || paused || conFault) return;
+  const d = (e.deltaY > 0 ? 1 : -1)*(e.shiftKey ? 1 : 3/FPS);
+  jogRot += d*.8; scrub(d);
+}, {passive:false});
+
+/* ---------- keyboard ---------- */
+addEventListener('keydown', e => {
+  if(!$('#conOv').hidden){ if(e.key === 'Escape') closeConsole(); return; }
+  if(!$('#startOv').hidden || !$('#endOv').hidden) return;
+  const tag = e.target && e.target.tagName;
+  if(tag === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+  if(!running) return;
+  const k = e.key;
+  const fm = /^F(\d+)$/.exec(k);
+  if(fm && +fm[1] <= 10){ e.preventDefault(); key(k); return; }
+  if(k === 'p' || k === 'P'){ togglePause(); return; }
+  if(k >= '1' && k <= '4') key(ANGLES[+k - 1]);
+  else if(k === 'i' || k === 'I') key('in');
+  else if(k === 'o' || k === 'O') key('out');
+  else if(k === 'g' || k === 'G'){ shift = true; key('in'); }
+  else if(k === 'r' || k === 'R' || k === 'l' || k === 'L') key('rec');
+  else if(k === 'm' || k === 'M') key('mark');
+  else if(k === 'c' || k === 'C') key('cue');
+  else if(k === 'f' || k === 'F'){ shift = true; key('mark'); }
+  else if(k === 'x' || k === 'X') key('clear');
+  else if(k === 'Enter'){ e.preventDefault(); key('enter'); }
+  else if(k === ' '){ e.preventDefault(); key(e.shiftKey ? 'play' : 'take'); }
+  else if(k === 'ArrowLeft' || k === 'ArrowRight'){ e.preventDefault(); const d = (k === 'ArrowLeft' ? -1 : 1)*(e.shiftKey ? 1 : 1/FPS); jogRot += d*2; if(!paused) scrub(d); }
+  else if(k === 'ArrowUp'){ e.preventDefault(); lever = clamp(lever + 5, 0, 100); }
+  else if(k === 'ArrowDown'){ e.preventDefault(); lever = clamp(lever - 5, 0, 100); }
+});
+function togglePause(){
+  if(!running) return;
+  paused = !paused;
+  $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+  if(paused) flash('PAUSED', 1e9); else lcdUntil = now;
+}
+$('#pauseBtn').addEventListener('click', togglePause);
+document.addEventListener('visibilitychange', () => { if(document.hidden && running && !paused) togglePause(); });
+$('#conClose').addEventListener('click', closeConsole);
+$('#startBtn').addEventListener('click', startShow);
+$('#againBtn').addEventListener('click', startShow);
+
+/* ---------- fit the panel ---------- */
+const rcp = $('#rcp'), rcpWrap = $('#rcpWrap');
+const stage = $('#stage');
+function fit(){
+  const k = Math.min(innerWidth/1920, innerHeight/1080);
+  stage.style.setProperty('--k', k);
+  const s = Math.min(1, rcpWrap.clientWidth/760, rcpWrap.clientHeight/rcp.offsetHeight);
+  rcp.style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit);
+if(document.fonts) document.fonts.ready.then(fit);
+
+/* ---------- boot ---------- */
+show = buildShow(42);
+stats = {aired:0, clean:0, missed:0, fixed:0, faults:0, dead:0, best:0, wrong:0};
+renderHealth(); fit();
+let last = performance.now(), demoT = 0;
+function frame(ts){
+  const dt = Math.min(.1, (ts - last)/1000); last = ts;
+  if(running && !paused) update(dt);
+  else if(!running && !ended){ demoT += dt; now = demoT % 60; playhead = now; }
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+$('#startBtn').focus();
+})();
+</script>
+</body>
+</html>

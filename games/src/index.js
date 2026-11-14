@@ -35,14 +35,19 @@ export default {
       return json({ ok: true });
     }
 
-    // Leaderboard: everyone's synced high score (localStorage key "dcra-hi").
+    // Leaderboard: everyone's synced high score for one game.
+    //   /api/leaderboard            -> Replay Academy ("dcra-hi"), kept for the Academy page
+    //   /api/leaderboard?key=ib-hi  -> any key in GAME_KEYS
+    const GAME_KEYS = ["dcra-hi", "rop-hi", "ib-hi", "mfr-best"];
     if (url.pathname === "/api/leaderboard") {
+      const lbKey = url.searchParams.get("key") || "dcra-hi";
+      if (!GAME_KEYS.includes(lbKey)) return json({ error: "unknown game" }, 400);
       const { results } = await env.DB.prepare(
         `SELECT d.email, u.name, CAST(json_extract(d.value, '$') AS INTEGER) AS score, d.updated
            FROM tool_data d LEFT JOIN users u ON u.email = d.email
-          WHERE d.tool = ?1 AND d.key = 'dcra-hi' AND CAST(json_extract(d.value, '$') AS INTEGER) > 0
+          WHERE d.tool = ?1 AND d.key = ?2 AND CAST(json_extract(d.value, '$') AS INTEGER) > 0
           ORDER BY score DESC, d.updated ASC LIMIT 10`
-      ).bind(env.TOOL).all();
+      ).bind(env.TOOL, lbKey).all();
       const label = (r) => (r.name || r.email.split("@")[0].replace(/[._-]+/g, " ")).toUpperCase().slice(0, 14);
       return json({ me: email, rows: results.map((r, i) => ({ rank: i + 1, name: label(r), score: r.score, you: r.email === email })) });
     }
