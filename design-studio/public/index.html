@@ -4,14 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LM Tool</title>
+<script src="/lm-sync.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js" data-suffix="New Tool"></script>
 <script src="/lm-store.js"></script>
 </head>
 <body>
-<p><a id="back" href="#">Back to Tool Library</a></p>
+<main style="max-width:880px;margin:32px auto;padding:0 20px">
 <h1>Replace with your tool</h1>
 <p id="who"></p>
 <script>
   LM.me().then(u => { who.textContent = "Signed in as " + u.email; back.href = u.portal; });
 </script>
+</main>
 </body>
 </html>
