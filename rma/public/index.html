@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evertz Live Media RMA Request</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js" data-suffix="RMA Request"></script>
+<style>
+main{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+.masthead h1{font-size:24px;margin:0 0 6px}
+.masthead p{margin:0;color:var(--ink-soft);line-height:1.55}
+.req-note{font:600 .72rem var(--mono);letter-spacing:.06em;color:var(--ink-soft);margin:14px 0 22px}
+.req-note b,.req{color:var(--err)}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:16px}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);background:var(--rail-bg);border-radius:10px 10px 0 0}
+.card-head h2{margin:0;font-size:.95rem}
+.card-head .tag{font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.card-body{padding:16px 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.full{grid-column:1/-1}
+@media (max-width:620px){.card-body{grid-template-columns:1fr}}
+label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px}
+.hint{font-weight:400;color:var(--ink-soft)}
+input[type=text],input[type=email],input[type=tel],select,textarea{width:100%;padding:9px 11px;border-radius:7px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);font:14px var(--sans)}
+textarea{min-height:90px;resize:vertical;line-height:1.45}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:0;border-color:var(--focus)}
+.yn{display:flex;gap:6px}
+.yn label{margin:0;display:inline-flex;align-items:center;gap:6px;font-weight:500;padding:7px 14px;border:1px solid var(--line);border-radius:99px;cursor:pointer;background:var(--bg)}
+.yn input{margin:0;accent-color:var(--accent)}
+.yn label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.unit{border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 14px}
+.unit .full{grid-column:1/-1}
+.unit-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;font:600 .7rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.unit-head button{background:none;border:0;color:var(--err);font:600 .78rem var(--sans);cursor:pointer}
+@media (max-width:620px){.unit{grid-template-columns:1fr}}
+.units{display:flex;flex-direction:column;gap:12px}
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px}
+.msg{font-size:.85rem}
+.msg.err{color:var(--err)}
+.hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
+.done{text-align:center;padding:48px 20px}
+.done .ref{display:inline-block;font:600 1.3rem var(--mono);letter-spacing:.06em;padding:10px 18px;border-radius:8px;background:var(--accent-soft);color:var(--accent-ink);margin:14px 0}
+.foot{color:var(--ink-soft);font-size:.75rem;text-align:center;margin-top:28px}
+</style>
+</head>
+<body>
+<main>
+  <div id="formWrap">
+    <div class="masthead">
+      <h1>RMA request</h1>
+      <p>Tell us about the unit that needs repair or replacement. The Live Media venue support team gets this right away and will follow up with your RMA details.</p>
+    </div>
+    <p class="req-note"><b>*</b> Required</p>
+
+    <form id="rma" novalidate>
+      <div class="hp" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+      <section class="card">
+        <div class="card-head"><span class="tag">1</span><h2>Contact</h2></div>
+        <div class="card-body">
+          <div><label for="contact">Customer contact (first and last name) <span class="req">*</span></label><input type="text" id="contact" name="contact" autocomplete="name" required></div>
+          <div><label for="company">Company name <span class="req">*</span></label><input type="text" id="company" name="company" autocomplete="organization" required></div>
+          <div><label for="phone">Phone number <span class="req">*</span></label><input type="tel" id="phone" name="phone" autocomplete="tel" required></div>
+          <div><label for="email">Email address <span class="req">*</span></label><input type="email" id="email" name="email" autocomplete="email" required></div>
+          <div class="full"><label for="cc">Additional email addresses to CC <span class="hint">(separate with commas)</span></label><input type="text" id="cc" name="cc"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="tag">2</span><h2>Request</h2></div>
+        <div class="card-body">
+          <div><label for="type">Type</label>
+            <select id="type" name="type"><option value="">Choose</option><option>Repair</option><option>Replacement</option><option>Warranty Replacement</option><option>Loaner Needed</option><option>Other</option></select></div>
+          <div><label for="verified">Verified by someone prior to shipping</label>
+            <select id="verified" name="verified"><option value="">Choose</option><option>No (Evertz will assign as necessary)</option></select></div>
+          <div><label>Urgent</label><div class="yn"><label><input type="radio" name="urgent" value="Yes">Yes</label><label><input type="radio" name="urgent" value="No">No</label></div></div>
+          <div><label>Hot RMA</label><div class="yn"><label><input type="radio" name="hot" value="Yes">Yes</label><label><input type="radio" name="hot" value="No">No</label></div></div>
+          <div><label>Flag someone upon receipt</label><div class="yn"><label><input type="radio" name="flag_receipt" value="Yes">Yes</label><label><input type="radio" name="flag_receipt" value="No">No</label></div></div>
+          <div><label>Authorize automatic return of the unit if failure analysis finds no fault</label><div class="yn"><label><input type="radio" name="auto_return" value="Yes">Yes</label></div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="tag">3</span><h2>Addresses</h2></div>
+        <div class="card-body">
+          <div class="full"><label for="company_address">Company address <span class="req">*</span></label><textarea id="company_address" name="company_address" rows="3" required></textarea></div>
+          <div class="full"><label for="shipping_address">Shipping address <span class="req">*</span> <span class="hint">(write "Same as company" if it's the same)</span></label><textarea id="shipping_address" name="shipping_address" rows="3" required></textarea></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="tag">4</span><h2>Units</h2></div>
+        <div class="card-body"><div class="full units" id="units"></div>
+          <div class="full"><button type="button" class="lm-btn" id="addUnit">+ Add another unit</button></div>
+        </div>
+      </section>
+
+      <div id="turnstile"></div>
+      <div class="actions">
+        <button type="submit" class="lm-btn primary" id="submit">Submit RMA request</button>
+        <span class="msg" id="msg" role="status"></span>
+      </div>
+    </form>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <h1>Request received</h1>
+    <p>Your reference number is</p>
+    <div class="ref" id="ref"></div>
+    <p>Keep this for your records. The Live Media venue support team will follow up by email.</p>
+    <p><button type="button" class="lm-btn" id="another">Submit another request</button></p>
+  </div>
+  <p class="foot">Evertz Live Media venue support</p>
+</main>
+
+<template id="unitTpl">
+  <div class="unit">
+    <div class="unit-head"><span class="n"></span><button type="button" class="rm">Remove</button></div>
+    <div><label>Part number <span class="req">*</span></label><input type="text" data-k="part" required></div>
+    <div><label>Serial number <span class="req">*</span></label><input type="text" data-k="serial" required></div>
+    <div><label>Firmware</label><input type="text" data-k="firmware"></div>
+    <div class="full"><label>Problem <span class="req">*</span></label><textarea data-k="problem" rows="3" required></textarea></div>
+    <div class="full"><label>Troubleshooting steps already tried</label><textarea data-k="troubleshooting" rows="3"></textarea></div>
+  </div>
+</template>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const unitsEl = $("units"), tpl = $("unitTpl");
+function renumber() {
+  [...unitsEl.children].forEach((u, i, all) => {
+    u.querySelector(".n").textContent = "Unit " + (i + 1);
+    u.querySelector(".rm").hidden = all.length === 1;
+  });
+}
+function addUnit() {
+  const n = tpl.content.firstElementChild.cloneNode(true);
+  n.querySelector(".rm").onclick = () => { n.remove(); renumber(); };
+  unitsEl.appendChild(n); renumber();
+}
+$("addUnit").onclick = () => { addUnit(); unitsEl.lastElementChild.querySelector("input").focus(); };
+addUnit();
+
+let tsWidget = null;
+fetch("/config").then((r) => r.json()).then((c) => {
+  if (!c.turnstile) return;
+  const s = document.createElement("script");
+  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  s.onload = () => { tsWidget = turnstile.render("#turnstile", { sitekey: c.turnstile }); };
+  document.head.appendChild(s);
+}).catch(() => {});
+
+$("rma").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target), msg = $("msg"), btn = $("submit");
+  const body = Object.fromEntries(f.entries());
+  body.units = [...unitsEl.children].map((u) => Object.fromEntries([...u.querySelectorAll("[data-k]")].map((el) => [el.dataset.k, el.value])));
+  if (window.turnstile && tsWidget !== null) body.turnstile = turnstile.getResponse(tsWidget);
+  const firstBad = [...e.target.querySelectorAll("[required]")].find((el) => !el.value.trim());
+  if (firstBad) { msg.className = "msg err"; msg.textContent = "Please fill in the required fields."; firstBad.focus(); return; }
+  btn.disabled = true; msg.className = "msg"; msg.textContent = "Sending…";
+  try {
+    const r = await fetch("/api/submit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again.");
+    $("ref").textContent = d.ref;
+    $("formWrap").hidden = true; $("done").hidden = false; scrollTo(0, 0);
+  } catch (err) {
+    msg.className = "msg err"; msg.textContent = err.message;
+    if (window.turnstile && tsWidget !== null) turnstile.reset(tsWidget);
+  } finally { btn.disabled = false; }
+});
+$("another").onclick = () => {
+  $("rma").reset(); unitsEl.innerHTML = ""; addUnit(); $("msg").textContent = "";
+  $("done").hidden = true; $("formWrap").hidden = false; scrollTo(0, 0);
+};
+</script>
+</body>
+</html>

@@ -85,6 +85,32 @@ dialog.wide{width:min(820px,94vw)}
 .guide table{border-collapse:collapse;display:block;overflow-x:auto}.guide th,.guide td{border:1px solid var(--line);padding:6px 10px;text-align:left}
 .guide blockquote{margin:0;padding:4px 14px;border-left:3px solid var(--accent);color:var(--muted)}
 .guide a{color:var(--accent)}.guide img{max-width:100%}
+nav .n.hot{background:var(--err);color:#fff;border-radius:99px;padding:0 7px;font-weight:600}
+.rma-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rma-filters button{background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);font:600 12px var(--sans);padding:5px 12px;border-radius:99px;cursor:pointer}
+.rma-filters button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.rma-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table.rma{width:100%;border-collapse:collapse;font-size:13px}
+table.rma th{text-align:left;font:600 .62rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);background:var(--rail-bg);padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rma td{padding:10px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.rma tbody tr{cursor:pointer} table.rma tbody tr:hover{background:var(--accent-soft)}
+table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
+.flag{display:inline-block;font:600 10px var(--mono);letter-spacing:.05em;padding:1px 6px;border-radius:4px;margin-left:6px;background:var(--warn-soft);color:var(--err)}
+.st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
+.st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
+.st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
+.rma-public{font-size:12px;color:var(--ink-soft);margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rma-public a{color:var(--accent-ink);font-family:var(--mono)}
+.rma-detail{padding:16px 20px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}
+.rma-detail .full{grid-column:1/-1}
+.rma-detail h4{margin:0 0 4px;font:600 .62rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.rma-detail p{margin:0;white-space:pre-wrap;line-height:1.45}
+.rma-detail .unit{border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:8px}
+.rma-detail select,.rma-detail input,.rma-detail textarea{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:13px var(--sans)}
+.rma-detail textarea{min-height:80px;resize:vertical}
+.rma-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rma-actions .saved{font-size:12px;color:var(--good-txt)}
+@media (max-width:640px){.rma-detail{grid-template-columns:1fr}}
 .empty{color:var(--muted);padding:40px 0}
 .banner{background:var(--warn-bg);color:var(--warn);font-size:12px;padding:6px 20px}
 @media (max-width:760px){.layout{grid-template-columns:1fr}nav{display:none}main{padding:20px 16px}.who{display:none}}
@@ -102,6 +128,8 @@ dialog.wide{width:min(820px,94vw)}
   <nav>
     <h3>LIBRARY</h3>
     <div id="cats"></div>
+    <h3 class="recent">INBOX</h3>
+    <div id="inbox"><button data-view="rma">RMA requests<span class="n" id="rmaCount"></span></button></div>
     <h3 class="recent">RECENTLY UPDATED</h3>
     <div id="recent"></div>
   </nav>
@@ -112,8 +140,19 @@ dialog.wide{width:min(820px,94vw)}
       <input class="search" id="q" type="search" placeholder="Search tools" aria-label="Search tools">
     </div>
     <div class="grid" id="grid"></div>
+    <div id="rmaView" hidden>
+      <div class="rma-filters" id="rmaFilters"></div>
+      <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>Contact</th><th>Type</th><th>Units</th><th>Status</th></tr></thead><tbody id="rmaRows"></tbody></table></div>
+      <p class="rma-public">Customer form: <a id="rmaLink" target="_blank" rel="noopener"></a> <button class="notes-btn" id="rmaCopy">Copy link</button></p>
+    </div>
   </main>
 </div>
+<dialog id="rmaDlg" class="wide" aria-labelledby="rma-title">
+  <div class="dlg-head"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg></div>
+    <div><h2 id="rma-title"></h2><div class="cat" id="rma-sub"></div></div>
+    <button class="close" id="rma-close" aria-label="Close">×</button></div>
+  <div id="rma-body" class="rma-detail"></div>
+</dialog>
 <dialog id="dlg" aria-labelledby="dlg-title">
   <div class="dlg-head"><div class="ico" id="dlg-ico"></div>
     <div><h2 id="dlg-title"></h2><div class="cat" id="dlg-sub">Release notes</div></div>
@@ -185,7 +224,84 @@ function render(){
         ${t.downloads ? '' : `<a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a>`}</div>
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
-$('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; render(); } });
+$('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; showView('tools'); render(); } });
+$('inbox').addEventListener('click', e => { if (e.target.closest('[data-view=rma]')) showView('rma'); });
+
+/* ---------- RMA inbox ---------- */
+const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://rma.' + location.hostname) + '/';
+let rmas = [], rmaFilter = 'Open', view = 'tools';
+const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
+const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
+function showView(v){
+  view = v;
+  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma';
+  document.querySelectorAll('#inbox button').forEach(b => b.classList.toggle('on', v === 'rma'));
+  document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', v === 'tools' && b.dataset.cat === cat));
+  if (v === 'rma') { $('title').textContent = 'RMA requests'; loadRma(); }
+}
+async function loadRma(){
+  try { const r = await fetch('/api/rma', {cache:'no-store'}); if (!r.ok) throw 0; rmas = (await r.json()).requests; }
+  catch { rmas = SAMPLE_RMA; }
+  renderRma();
+}
+function renderRma(){
+  const n = rmas.filter(r => r.status === 'New').length;
+  $('rmaCount').textContent = n || ''; $('rmaCount').className = 'n' + (n ? ' hot' : '');
+  if (view !== 'rma') return;
+  const filters = ['Open','New','All'];
+  $('rmaFilters').innerHTML = filters.map(f => `<button class="${f===rmaFilter?'on':''}" data-f="${f}">${f}</button>`).join('');
+  const list = rmas.filter(r => rmaFilter === 'All' || (rmaFilter === 'New' ? r.status === 'New' : isOpen(r)));
+  $('count').textContent = list.length + (list.length === 1 ? ' request' : ' requests');
+  $('rmaRows').innerHTML = list.length ? list.map(r => `<tr data-ref="${esc(r.ref)}">
+    <td class="ref">${esc(r.ref)}</td><td>${fmtWhen(r.created)}</td>
+    <td>${esc(r.company)}${r.urgent==='Yes'?'<span class="flag">URGENT</span>':''}${r.hot==='Yes'?'<span class="flag">HOT</span>':''}</td>
+    <td>${esc(r.contact)}</td><td>${esc(r.type)}</td><td>${(r.units||[]).length}</td>
+    <td><span class="st ${esc(r.status.split(' ')[0])}">${esc(r.status)}</span></td></tr>`).join('')
+    : `<tr><td colspan="7" style="color:var(--ink-soft);padding:24px 12px">No ${rmaFilter === 'All' ? '' : rmaFilter.toLowerCase() + ' '}requests.</td></tr>`;
+}
+const fmtWhen = s => s ? new Date(s.replace(' ', 'T') + 'Z').toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+$('rmaFilters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { rmaFilter = b.dataset.f; renderRma(); } });
+$('rmaRows').addEventListener('click', e => { const tr = e.target.closest('tr[data-ref]'); if (tr) openRma(tr.dataset.ref); });
+$('rmaLink').textContent = RMA_FORM_URL; $('rmaLink').href = RMA_FORM_URL;
+$('rmaCopy').onclick = () => navigator.clipboard.writeText(RMA_FORM_URL).then(() => { $('rmaCopy').textContent = 'Copied'; setTimeout(() => $('rmaCopy').textContent = 'Copy link', 1500); });
+function field(label, v, full){ return `<div class="${full?'full':''}"><h4>${label}</h4><p>${esc(v || '—')}</p></div>`; }
+function openRma(ref){
+  const r = rmas.find(x => x.ref === ref); if (!r) return;
+  $('rma-title').textContent = r.company + ' · ' + r.ref;
+  $('rma-sub').textContent = 'Received ' + fmtWhen(r.created) + (r.email_status && r.email_status !== 'sent' ? ' · email ' + r.email_status : '');
+  const subj = encodeURIComponent('Evertz RMA ' + r.ref);
+  $('rma-body').innerHTML = `
+    ${field('Contact', r.contact)}${field('Company', r.company)}
+    <div><h4>Email</h4><p><a href="mailto:${esc(r.email)}?subject=${subj}${r.cc ? '&cc=' + encodeURIComponent(r.cc) : ''}">${esc(r.email)}</a></p></div>${field('Phone', r.phone)}
+    ${r.cc ? field('CC', r.cc, true) : ''}
+    ${field('Type', r.type)}${field('Urgent / Hot RMA', [r.urgent||'—', r.hot||'—'].join(' / '))}
+    ${field('Flag someone upon receipt', r.flag_receipt)}${field('Verified prior to shipping', r.verified)}
+    ${field('Automatic return if no fault found', r.auto_return, true)}
+    ${field('Company address', r.company_address)}${field('Shipping address', r.shipping_address)}
+    <div class="full"><h4>Units</h4>${(r.units||[]).map((u,i) => `<div class="unit">
+      <p><b>${i+1}. ${esc(u.part)}</b> · S/N ${esc(u.serial)}${u.firmware ? ' · FW ' + esc(u.firmware) : ''}</p>
+      <p style="margin-top:6px">${esc(u.problem)}</p>${u.troubleshooting ? `<p style="margin-top:6px;color:var(--ink-soft)">Tried: ${esc(u.troubleshooting)}</p>` : ''}</div>`).join('')}</div>
+    <div><h4>Status</h4><select id="rmaStatus">${STATUSES.map(s => `<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div><h4>Assigned to</h4><input id="rmaAssigned" value="${esc(r.assigned||'')}" placeholder="Name"></div>
+    <div class="full"><h4>Internal notes</h4><textarea id="rmaNotes" placeholder="Evertz RMA #, tracking number, anything the team should know">${esc(r.notes||'')}</textarea></div>
+    <div class="full rma-actions"><button class="open" id="rmaSave" style="margin-left:0;border:0;cursor:pointer">Save</button>
+      <span class="saved" id="rmaSaved"></span>${r.updated_by ? `<span style="font-size:12px;color:var(--ink-soft)">Last updated by ${esc(r.updated_by)}</span>` : ''}</div>`;
+  $('rmaSave').onclick = async () => {
+    const body = { status: $('rmaStatus').value, assigned: $('rmaAssigned').value, notes: $('rmaNotes').value };
+    try {
+      const res = await fetch('/api/rma/' + encodeURIComponent(r.ref), {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+      if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+      Object.assign(r, body); $('rmaSaved').textContent = 'Saved'; renderRma();
+    } catch (err) { $('rmaSaved').style.color = 'var(--err)'; $('rmaSaved').textContent = err.message || 'Save failed'; }
+  };
+  $('rmaDlg').showModal();
+}
+$('rma-close').onclick = () => $('rmaDlg').close();
+$('rmaDlg').addEventListener('click', e => { if (e.target === $('rmaDlg')) $('rmaDlg').close(); });
+const SAMPLE_RMA = [
+  {ref:'LM-20261114-7Q2K', created:'2026-11-14 15:02:11', status:'New', company:'Sample University Athletics', contact:'Jordan Smith', email:'jsmith@example.edu', phone:'555-0100', type:'Repair', urgent:'Yes', hot:'No', company_address:'1 Stadium Way', shipping_address:'Same as company', units:[{part:'DC-IO-MX8-12G-SDI', serial:'1234567', firmware:'', problem:'Card not detected after power cycle.'}]},
+  {ref:'LM-20261112-0B9D', created:'2026-11-12 18:40:00', status:'In progress', company:'Sample Arena', contact:'Alex Lee', email:'alee@example.com', phone:'555-0101', type:'Warranty Replacement', urgent:'No', hot:'No', company_address:'2 Arena Blvd', shipping_address:'Same as company', units:[{part:'LM-25GE', serial:'7654321', problem:'Link drops'},{part:'PSU', serial:'99881', problem:'Fan noise'}], assigned:'Rhyce'}
+];
 $('q').addEventListener('input', render);
 
 const SAMPLE_NOTES = {
@@ -263,6 +379,7 @@ new MutationObserver(() => {
     fetch('/api/me').then(r=>r.json()).then(u => { $('who').textContent = u.email; if (u.theme) setTheme(u.theme); }).catch(()=>{});
   } catch { tools = SAMPLE; $('banner').hidden = false; }
   render();
+  loadRma();
 })();
 </script>
 </body>

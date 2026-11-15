@@ -1,0 +1,27 @@
+# PUBLIC customer RMA form. Do NOT enable Cloudflare Access on this Worker.
+# It can only add requests; reading them happens in the (Access-protected) portal.
+name = "lm-rma"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = true
+preview_urls = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+TO_EMAIL = "lmvenuesupport@evertz.com"
+FROM_EMAIL = ""            # e.g. "rma@lmtools.xyz" once you have a domain with Email Routing
+TURNSTILE_SITE_KEY = ""    # optional spam protection; secret goes in TURNSTILE_SECRET (a Secret)
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lm-db"
+database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
+
+# Email: needs a domain on Cloudflare with Email Routing, and TO_EMAIL verified as a destination.
+# Uncomment once that's done:
+# [[send_email]]
+# name = "EMAIL"
+# destination_address = "lmvenuesupport@evertz.com"

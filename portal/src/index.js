@@ -96,6 +96,27 @@ export default {
       return json({ ok: true });
     }
 
+    // RMA requests from the public lm-rma form (portal is behind Access, so only the team sees these)
+    if (url.pathname === "/api/rma" && request.method === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT * FROM rma_requests ORDER BY created DESC LIMIT 500"
+      ).all().catch(() => ({ results: [] }));
+      return json({ requests: results.map((r) => ({ ...r, units: r.units ? JSON.parse(r.units) : [] })) });
+    }
+    const rm = url.pathname.match(/^\/api\/rma\/([A-Z0-9-]{4,40})$/);
+    if (rm && request.method === "PATCH") {
+      const body = await request.json();
+      const STATUSES = ["New", "In progress", "Waiting on customer", "Shipped", "Closed"];
+      if ("status" in body && !STATUSES.includes(body.status)) return json({ error: "Unknown status" }, 400);
+      const sets = [], vals = [];
+      for (const k of ["status", "assigned", "notes"]) if (k in body) { sets.push(`${k} = ?${vals.length + 1}`); vals.push(String(body[k] ?? "").slice(0, 8000)); }
+      if (!sets.length) return json({ error: "Nothing to update" }, 400);
+      vals.push(email); sets.push(`updated_by = ?${vals.length}`, "updated = datetime('now')");
+      vals.push(rm[1]);
+      await env.DB.prepare(`UPDATE rma_requests SET ${sets.join(", ")} WHERE ref = ?${vals.length}`).bind(...vals).run();
+      return json({ ok: true });
+    }
+
     if (url.pathname.startsWith("/api/")) return json({ error: "Not found" }, 404);
     return env.ASSETS.fetch(request);
   },

@@ -79,3 +79,17 @@ Tools that already use localStorage only need one line, first thing in `<head>`:
 It pulls your saved data from D1 before the tool starts and saves every change back,
 so the same data shows up on any computer you log in from. The first time you open a tool
 in a browser that already has local data, that data is uploaded.
+
+## Style guide (every tool)
+
+All tools share `lm-ui.css` (Live Media Tools Style Guide 2.0 tokens: warm-paper light, navy dark,
+IBM Plex, navy banner) and `lm-ui.js` (adds the banner and the Light/Dark switch). In a new tool's `<head>`:
+
+```html
+<script src="/lm-sync.js"></script>
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js" data-suffix="Tool Name"></script>
+```
+
+Build the page's colors from the tokens (`--bg --surface --ink --ink-soft --line --accent --save --on-accent ...`)
+so light and dark both work. The theme is one setting per person, shared by the portal and every tool.

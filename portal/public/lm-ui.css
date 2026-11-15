@@ -40,6 +40,7 @@
 
 
 /* Shared base: the page itself */
+*,*::before,*::after{box-sizing:border-box} [hidden]{display:none !important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
 /* ---------- banner + sub-bar ---------- */
