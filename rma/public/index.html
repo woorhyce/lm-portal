@@ -22,7 +22,7 @@ section.card{background:var(--surface);border:1px solid var(--line);border-radiu
 @media (max-width:620px){.card-body{grid-template-columns:1fr}}
 label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px}
 .hint{font-weight:400;color:var(--ink-soft)}
-input[type=text],input[type=email],input[type=tel],select,textarea{width:100%;padding:9px 11px;border-radius:7px;border:1px solid var(--line);
+input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{width:100%;padding:9px 11px;border-radius:7px;border:1px solid var(--line);
   background:var(--bg);color:var(--ink);font:14px var(--sans)}
 textarea{min-height:90px;resize:vertical;line-height:1.45}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:0;border-color:var(--focus)}
@@ -78,8 +78,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-o
         <div class="card-head"><span class="tag">2</span><h2>Request</h2></div>
         <div class="card-body">
           <div><label for="type">Type</label>
-            <select id="type" name="type"><option value="">Choose</option><option>Repair</option><option>Replacement</option><option>Warranty Replacement</option><option>Loaner Needed</option><option>Other</option></select></div>
+            <select id="type" name="type"><option value="">Choose</option><option>Repair</option><option>Replacement</option><option>Warranty Replacement</option><option>Other</option></select></div>
           <div><label>Urgent <span class="hint">(handled as a Hot RMA)</span></label><div class="yn"><label><input type="radio" name="urgent" value="Yes">Yes</label><label><input type="radio" name="urgent" value="No" checked>No</label></div></div>
+          <div><label>Loaner needed</label><div class="yn"><label><input type="radio" name="loaner" value="Yes">Yes</label><label><input type="radio" name="loaner" value="No" checked>No</label></div></div>
+          <div><label for="needed_by">Date needed by <span class="hint">(optional)</span></label><input type="date" id="needed_by" name="needed_by"></div>
           <div class="full"><label class="ack"><input type="checkbox" name="auto_return" value="Yes" id="autoReturn" required>
             <span>I accept the evaluation fee and authorize automatic return of the unit if failure analysis finds no fault. <span class="req">*</span></span></label></div>
         </div>
@@ -155,6 +157,7 @@ fetch("/config").then((r) => r.json()).then((c) => {
   document.head.appendChild(s);
 }).catch(() => {});
 
+(() => { const t = new Date(); $("needed_by").min = new Date(t.getTime() - t.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); })();
 $("sameAddr").onclick = () => {
   const c = $("company_address").value.trim();
   if (!c) { $("msg").className = "msg err"; $("msg").textContent = "Fill in the company address first."; $("company_address").focus(); return; }

@@ -11,7 +11,7 @@ directory = "./public"
 binding = "ASSETS"
 
 [vars]
-TO_EMAIL = "lmvenuesupport@evertz.com"
+TO_EMAIL = "lmvenuesupport@evertz.com"   # one or more, comma-separated; each must be verified in Email Routing
 FROM_EMAIL = "rma@evertz.app"
 TURNSTILE_SITE_KEY = ""    # optional spam protection; secret goes in TURNSTILE_SECRET (a Secret)
 
@@ -27,4 +27,4 @@ database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
 # Email: evertz.app has Email Routing on, and TO_EMAIL is a verified destination address.
 [[send_email]]
 name = "EMAIL"
-destination_address = "lmvenuesupport@evertz.com"
+# no destination_address: can send to any verified destination listed in TO_EMAIL

@@ -9,7 +9,7 @@ const json = (d, s = 200) => new Response(JSON.stringify(d), {
   status: s, headers: { "content-type": "application/json", "cache-control": "no-store" },
 });
 
-const TYPES = ["Repair", "Replacement", "Warranty Replacement", "Loaner Needed", "Other"];
+const TYPES = ["Repair", "Replacement", "Warranty Replacement", "Other"];
 const YN = ["Yes", "No", ""];
 const clean = (v, max = 2000) => String(v ?? "").replace(/\r/g, "").trim().slice(0, max);
 const emailOk = (e) => /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(e);
@@ -37,6 +37,7 @@ function emailBody(r) {
     `Contact:   ${r.contact}`, `Company:   ${r.company}`, `Phone:     ${r.phone}`, `Email:     ${r.email}`,
     r.cc ? `CC:        ${r.cc}` : null, "",
     `Type:      ${r.type}`, `Urgent / Hot RMA: ${r.urgent === "Yes" ? "YES" : "No"}`,
+    `Loaner needed: ${r.loaner === "Yes" ? "YES" : "No"}`, `Needed by: ${r.needed_by || "Not given"}`,
     `Verified prior to shipping: ${r.verified || "No (Evertz will assign as necessary)"}`,
     `Accepts evaluation fee + automatic return if no fault found: ${yn(r.auto_return)}`, "",
     "Company address:", r.company_address, "", "Shipping address:", r.shipping_address, "",
@@ -48,13 +49,31 @@ function emailBody(r) {
   return lines.filter((l) => l !== null).join("\r\n");
 }
 
+// TO_EMAIL can be one address or several, comma-separated. Each one gets its own copy, and each must
+// be a verified destination address in Email Routing.
+function recipients(env) {
+  return String(env.TO_EMAIL || "").split(",").map((x) => x.trim()).filter((x) => emailOk(x));
+}
+
 async function sendEmail(env, r) {
-  if (!env.EMAIL || !env.FROM_EMAIL) return "not configured";
-  const subject = `RMA request ${r.ref}: ${r.company}${r.urgent === "Yes" ? " (URGENT / HOT)" : ""}`;
+  const list = recipients(env);
+  if (!env.EMAIL || !env.FROM_EMAIL || !list.length) return "not configured";
+  const flags = [r.urgent === "Yes" ? "URGENT / HOT" : "", r.loaner === "Yes" ? "LOANER" : ""].filter(Boolean).join(", ");
+  const subject = `RMA request ${r.ref}: ${r.company}${flags ? " (" + flags + ")" : ""}`;
+  const failed = [];
+  for (const to of list) {
+    const res = await sendOne(env, r, subject, to);
+    if (res !== "sent") failed.push(to + " (" + res + ")");
+  }
+  if (!failed.length) return list.length === 1 ? "sent" : `sent to ${list.length}`;
+  return `sent ${list.length - failed.length}/${list.length}; failed: ` + failed.join("; ").slice(0, 300);
+}
+
+async function sendOne(env, r, subject, to) {
   const enc = (s) => "=?UTF-8?B?" + btoa(unescape(encodeURIComponent(s))) + "?=";
   const raw = [
     `From: ${enc("Live Media RMA")} <${env.FROM_EMAIL}>`,
-    `To: <${env.TO_EMAIL}>`,
+    `To: <${to}>`,
     `Reply-To: <${r.email}>`,
     `Subject: ${enc(subject)}`,
     `Date: ${new Date().toUTCString()}`,
@@ -65,10 +84,10 @@ async function sendEmail(env, r) {
     "", emailBody(r),
   ].join("\r\n");
   try {
-    await env.EMAIL.send(new EmailMessage(env.FROM_EMAIL, env.TO_EMAIL, raw));
+    await env.EMAIL.send(new EmailMessage(env.FROM_EMAIL, to, raw));
     return "sent";
   } catch (e) {
-    return "failed: " + String(e.message || e).slice(0, 200);
+    return String(e.message || e).slice(0, 120);
   }
 }
 
@@ -91,6 +110,7 @@ export default {
         email: clean(b.email, 160), cc: clean(b.cc, 400),
         type: clean(b.type, 40), urgent: clean(b.urgent, 3), flag_receipt: clean(b.flag_receipt, 3),
         verified: clean(b.verified, 80), hot: clean(b.hot, 3), auto_return: clean(b.auto_return, 3),
+        loaner: clean(b.loaner, 3), needed_by: /^\d{4}-\d{2}-\d{2}$/.test(String(b.needed_by || "")) ? b.needed_by : "",
         company_address: clean(b.company_address, 600), shipping_address: clean(b.shipping_address, 600),
         units: (Array.isArray(b.units) ? b.units : []).slice(0, 20).map((u) => ({
           part: clean(u.part, 120), serial: clean(u.serial, 120), firmware: clean(u.firmware, 120),
@@ -103,7 +123,8 @@ export default {
         if (!r[k]) missing.push(label);
       if (r.email && !emailOk(r.email)) missing.push("a valid email address");
       if (!TYPES.includes(r.type)) r.type = "Other";
-      for (const k of ["urgent", "flag_receipt", "hot", "auto_return"]) if (!YN.includes(r[k])) r[k] = "";
+      for (const k of ["urgent", "flag_receipt", "hot", "auto_return", "loaner"]) if (!YN.includes(r[k])) r[k] = "";
+      if (b.type === "Loaner Needed") { r.type = "Other"; r.loaner = "Yes"; }   // old form value
       r.hot = r.urgent === "Yes" ? "Yes" : "No";               // urgent is always a Hot RMA
       if (!r.verified) r.verified = "No (Evertz will assign as necessary)";
       if (r.auto_return !== "Yes") missing.push("acceptance of the evaluation fee / automatic return");
@@ -113,10 +134,10 @@ export default {
 
       await env.DB.prepare(
         `INSERT INTO rma_requests (ref, created, status, contact, company, phone, email, cc, type, urgent, flag_receipt,
-           verified, hot, auto_return, company_address, shipping_address, units, email_status)
-         VALUES (?1, datetime('now'), 'New', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 'pending')`
+           verified, hot, auto_return, company_address, shipping_address, units, email_status, loaner, needed_by)
+         VALUES (?1, datetime('now'), 'New', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 'pending', ?16, ?17)`
       ).bind(r.ref, r.contact, r.company, r.phone, r.email, r.cc, r.type, r.urgent, r.flag_receipt,
-        r.verified, r.hot, r.auto_return, r.company_address, r.shipping_address, JSON.stringify(r.units)).run();
+        r.verified, r.hot, r.auto_return, r.company_address, r.shipping_address, JSON.stringify(r.units), r.loaner, r.needed_by).run();
 
       const status = await sendEmail(env, r);
       await env.DB.prepare("UPDATE rma_requests SET email_status = ?1 WHERE ref = ?2").bind(status, r.ref).run();
