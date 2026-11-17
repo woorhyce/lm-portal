@@ -12,7 +12,7 @@ binding = "ASSETS"
 
 [vars]
 TO_EMAIL = "lmvenuesupport@evertz.com"
-FROM_EMAIL = "rma@evertz.app"   # sending turns on once the send_email block below is uncommented
+FROM_EMAIL = "rma@evertz.app"
 TURNSTILE_SITE_KEY = ""    # optional spam protection; secret goes in TURNSTILE_SECRET (a Secret)
 
 [[routes]]
@@ -24,8 +24,7 @@ binding = "DB"
 database_name = "lm-db"
 database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
 
-# Email: needs a domain on Cloudflare with Email Routing, and TO_EMAIL verified as a destination.
-# Uncomment once that's done:
-# [[send_email]]
-# name = "EMAIL"
-# destination_address = "lmvenuesupport@evertz.com"
+# Email: evertz.app has Email Routing on, and TO_EMAIL is a verified destination address.
+[[send_email]]
+name = "EMAIL"
+destination_address = "lmvenuesupport@evertz.com"
