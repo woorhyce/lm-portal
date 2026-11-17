@@ -31,3 +31,4 @@ bucket_name = "lm-logs"
 
 [[send_email]]
 name = "EMAIL"
+
