@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS log_uploads (ref TEXT PRIMARY KEY, created TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'Uploading', name TEXT, company TEXT, email TEXT, site TEXT, rma_ref TEXT, description TEXT, files TEXT, total_bytes INTEGER, token_hash TEXT, assigned TEXT, notes TEXT, email_status TEXT, updated TEXT, updated_by TEXT);
