@@ -1,5 +1,5 @@
 // lm-rma: public customer RMA form.
-//   GET  /            the form (public/index.html)
+//   GET  /            the form (public/index.html); on dcsupport.evertz.app, the support home (public/support/)
 //   GET  /config      Turnstile site key, if spam protection is on
 //   POST /api/submit  validate, save to D1 (rma_requests), email TO_EMAIL
 // There is deliberately no endpoint that reads requests back; the portal does that behind Access.
@@ -142,6 +142,9 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // dcsupport.evertz.app: the customer support home page (links to the RMA form and the log upload page)
+    if (url.hostname.startsWith("dcsupport.") && (url.pathname === "/" || url.pathname === "/index.html"))
+      return env.ASSETS.fetch(new Request(new URL("/support/", url), request));
     if (url.pathname === "/config") return json({ turnstile: env.TURNSTILE_SITE_KEY || null });
 
     if (url.pathname === "/api/submit" && request.method === "POST") {

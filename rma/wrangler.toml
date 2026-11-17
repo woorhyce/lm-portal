@@ -19,6 +19,11 @@ TURNSTILE_SITE_KEY = ""    # optional spam protection; secret goes in TURNSTILE_
 pattern = "dcrma.evertz.app"
 custom_domain = true
 
+# Customer support home: links to the RMA form and the log upload page
+[[routes]]
+pattern = "dcsupport.evertz.app"
+custom_domain = true
+
 [[d1_databases]]
 binding = "DB"
 database_name = "lm-db"
