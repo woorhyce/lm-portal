@@ -42,3 +42,25 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   window.LMUI = { setTheme: setTheme, isDark: isDark };
 })();
+
+// Clicking the Live Media logo in any banner goes back to the Tool Library home.
+(function () {
+  function portalUrl() {
+    var h = location.hostname, parts = h.split(".");
+    if (/\.workers\.dev$/.test(h)) return location.protocol + "//lm-portal." + parts.slice(1).join(".") + "/";
+    if (parts.length > 2) return location.protocol + "//" + parts.slice(1).join(".") + "/";
+    return "/";
+  }
+  function link() {
+    document.querySelectorAll(".identity-bar .brand-logo").forEach(function (logo) {
+      if (logo.closest("a")) return;
+      var a = document.createElement("a");
+      a.href = portalUrl(); a.className = "brand-home"; a.title = "Live-Media Tool Library";
+      a.setAttribute("aria-label", "Live-Media Tool Library home");
+      a.style.cssText = "display:flex;align-items:center;color:inherit;text-decoration:none";
+      logo.parentNode.insertBefore(a, logo); a.appendChild(logo);
+    });
+  }
+  if (!/^https?:$/.test(location.protocol) || document.documentElement.hasAttribute("data-lm-public")) return;   /* public pages (RMA form) keep a plain logo */
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(link, 0); }); else setTimeout(link, 0);
+})();

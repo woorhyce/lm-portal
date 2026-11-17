@@ -1,7 +1,7 @@
 name = "lm-portal"
 main = "src/index.js"
 compatibility_date = "2025-10-01"
-workers_dev = true      # NO-DOMAIN MODE. With a domain: set false
+workers_dev = false
 preview_urls = false
 
 [assets]
@@ -10,16 +10,13 @@ binding = "ASSETS"
 
 [vars]
 # Where each tool lives. {slug} is replaced with the tool slug.
-# No domain yet:
-TOOL_URL = "https://lm-{slug}.woorhyce.workers.dev/"
-# With a domain:  TOOL_URL = "https://{slug}.lmtools.xyz/"
+TOOL_URL = "https://{slug}.evertz.app/"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "lm-db"
 database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
 
-# With a domain, uncomment:
-# [[routes]]
-# pattern = "lmtools.xyz"
-# custom_domain = true
+[[routes]]
+pattern = "evertz.app"
+custom_domain = true

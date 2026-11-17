@@ -3,7 +3,7 @@
 name = "lm-rma"
 main = "src/index.js"
 compatibility_date = "2025-10-01"
-workers_dev = true
+workers_dev = false
 preview_urls = false
 
 [assets]
@@ -12,8 +12,12 @@ binding = "ASSETS"
 
 [vars]
 TO_EMAIL = "lmvenuesupport@evertz.com"
-FROM_EMAIL = ""            # e.g. "rma@lmtools.xyz" once you have a domain with Email Routing
+FROM_EMAIL = "rma@evertz.app"   # sending turns on once the send_email block below is uncommented
 TURNSTILE_SITE_KEY = ""    # optional spam protection; secret goes in TURNSTILE_SECRET (a Secret)
+
+[[routes]]
+pattern = "dcrma.evertz.app"
+custom_domain = true
 
 [[d1_databases]]
 binding = "DB"

@@ -93,3 +93,8 @@ IBM Plex, navy banner) and `lm-ui.js` (adds the banner and the Light/Dark switch
 
 Build the page's colors from the tokens (`--bg --surface --ink --ink-soft --line --accent --save --on-accent ...`)
 so light and dark both work. The theme is one setting per person, shared by the portal and every tool.
+
+## Addresses (evertz.app)
+
+Portal `https://evertz.app`, each tool `https://<slug>.evertz.app`, public RMA form `https://dcrma.evertz.app`.
+Access: one app for `evertz.app` + `*.evertz.app`, plus a separate app for `dcrma.evertz.app` with a Bypass (Everyone) policy.

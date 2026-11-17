@@ -228,7 +228,7 @@ $('cats').addEventListener('click', e => { const b = e.target.closest('button');
 $('inbox').addEventListener('click', e => { if (e.target.closest('[data-view=rma]')) showView('rma'); });
 
 /* ---------- RMA inbox ---------- */
-const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://rma.' + location.hostname) + '/';
+const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcrma.' + location.hostname) + '/';
 let rmas = [], rmaFilter = 'Open', view = 'tools';
 const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
 const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
