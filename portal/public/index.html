@@ -103,6 +103,7 @@ table.rma td{padding:10px 12px;border-bottom:1px solid var(--line-soft);vertical
 table.rma tbody tr{cursor:pointer} table.rma tbody tr:hover{background:var(--accent-soft)}
 table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 .flag{display:inline-block;font:600 10px var(--mono);letter-spacing:.05em;padding:1px 6px;border-radius:4px;margin-left:6px;background:var(--warn-soft);color:var(--err)}
+.flag.loan{background:var(--caution-soft);color:var(--caution-ink)} .flag.due{background:var(--accent-soft);color:var(--accent-ink)}
 .st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
 .st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
 .st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
@@ -192,7 +193,7 @@ const SAMPLE = [
  {slug:'health',name:'LM Health Report',category:'Monitoring',description:'Installable DreamCatcher cluster health check (.efp). Pick the build for the server: Trusty or Live Media.',version:'latest',icon:'heart',downloads:[{label:'Trusty',url:'#'},{label:'Live Media',url:'#'}]},
  {slug:'monitoring',name:'LM Monitoring',category:'Monitoring',description:'Live, read-only 2110 view of DreamCatcher Matrox cards from the NMOS API. IO map, Red/Blue lanes, SDP compare across servers.',version:'1.0.80',updated:'2026-11-10',icon:'pulse',local_only:true,url:'#'},
  {slug:'core-builder',name:'LM Core Builder',category:'Documentation',description:'Draws rear and front plates for an LM-CORE build: model, input card, SDI I/O config and front PCIe slot. Exports PNG.',version:'0.1',updated:'2026-10-30',icon:'grid',file_needed:true,url:'#'},
- {slug:'games',name:'LM Games',category:'Operations',description:'Game and event tracking.',version:'latest',icon:'flag',url:'#'},
+ {slug:'games',name:'LM Arcade',category:'Training',description:'Game and event tracking.',version:'latest',icon:'flag',url:'#'},
  {slug:'mediabank',name:'Media Bank Integration',category:'Integrations',description:'MediaBank and DreamCatcher integration tools.',version:'latest',icon:'link',url:'#'},
  {slug:'roster',name:'VueWeb Roster Management',category:'Integrations',description:'Build and manage vueWeb rosters.',version:'latest',icon:'users',url:'#'},
  {slug:'scheduler',name:'Scheduler Builder',category:'Operations',description:'Build DreamCatcher schedules.',version:'latest',icon:'calendar',url:'#'},
@@ -269,7 +270,7 @@ function renderRma(){
   $('count').textContent = list.length + (list.length === 1 ? ' request' : ' requests');
   $('rmaRows').innerHTML = list.length ? list.map(r => `<tr data-ref="${esc(r.ref)}">
     <td class="ref">${esc(r.ref)}</td><td>${fmtWhen(r.created)}</td>
-    <td>${esc(r.company)}${r.urgent==='Yes'?'<span class="flag">URGENT</span>':''}${r.hot==='Yes'?'<span class="flag">HOT</span>':''}</td>
+    <td>${esc(r.company)}${r.urgent==='Yes'||r.hot==='Yes'?'<span class="flag">URGENT</span>':''}${r.loaner==='Yes'?'<span class="flag loan">LOANER</span>':''}${r.needed_by?`<span class="flag due">BY ${esc(fmtDue(r.needed_by))}</span>`:''}</td>
     <td>${esc(r.contact)}</td><td>${esc(r.type)}</td><td>${(r.units||[]).length}</td>
     <td class="asg${r.assigned && r.assigned === me ? ' me' : ''}">${r.assigned ? esc(r.assigned === me ? 'Me' : nameOf(r.assigned)) : '—'}</td>
     <td><span class="st ${esc(r.status.split(' ')[0])}">${esc(r.status)}</span></td></tr>`).join('')
@@ -285,6 +286,7 @@ $('who').onclick = async () => {
     if (r.ok) { const d = await r.json(); $('who').textContent = d.name || me; const u = users.find(x => x.email === me); if (u) u.name = d.name; renderRma(); }
   } catch {}
 };
+const fmtDue = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
 const fmtWhen = s => s ? new Date(s.replace(' ', 'T') + 'Z').toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
 $('rmaFilters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { rmaFilter = b.dataset.f; renderRma(); } });
 $('rmaRows').addEventListener('click', e => { const tr = e.target.closest('tr[data-ref]'); if (tr) openRma(tr.dataset.ref); });
@@ -301,6 +303,7 @@ function openRma(ref){
     <div><h4>Email</h4><p><a href="mailto:${esc(r.email)}?subject=${subj}${r.cc ? '&cc=' + encodeURIComponent(r.cc) : ''}">${esc(r.email)}</a></p></div>${field('Phone', r.phone)}
     ${r.cc ? field('CC', r.cc, true) : ''}
     ${field('Type', r.type)}${field('Urgent / Hot RMA', r.urgent === 'Yes' || r.hot === 'Yes' ? 'Yes' : 'No')}
+    ${field('Loaner needed', r.loaner === 'Yes' ? 'Yes' : 'No')}${field('Needed by', r.needed_by ? fmtDue(r.needed_by) : '')}
     ${field('Fee + automatic return if no fault found', r.auto_return === 'Yes' ? 'Accepted' : r.auto_return, true)}
     ${field('Company address', r.company_address)}${field('Shipping address', r.shipping_address)}
     <div class="full"><h4>Units</h4>${(r.units||[]).map((u,i) => `<div class="unit">

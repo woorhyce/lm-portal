@@ -1,4 +1,4 @@
-# LM Games: DreamCatcher Replay Academy
+# LM Arcade: DreamCatcher Replay Academy
 
 An arcade-style quiz for learning DreamCatcher replay operation. Good for new operators, and for a quick refresher before a show.
 
