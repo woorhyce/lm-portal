@@ -152,6 +152,54 @@ export default {
       return json({ ok: true });
     }
 
+    // Customer log uploads (from the public lm-logs page). Files live in R2; only the team, signed in, can read them.
+    if (url.pathname === "/api/logs" && request.method === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT ref, created, status, name, company, email, site, rma_ref, description, files, total_bytes, assigned, notes, email_status, updated_by FROM log_uploads WHERE status != 'Uploading' ORDER BY created DESC LIMIT 500"
+      ).all().catch(() => ({ results: [] }));
+      return json({ uploads: results.map((r) => ({ ...r, files: JSON.parse(r.files || "[]").map((f, i) => ({ name: f.name, size: f.size, i, done: f.done, deleted: f.deleted })).filter((f) => f.done || f.deleted) })) });
+    }
+    const lg = url.pathname.match(/^\/api\/logs\/(LOG-\d{8}-[A-Z0-9]{4})(?:\/file\/(\d+))?$/);
+    if (lg && lg[2] !== undefined && request.method === "GET") {
+      const row = await env.DB.prepare("SELECT files FROM log_uploads WHERE ref = ?1").bind(lg[1]).first();
+      const f = row && JSON.parse(row.files || "[]")[Number(lg[2])];
+      if (!f || !f.done || !env.LOGS) return json({ error: "File not found" }, 404);
+      const obj = await env.LOGS.get(f.key);
+      if (!obj) return json({ error: "File not found (it may have been cleaned up)" }, 404);
+      return new Response(obj.body, { headers: {
+        "content-type": "application/octet-stream", "content-length": String(obj.size), "cache-control": "no-store",
+        "content-disposition": `attachment; filename="${f.name.replace(/"/g, "")}"`,
+      } });
+    }
+    if (lg && !lg[2] && request.method === "PATCH") {
+      const body = await request.json();
+      const STATUSES = ["New", "Reviewing", "Waiting on customer", "Done"];
+      if ("status" in body && !STATUSES.includes(body.status)) return json({ error: "Unknown status" }, 400);
+      if (body.assigned) {
+        body.assigned = String(body.assigned).toLowerCase();
+        const u = await env.DB.prepare("SELECT email FROM users WHERE email = ?1").bind(body.assigned).first();
+        if (!u) return json({ error: "That person hasn't signed in to the portal yet" }, 400);
+      }
+      const sets = [], vals = [];
+      for (const k of ["status", "assigned", "notes"]) if (k in body) { sets.push(`${k} = ?${vals.length + 1}`); vals.push(String(body[k] ?? "").slice(0, 8000)); }
+      if (!sets.length) return json({ error: "Nothing to update" }, 400);
+      vals.push(email); sets.push(`updated_by = ?${vals.length}`, "updated = datetime('now')");
+      vals.push(lg[1]);
+      await env.DB.prepare(`UPDATE log_uploads SET ${sets.join(", ")} WHERE ref = ?${vals.length}`).bind(...vals).run();
+      return json({ ok: true });
+    }
+    // Delete the files of an upload (the record stays, marked Done)
+    if (lg && !lg[2] && request.method === "DELETE") {
+      const row = await env.DB.prepare("SELECT files FROM log_uploads WHERE ref = ?1").bind(lg[1]).first();
+      if (!row) return json({ error: "Not found" }, 404);
+      const files = JSON.parse(row.files || "[]");
+      if (env.LOGS && files.length) await env.LOGS.delete(files.map((f) => f.key));
+      files.forEach((f) => { f.done = false; f.deleted = true; });
+      await env.DB.prepare("UPDATE log_uploads SET files = ?1, status = 'Done', updated_by = ?2, updated = datetime('now') WHERE ref = ?3")
+        .bind(JSON.stringify(files), email, lg[1]).run();
+      return json({ ok: true });
+    }
+
     if (url.pathname.startsWith("/api/")) return json({ error: "Not found" }, 404);
     return env.ASSETS.fetch(request);
   },

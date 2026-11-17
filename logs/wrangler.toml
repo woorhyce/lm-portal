@@ -1,0 +1,33 @@
+# PUBLIC customer log upload page. Do NOT enable Cloudflare Access here; add a Bypass Access app
+# for dclogs.evertz.app. Customers can only upload; downloading happens in the (Access-protected) portal.
+name = "lm-logs"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = false
+preview_urls = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+TO_EMAIL = "woorhyce@gmail.com,rwoodhill@evertz.com"   # who gets "new logs" emails; each must be verified in Email Routing
+FROM_EMAIL = "rma@evertz.app"                           # same sender as the RMA form, so your Gmail forwarding script picks it up
+PORTAL_URL = "https://evertz.app/"
+TURNSTILE_SITE_KEY = ""                                 # optional spam check; secret goes in TURNSTILE_SECRET (a Secret)
+
+[[routes]]
+pattern = "dclogs.evertz.app"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lm-db"
+database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
+
+[[r2_buckets]]
+binding = "LOGS"
+bucket_name = "lm-logs"
+
+[[send_email]]
+name = "EMAIL"

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" data-lm-public>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evertz Live Media: Send us logs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js" data-suffix="Send Logs"></script>
+<style>
+main{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+.masthead h1{font-size:24px;margin:0 0 6px}
+.masthead p{margin:0;color:var(--ink-soft);line-height:1.55}
+.req-note{font:600 .72rem var(--mono);letter-spacing:.06em;color:var(--ink-soft);margin:14px 0 22px}
+.req-note b,.req{color:var(--err)}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:16px}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);background:var(--rail-bg);border-radius:10px 10px 0 0}
+.card-head h2{margin:0;font-size:.95rem}
+.card-head .tag{font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.card-body{padding:16px 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.full{grid-column:1/-1}
+@media (max-width:620px){.card-body{grid-template-columns:1fr}}
+label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px}
+.hint{font-weight:400;color:var(--ink-soft)}
+input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{width:100%;padding:9px 11px;border-radius:7px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);font:14px var(--sans)}
+textarea{min-height:90px;resize:vertical;line-height:1.45}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:0;border-color:var(--focus)}
+.yn{display:flex;gap:6px}
+.yn label{margin:0;display:inline-flex;align-items:center;gap:6px;font-weight:500;padding:7px 14px;border:1px solid var(--line);border-radius:99px;cursor:pointer;background:var(--bg)}
+.yn input{margin:0;accent-color:var(--accent)}
+.yn label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.unit{border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 14px}
+.unit .full{grid-column:1/-1}
+.unit-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;font:600 .7rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.unit-head button{background:none;border:0;color:var(--err);font:600 .78rem var(--sans);cursor:pointer}
+@media (max-width:620px){.unit{grid-template-columns:1fr}}
+.units{display:flex;flex-direction:column;gap:12px}
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px}
+.msg{font-size:.85rem}
+.msg.err{color:var(--err)}
+.ack{display:flex;gap:10px;align-items:flex-start;font-weight:500;line-height:1.45;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer}
+.ack input{margin-top:3px;accent-color:var(--accent);flex:none}
+.ack:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.addr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.addr-head label{margin:0}
+.addr-head .lm-btn{height:28px;padding:0 12px;font-size:.75rem}
+.hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
+.done{text-align:center;padding:48px 20px}
+.done .ref{display:inline-block;font:600 1.3rem var(--mono);letter-spacing:.06em;padding:10px 18px;border-radius:8px;background:var(--accent-soft);color:var(--accent-ink);margin:14px 0}
+.foot{color:var(--ink-soft);font-size:.75rem;text-align:center;margin-top:28px}
+
+.drop{border:2px dashed var(--line);border-radius:10px;padding:28px 18px;text-align:center;background:var(--bg);cursor:pointer;transition:border-color .12s,background .12s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop b{display:block;font-size:.95rem;margin-bottom:4px}
+.drop span{font-size:.8rem;color:var(--ink-soft)}
+.files{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.files li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:.85rem}
+.files .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.files .fs{color:var(--ink-soft);font:500 .78rem var(--mono);white-space:nowrap}
+.files .rm{background:none;border:0;color:var(--ink-soft);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:6px}
+.files .rm:hover{color:var(--err)}
+.bar{grid-column:1/-1;height:5px;border-radius:99px;background:var(--line-soft);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.files li.ok .bar i{background:var(--good)}
+.files li.bad .bar i{background:var(--err)}
+.total{font-size:.8rem;color:var(--ink-soft);margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+  <div id="formWrap">
+    <div class="masthead">
+      <h1>Send us logs</h1>
+      <p>Upload log files or a log bundle for the Live Media venue support team. Large files are fine: they upload in pieces and you'll see the progress as they go.</p>
+    </div>
+    <p class="req-note"><b>*</b> Required</p>
+    <form id="lf" novalidate>
+      <div class="hp" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <section class="card">
+        <div class="card-head"><span class="tag">1</span><h2>About you</h2></div>
+        <div class="card-body">
+          <div><label for="name">Your name <span class="req">*</span></label><input type="text" id="name" name="name" autocomplete="name" required></div>
+          <div><label for="company">Company <span class="req">*</span></label><input type="text" id="company" name="company" autocomplete="organization" required></div>
+          <div><label for="email">Email address <span class="req">*</span></label><input type="email" id="email" name="email" autocomplete="email" required></div>
+          <div><label for="site">Site / server <span class="hint">(e.g. venue, DC-7)</span></label><input type="text" id="site" name="site"></div>
+          <div class="full"><label for="rma_ref">RMA or case number <span class="hint">(if you have one)</span></label><input type="text" id="rma_ref" name="rma_ref" placeholder="e.g. LM-20261117-KAHT"></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-head"><span class="tag">2</span><h2>What happened</h2></div>
+        <div class="card-body"><div class="full"><label for="description">Describe the problem and roughly when it happened <span class="req">*</span></label><textarea id="description" name="description" rows="4" required></textarea></div></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><span class="tag">3</span><h2>Files</h2></div>
+        <div class="card-body"><div class="full">
+          <div class="drop" id="drop" tabindex="0" role="button"><b>Drop files here, or click to choose</b><span id="limits">Up to 20 files, 5 GB each</span></div>
+          <input type="file" id="pick" multiple hidden>
+          <ul class="files" id="files"></ul>
+          <div class="total" id="total"></div>
+        </div></div>
+      </section>
+      <div id="turnstile"></div>
+      <div class="actions">
+        <button type="submit" class="lm-btn primary" id="submit">Upload</button>
+        <span class="msg" id="msg" role="status"></span>
+      </div>
+    </form>
+  </div>
+  <div class="done" id="done" hidden>
+    <h1>Logs received</h1>
+    <p>Your reference number is</p>
+    <div class="ref" id="ref"></div>
+    <p id="doneNote">The Live Media venue support team has been notified and will follow up by email.</p>
+    <p><button type="button" class="lm-btn" id="another">Send more logs</button></p>
+  </div>
+  <p class="foot">Evertz Live Media venue support</p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let picked = [], busy = false, tsWidget = null, LIM = {files: 20, fileBytes: 5 * 1024 ** 3, totalBytes: 20 * 1024 ** 3};
+const fmt = (n) => n >= 1024 ** 3 ? (n / 1024 ** 3).toFixed(2) + " GB" : n >= 1024 ** 2 ? (n / 1024 ** 2).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function draw() {
+  $("files").innerHTML = picked.map((f, i) => `<li data-i="${i}"><span class="fn" title="${esc(f.name)}">${esc(f.name)}</span><span class="fs">${fmt(f.size)}</span>${busy ? "<span></span>" : `<button type="button" class="rm" aria-label="Remove ${esc(f.name)}">×</button>`}<span class="bar"><i></i></span></li>`).join("");
+  const t = picked.reduce((n, f) => n + f.size, 0);
+  $("total").textContent = picked.length ? `${picked.length} file${picked.length === 1 ? "" : "s"}, ${fmt(t)}` : "";
+}
+function add(list) {
+  for (const f of list) {
+    if (picked.some((p) => p.name === f.name && p.size === f.size)) continue;
+    if (f.size > LIM.fileBytes) { msg(`${f.name} is over ${fmt(LIM.fileBytes)}. Split or compress it first.`, true); continue; }
+    picked.push(f);
+  }
+  if (picked.length > LIM.files) { picked = picked.slice(0, LIM.files); msg(`Up to ${LIM.files} files. Zip them together if you have more.`, true); }
+  draw();
+}
+function msg(t, err) { $("msg").className = "msg" + (err ? " err" : ""); $("msg").textContent = t; }
+$("drop").onclick = () => !busy && $("pick").click();
+$("drop").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("drop").click(); } };
+$("pick").onchange = () => { add($("pick").files); $("pick").value = ""; };
+["dragenter", "dragover"].forEach((ev) => $("drop").addEventListener(ev, (e) => { e.preventDefault(); if (!busy) $("drop").classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => $("drop").addEventListener(ev, () => $("drop").classList.remove("over")));
+$("drop").addEventListener("drop", (e) => { e.preventDefault(); if (!busy) add(e.dataTransfer.files); });
+document.addEventListener("dragover", (e) => e.preventDefault()); document.addEventListener("drop", (e) => e.preventDefault());
+$("files").addEventListener("click", (e) => { const b = e.target.closest(".rm"); if (b) { picked.splice(+b.closest("li").dataset.i, 1); draw(); } });
+
+fetch("/config").then((r) => r.json()).then((c) => {
+  if (c.limits) { LIM = c.limits; $("limits").textContent = `Up to ${LIM.files} files, ${fmt(LIM.fileBytes)} each, ${fmt(LIM.totalBytes)} in total`; }
+  if (!c.turnstile) return;
+  const s = document.createElement("script");
+  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  s.onload = () => { tsWidget = turnstile.render("#turnstile", {sitekey: c.turnstile}); };
+  document.head.appendChild(s);
+}).catch(() => {});
+
+async function api(path, body, opt = {}) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const r = await fetch(path, opt.raw ? opt.raw : {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body)});
+      const d = await r.json().catch(() => ({error: "Unexpected reply from the server (" + r.status + ")"}));
+      if (!r.ok) { if (r.status >= 500 && attempt < 4) throw new Error(d.error); const e = new Error(d.error || "Upload failed"); e.fatal = true; throw e; }
+      return d;
+    } catch (e) {
+      if (e.fatal || attempt >= 4) throw e;
+      await new Promise((res) => setTimeout(res, 1500 * attempt));   // retry dropped connections
+    }
+  }
+}
+
+async function sendFile(ref, token, chunk, i, f, bar, onBytes) {
+  const {uploadId} = await api("/api/file/create", {ref, token, i});
+  const count = Math.max(1, Math.ceil(f.size / chunk)), parts = new Array(count);
+  let next = 0, sent = 0;
+  async function worker() {
+    while (next < count) {
+      const n = next++, blob = f.slice(n * chunk, Math.min(f.size, (n + 1) * chunk));
+      const q = new URLSearchParams({ref, i, n: n + 1, uploadId});
+      parts[n] = await api("/api/file/part?" + q, null, {raw: {method: "PUT", headers: {"X-Upload-Token": token}, body: blob}});
+      sent += blob.size; onBytes(blob.size); bar.style.width = (sent / f.size * 100).toFixed(1) + "%";
+    }
+  }
+  await Promise.all([worker(), worker(), worker()]);   // three chunks at a time
+  await api("/api/file/complete", {ref, token, i, uploadId, parts});
+}
+
+$("lf").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (busy) return;
+  const form = e.target;
+  const bad = [...form.querySelectorAll("[required]")].find((el) => !el.value.trim());
+  if (bad) { msg("Please fill in the required fields.", true); bad.focus(); return; }
+  if (!picked.length) { msg("Add at least one file.", true); return; }
+  const body = Object.fromEntries(new FormData(form).entries());
+  body.files = picked.map((f) => ({name: f.name, size: f.size}));
+  if (window.turnstile && tsWidget !== null) body.turnstile = turnstile.getResponse(tsWidget);
+  busy = true; $("submit").disabled = true; draw();
+  form.querySelectorAll("input,textarea").forEach((el) => el.readOnly = true);
+  const total = picked.reduce((n, f) => n + f.size, 0); let done = 0;
+  const pct = () => msg(`Uploading… ${Math.floor(done / total * 100)}% of ${fmt(total)}. Keep this page open.`);
+  window.onbeforeunload = () => "Your upload is still running.";
+  try {
+    const {ref, token, chunk} = await api("/api/start", body);
+    let failed = 0;
+    for (let i = 0; i < picked.length; i++) {
+      const li = $("files").querySelector(`li[data-i="${i}"]`), bar = li.querySelector(".bar i");
+      try { await sendFile(ref, token, chunk, i, picked[i], bar, (b) => { done += b; pct(); }); li.classList.add("ok"); bar.style.width = "100%"; }
+      catch (err) { failed++; li.classList.add("bad"); }
+    }
+    const r = await api("/api/finish", {ref, token});
+    window.onbeforeunload = null;
+    $("ref").textContent = ref;
+    $("doneNote").textContent = failed ? `${r.files} file(s) arrived, but ${failed} didn't upload. Please send those again and mention ${ref}.`
+      : "The Live Media venue support team has been notified and will follow up by email.";
+    $("formWrap").hidden = true; $("done").hidden = false; scrollTo(0, 0);
+  } catch (err) {
+    window.onbeforeunload = null;
+    msg(err.message || "Upload failed. Please try again.", true);
+    if (window.turnstile && tsWidget !== null) turnstile.reset(tsWidget);
+  } finally {
+    busy = false; $("submit").disabled = false;
+    form.querySelectorAll("input,textarea").forEach((el) => el.readOnly = false);
+  }
+});
+$("another").onclick = () => {
+  $("lf").reset(); picked = []; draw(); msg("");
+  $("done").hidden = true; $("formWrap").hidden = false; scrollTo(0, 0);
+};
+</script>
+</body>
+</html>

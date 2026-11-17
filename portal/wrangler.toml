@@ -20,3 +20,8 @@ database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
 [[routes]]
 pattern = "evertz.app"
 custom_domain = true
+
+# Customer log uploads (written by lm-logs, read here behind Access)
+[[r2_buckets]]
+binding = "LOGS"
+bucket_name = "lm-logs"

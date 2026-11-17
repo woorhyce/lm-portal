@@ -104,6 +104,12 @@ table.rma tbody tr{cursor:pointer} table.rma tbody tr:hover{background:var(--acc
 table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 .flag{display:inline-block;font:600 10px var(--mono);letter-spacing:.05em;padding:1px 6px;border-radius:4px;margin-left:6px;background:var(--warn-soft);color:var(--err)}
 .flag.loan{background:var(--caution-soft);color:var(--caution-ink)} .flag.due{background:var(--accent-soft);color:var(--accent-ink)}
+.log-files{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.log-files a,.log-files span.gone{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);text-decoration:none;color:var(--ink);font-size:13px}
+.log-files a:hover{border-color:var(--accent)}
+.log-files a em,.log-files span.gone em{font:500 12px var(--mono);color:var(--ink-soft);font-style:normal}
+.log-files span.gone{color:var(--ink-soft);text-decoration:line-through}
+.st.Reviewing{background:var(--accent-soft);color:var(--accent-ink)} .st.Done{background:var(--good-soft);color:var(--good-txt)}
 .st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
 .st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
 .st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
@@ -137,7 +143,7 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
     <h3>LIBRARY</h3>
     <div id="cats"></div>
     <h3 class="recent">INBOX</h3>
-    <div id="inbox"><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button></div>
+    <div id="inbox"><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button><button data-view="logs">Log uploads<span class="n" id="logCount" title="New, not looked at yet"></span></button></div>
     <h3 class="recent">RECENTLY UPDATED</h3>
     <div id="recent"></div>
   </nav>
@@ -153,8 +159,19 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
       <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>Contact</th><th>Type</th><th>Units</th><th>Assigned</th><th>Status</th></tr></thead><tbody id="rmaRows"></tbody></table></div>
       <p class="rma-public">Customer form: <a id="rmaLink" target="_blank" rel="noopener"></a> <button class="notes-btn" id="rmaCopy">Copy link</button></p>
     </div>
+    <div id="logsView" hidden>
+      <div class="rma-filters" id="logFilters"></div>
+      <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>From</th><th>Site</th><th>Files</th><th>Assigned</th><th>Status</th></tr></thead><tbody id="logRows"></tbody></table></div>
+      <p class="rma-public">Customer upload page: <a id="logLink" target="_blank" rel="noopener"></a> <button class="notes-btn" id="logCopy">Copy link</button></p>
+    </div>
   </main>
 </div>
+<dialog id="logDlg" class="wide" aria-labelledby="log-title">
+  <div class="dlg-head"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
+    <div><h2 id="log-title"></h2><div class="cat" id="log-sub"></div></div>
+    <button class="close" id="log-close" aria-label="Close">×</button></div>
+  <div id="log-body" class="rma-detail"></div>
+</dialog>
 <dialog id="rmaDlg" class="wide" aria-labelledby="rma-title">
   <div class="dlg-head"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg></div>
     <div><h2 id="rma-title"></h2><div class="cat" id="rma-sub"></div></div>
@@ -233,7 +250,7 @@ function render(){
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
 $('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; showView('tools'); render(); } });
-$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } });
+$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } if (e.target.closest('[data-view=logs]')) showView('logs'); });
 
 /* ---------- RMA inbox ---------- */
 const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcrma.' + location.hostname) + '/';
@@ -243,10 +260,12 @@ const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
 const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
 function showView(v){
   view = v;
-  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma';
-  document.querySelectorAll('#inbox button').forEach(b => b.classList.toggle('on', v === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
+  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs';
+  document.querySelectorAll('#inbox [data-view=rma]').forEach(b => b.classList.toggle('on', v === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', v === 'tools' && b.dataset.cat === cat));
   if (v === 'rma') { $('title').textContent = 'RMA requests'; loadRma(); }
+  if (v === 'logs') { $('title').textContent = 'Log uploads'; loadLogs(); }
+  document.querySelector('#inbox [data-view=logs]').classList.toggle('on', v === 'logs');
 }
 async function loadRma(){
   try { const r = await fetch('/api/rma', {cache:'no-store'}); if (!r.ok) throw 0; rmas = (await r.json()).requests; }
@@ -260,7 +279,7 @@ function renderRma(){
   const mine = rmas.filter(r => me && r.assigned === me && isOpen(r));
   const mineNew = mine.filter(r => r.status === 'New').length;
   $('rmaMineCount').textContent = mine.length || ''; $('rmaMineCount').className = 'n' + (mineNew ? ' hot' : '');
-  document.querySelectorAll('#inbox button').forEach(b => b.classList.toggle('on', view === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
+  document.querySelectorAll('#inbox [data-view=rma]').forEach(b => b.classList.toggle('on', view === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   if (view !== 'rma') return;
   const filters = ['Open','New','Mine','Unassigned','All'];
   $('rmaFilters').innerHTML = filters.map(f => `<button class="${f===rmaFilter?'on':''}" data-f="${f}">${f}</button>`).join('');
@@ -332,6 +351,77 @@ function openRma(ref){
 }
 $('rma-close').onclick = () => $('rmaDlg').close();
 $('rmaDlg').addEventListener('click', e => { if (e.target === $('rmaDlg')) $('rmaDlg').close(); });
+/* ---------- Log uploads ---------- */
+const LOG_PAGE_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-logs.' + location.hostname.split('.').slice(1).join('.') : 'https://dclogs.' + location.hostname) + '/';
+let logs = [], logFilter = 'Open';
+const LOG_STATUSES = ['New','Reviewing','Waiting on customer','Done'];
+const fmtSize = n => n >= 1024 ** 3 ? (n / 1024 ** 3).toFixed(2) + ' GB' : n >= 1024 ** 2 ? (n / 1024 ** 2).toFixed(1) + ' MB' : Math.max(1, Math.round((n || 0) / 1024)) + ' KB';
+async function loadLogs(){
+  try { const r = await fetch('/api/logs', {cache:'no-store'}); if (!r.ok) throw 0; logs = (await r.json()).uploads; }
+  catch { logs = SAMPLE_LOGS; }
+  if (!users.length) { try { const r = await fetch('/api/users', {cache:'no-store'}); if (r.ok) users = (await r.json()).users; } catch {} }
+  renderLogs();
+}
+function renderLogs(){
+  const n = logs.filter(r => r.status === 'New').length;
+  $('logCount').textContent = n || ''; $('logCount').className = 'n' + (n ? ' hot' : '');
+  if (view !== 'logs') return;
+  $('logFilters').innerHTML = ['Open','New','Mine','All'].map(f => `<button class="${f===logFilter?'on':''}" data-f="${f}">${f}</button>`).join('');
+  const list = logs.filter(r => logFilter === 'All' ? true : logFilter === 'New' ? r.status === 'New' : logFilter === 'Mine' ? (me && r.assigned === me && r.status !== 'Done') : r.status !== 'Done');
+  $('count').textContent = list.length + (list.length === 1 ? ' upload' : ' uploads');
+  $('logRows').innerHTML = list.length ? list.map(r => `<tr data-ref="${esc(r.ref)}">
+    <td class="ref">${esc(r.ref)}</td><td>${fmtWhen(r.created)}</td><td>${esc(r.company)}${r.rma_ref ? `<span class="flag due">${esc(r.rma_ref)}</span>` : ''}</td>
+    <td>${esc(r.name)}</td><td>${esc(r.site || '—')}</td><td>${(r.files||[]).filter(f => f.done).length} · ${fmtSize(r.total_bytes)}</td>
+    <td class="asg${r.assigned && r.assigned === me ? ' me' : ''}">${r.assigned ? esc(r.assigned === me ? 'Me' : nameOf(r.assigned)) : '—'}</td>
+    <td><span class="st ${esc(r.status.split(' ')[0])}">${esc(r.status)}</span></td></tr>`).join('')
+    : `<tr><td colspan="8" style="color:var(--ink-soft);padding:24px 12px">No ${logFilter === 'All' ? '' : logFilter.toLowerCase() + ' '}uploads.</td></tr>`;
+}
+$('logFilters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { logFilter = b.dataset.f; renderLogs(); } });
+$('logRows').addEventListener('click', e => { const tr = e.target.closest('tr[data-ref]'); if (tr) openLog(tr.dataset.ref); });
+$('logLink').textContent = LOG_PAGE_URL; $('logLink').href = LOG_PAGE_URL;
+$('logCopy').onclick = () => navigator.clipboard.writeText(LOG_PAGE_URL).then(() => { $('logCopy').textContent = 'Copied'; setTimeout(() => $('logCopy').textContent = 'Copy link', 1500); });
+function openLog(ref){
+  const r = logs.find(x => x.ref === ref); if (!r) return;
+  $('log-title').textContent = r.company + ' · ' + r.ref;
+  $('log-sub').textContent = 'Received ' + fmtWhen(r.created) + (r.email_status && !/^sent/.test(r.email_status) ? ' · email ' + r.email_status : '');
+  const live = (r.files || []).filter(f => f.done);
+  $('log-body').innerHTML = `
+    ${field('From', r.name)}<div><h4>Email</h4><p><a href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Evertz logs ' + r.ref)}">${esc(r.email)}</a></p></div>
+    ${field('Site / server', r.site)}${field('RMA or case', r.rma_ref)}
+    ${field('What happened', r.description, true)}
+    <div class="full"><h4>Files · ${fmtSize(r.total_bytes)}</h4><div class="log-files">${(r.files || []).map(f => f.done
+      ? `<a href="/api/logs/${encodeURIComponent(r.ref)}/file/${f.i}" download="${esc(f.name)}"><span>${esc(f.name)}</span><em>${fmtSize(f.size)} · Download</em></a>`
+      : `<span class="gone"><span>${esc(f.name)}</span><em>deleted</em></span>`).join('')}</div></div>
+    <div><h4>Status</h4><select id="logStatus">${LOG_STATUSES.map(s => `<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div><h4>Assigned to</h4><select id="logAssigned"><option value="">Unassigned</option>${users.map(u => `<option value="${esc(u.email)}" ${u.email === r.assigned ? 'selected' : ''}>${esc((u.name || u.email) + (u.email === me ? ' (me)' : ''))}</option>`).join('')}</select></div>
+    <div class="full rma-quick">${r.assigned !== me ? '<button type="button" id="logTake">Assign to me</button>' : ''}${r.status !== 'Done' ? '<button type="button" id="logDone">Mark done</button>' : ''}${live.length ? '<button type="button" id="logDelete">Delete files</button>' : ''}</div>
+    <div class="full"><h4>Internal notes</h4><textarea id="logNotes" placeholder="What you found, Jira ticket, next steps">${esc(r.notes||'')}</textarea></div>
+    <div class="full rma-actions"><button class="open" id="logSave" style="margin-left:0;border:0;cursor:pointer">Save</button>
+      <span class="saved" id="logSaved"></span>${r.updated_by ? `<span style="font-size:12px;color:var(--ink-soft)">Last updated by ${esc(nameOf(r.updated_by))}</span>` : ''}</div>`;
+  const save = async (body) => {
+    try {
+      const res = await fetch('/api/logs/' + encodeURIComponent(r.ref), {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+      if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+      Object.assign(r, body); r.updated_by = me; $('logSaved').style.color = ''; $('logSaved').textContent = 'Saved'; renderLogs(); return true;
+    } catch (err) { $('logSaved').style.color = 'var(--err)'; $('logSaved').textContent = err.message || 'Save failed'; return false; }
+  };
+  $('logSave').onclick = () => save({ status: $('logStatus').value, assigned: $('logAssigned').value, notes: $('logNotes').value });
+  if ($('logTake')) $('logTake').onclick = async () => { if (await save({ assigned: me, status: r.status === 'New' ? 'Reviewing' : r.status })) openLog(r.ref); };
+  if ($('logDone')) $('logDone').onclick = async () => { if (await save({ status: 'Done' })) $('logDlg').close(); };
+  if ($('logDelete')) $('logDelete').onclick = async () => {
+    if (!confirm('Delete the ' + live.length + ' file(s) for ' + r.ref + '? This cannot be undone. The record and notes stay.')) return;
+    const res = await fetch('/api/logs/' + encodeURIComponent(r.ref), {method:'DELETE'});
+    if (res.ok) { (r.files || []).forEach(f => { f.done = false; f.deleted = true; }); r.status = 'Done'; renderLogs(); openLog(r.ref); }
+    else { $('logSaved').style.color = 'var(--err)'; $('logSaved').textContent = 'Delete failed'; }
+  };
+  if (!$('logDlg').open) $('logDlg').showModal();
+}
+$('log-close').onclick = () => $('logDlg').close();
+$('logDlg').addEventListener('click', e => { if (e.target === $('logDlg')) $('logDlg').close(); });
+const SAMPLE_LOGS = [
+  {ref:'LOG-20261117-8X2P', created:'2026-11-17 19:12:00', status:'New', company:'Sample Arena', name:'Alex Lee', email:'alee@example.com', site:'DC-7', rma_ref:'', description:'Playout froze for about a second at 7:42 PM during the second period.', total_bytes: 734003200,
+   files:[{name:'dc7-logs-2026-11-17.tar.gz', size:734003200, i:0, done:true}]}
+];
 const SAMPLE_RMA = [
   {ref:'LM-20261114-7Q2K', created:'2026-11-14 15:02:11', status:'New', company:'Sample University Athletics', contact:'Jordan Smith', email:'jsmith@example.edu', phone:'555-0100', type:'Repair', urgent:'Yes', hot:'No', company_address:'1 Stadium Way', shipping_address:'Same as company', units:[{part:'DC-IO-MX8-12G-SDI', serial:'1234567', firmware:'', problem:'Card not detected after power cycle.'}]},
   {ref:'LM-20261112-0B9D', created:'2026-11-12 18:40:00', status:'In progress', company:'Sample Arena', contact:'Alex Lee', email:'alee@example.com', phone:'555-0101', type:'Warranty Replacement', urgent:'No', hot:'No', company_address:'2 Arena Blvd', shipping_address:'Same as company', units:[{part:'LM-25GE', serial:'7654321', problem:'Link drops'},{part:'PSU', serial:'99881', problem:'Fan noise'}], assigned:'Rhyce'}
@@ -414,6 +504,7 @@ new MutationObserver(() => {
   } catch { tools = SAMPLE; $('banner').hidden = false; }
   render();
   loadRma();
+  loadLogs();
 })();
 </script>
 </body>
