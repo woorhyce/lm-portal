@@ -39,6 +39,12 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-o
 .actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px}
 .msg{font-size:.85rem}
 .msg.err{color:var(--err)}
+.ack{display:flex;gap:10px;align-items:flex-start;font-weight:500;line-height:1.45;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer}
+.ack input{margin-top:3px;accent-color:var(--accent);flex:none}
+.ack:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.addr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.addr-head label{margin:0}
+.addr-head .lm-btn{height:28px;padding:0 12px;font-size:.75rem}
 .hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
 .done{text-align:center;padding:48px 20px}
 .done .ref{display:inline-block;font:600 1.3rem var(--mono);letter-spacing:.06em;padding:10px 18px;border-radius:8px;background:var(--accent-soft);color:var(--accent-ink);margin:14px 0}
@@ -73,12 +79,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-o
         <div class="card-body">
           <div><label for="type">Type</label>
             <select id="type" name="type"><option value="">Choose</option><option>Repair</option><option>Replacement</option><option>Warranty Replacement</option><option>Loaner Needed</option><option>Other</option></select></div>
-          <div><label for="verified">Verified by someone prior to shipping</label>
-            <select id="verified" name="verified"><option value="">Choose</option><option>No (Evertz will assign as necessary)</option></select></div>
-          <div><label>Urgent</label><div class="yn"><label><input type="radio" name="urgent" value="Yes">Yes</label><label><input type="radio" name="urgent" value="No">No</label></div></div>
-          <div><label>Hot RMA</label><div class="yn"><label><input type="radio" name="hot" value="Yes">Yes</label><label><input type="radio" name="hot" value="No">No</label></div></div>
-          <div><label>Flag someone upon receipt</label><div class="yn"><label><input type="radio" name="flag_receipt" value="Yes">Yes</label><label><input type="radio" name="flag_receipt" value="No">No</label></div></div>
-          <div><label>Authorize automatic return of the unit if failure analysis finds no fault</label><div class="yn"><label><input type="radio" name="auto_return" value="Yes">Yes</label></div></div>
+          <div><label>Urgent <span class="hint">(handled as a Hot RMA)</span></label><div class="yn"><label><input type="radio" name="urgent" value="Yes">Yes</label><label><input type="radio" name="urgent" value="No" checked>No</label></div></div>
+          <div class="full"><label class="ack"><input type="checkbox" name="auto_return" value="Yes" id="autoReturn" required>
+            <span>I accept the evaluation fee and authorize automatic return of the unit if failure analysis finds no fault. <span class="req">*</span></span></label></div>
         </div>
       </section>
 
@@ -86,7 +89,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-o
         <div class="card-head"><span class="tag">3</span><h2>Addresses</h2></div>
         <div class="card-body">
           <div class="full"><label for="company_address">Company address <span class="req">*</span></label><textarea id="company_address" name="company_address" rows="3" required></textarea></div>
-          <div class="full"><label for="shipping_address">Shipping address <span class="req">*</span> <span class="hint">(write "Same as company" if it's the same)</span></label><textarea id="shipping_address" name="shipping_address" rows="3" required></textarea></div>
+          <div class="full"><div class="addr-head"><label for="shipping_address">Shipping address <span class="req">*</span></label><button type="button" class="lm-btn" id="sameAddr">Same as company address</button></div><textarea id="shipping_address" name="shipping_address" rows="3" required></textarea></div>
         </div>
       </section>
 
@@ -152,13 +155,20 @@ fetch("/config").then((r) => r.json()).then((c) => {
   document.head.appendChild(s);
 }).catch(() => {});
 
+$("sameAddr").onclick = () => {
+  const c = $("company_address").value.trim();
+  if (!c) { $("msg").className = "msg err"; $("msg").textContent = "Fill in the company address first."; $("company_address").focus(); return; }
+  $("shipping_address").value = c; $("msg").textContent = "";
+};
 $("rma").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = new FormData(e.target), msg = $("msg"), btn = $("submit");
   const body = Object.fromEntries(f.entries());
+  body.hot = body.urgent === "Yes" ? "Yes" : "No";            /* urgent is always hot */
+  body.verified = "No (Evertz will assign as necessary)";
   body.units = [...unitsEl.children].map((u) => Object.fromEntries([...u.querySelectorAll("[data-k]")].map((el) => [el.dataset.k, el.value])));
   if (window.turnstile && tsWidget !== null) body.turnstile = turnstile.getResponse(tsWidget);
-  const firstBad = [...e.target.querySelectorAll("[required]")].find((el) => !el.value.trim());
+  const firstBad = [...e.target.querySelectorAll("[required]")].find((el) => el.type === "checkbox" ? !el.checked : !el.value.trim());
   if (firstBad) { msg.className = "msg err"; msg.textContent = "Please fill in the required fields."; firstBad.focus(); return; }
   btn.disabled = true; msg.className = "msg"; msg.textContent = "Sending…";
   try {

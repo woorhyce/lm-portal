@@ -7,9 +7,21 @@ const json = (data, status = 200) =>
     headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 
-function userEmail(request) {
-  return (request.headers.get("Cf-Access-Authenticated-User-Email") || "dev@local").toLowerCase();
+// Who is signed in. Cloudflare Access sits in front of every hostname and passes the email,
+// either as a header or inside its signed token. No sign-in = no email = API calls are refused.
+function accessEmail(request) {
+  let e = request.headers.get("Cf-Access-Authenticated-User-Email");
+  if (!e) {
+    let tok = request.headers.get("Cf-Access-Jwt-Assertion");
+    if (!tok) { const m = (request.headers.get("Cookie") || "").match(/(?:^|;\s*)CF_Authorization=([^;]+)/); if (m) tok = m[1]; }
+    try {
+      const p = tok && tok.split(".")[1];
+      if (p) e = JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(p.length / 4) * 4, "="))).email;
+    } catch {}
+  }
+  return e ? String(e).toLowerCase() : null;
 }
+
 
 async function touchUser(env, email) {
   await env.DB.prepare(
@@ -22,12 +34,30 @@ async function touchUser(env, email) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const email = userEmail(request);
+    const email = accessEmail(request);
+    if (!email && url.pathname.startsWith("/api/")) return json({ error: "Not signed in" }, 401);
 
-    if (url.pathname === "/api/me") {
+    if (url.pathname === "/api/me" && request.method === "GET") {
       const me = await touchUser(env, email);
       const prefs = await env.DB.prepare("SELECT theme FROM prefs WHERE email=?1").bind(email).first().catch(() => null);
       return json({ ...me, theme: prefs?.theme || null });
+    }
+
+    // Display name, shown on the leaderboard and on RMA assignments
+    if (url.pathname === "/api/me" && request.method === "PUT") {
+      const { name } = await request.json();
+      const n = String(name || "").replace(/\s+/g, " ").trim().slice(0, 60);
+      await touchUser(env, email);
+      await env.DB.prepare("UPDATE users SET name = ?1 WHERE email = ?2").bind(n || null, email).run();
+      return json({ ok: true, name: n || null });
+    }
+
+    // Everyone who has signed in (for assigning RMA requests)
+    if (url.pathname === "/api/users" && request.method === "GET") {
+      const { results } = await env.DB.prepare(
+        "SELECT email, name FROM users WHERE email LIKE '%@%.%' ORDER BY COALESCE(name, email)"
+      ).all();
+      return json({ users: results });
     }
 
     if (url.pathname === "/api/prefs" && request.method === "PUT") {
@@ -108,6 +138,11 @@ export default {
       const body = await request.json();
       const STATUSES = ["New", "In progress", "Waiting on customer", "Shipped", "Closed"];
       if ("status" in body && !STATUSES.includes(body.status)) return json({ error: "Unknown status" }, 400);
+      if (body.assigned) {
+        body.assigned = String(body.assigned).toLowerCase();
+        const u = await env.DB.prepare("SELECT email FROM users WHERE email = ?1").bind(body.assigned).first();
+        if (!u) return json({ error: "That person hasn't signed in to the portal yet" }, 400);
+      }
       const sets = [], vals = [];
       for (const k of ["status", "assigned", "notes"]) if (k in body) { sets.push(`${k} = ?${vals.length + 1}`); vals.push(String(body[k] ?? "").slice(0, 8000)); }
       if (!sets.length) return json({ error: "Nothing to update" }, 400);

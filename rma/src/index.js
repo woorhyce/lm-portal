@@ -36,10 +36,9 @@ function emailBody(r) {
     `New RMA request ${r.ref}`, "",
     `Contact:   ${r.contact}`, `Company:   ${r.company}`, `Phone:     ${r.phone}`, `Email:     ${r.email}`,
     r.cc ? `CC:        ${r.cc}` : null, "",
-    `Type:      ${r.type}`, `Urgent:    ${yn(r.urgent)}`, `Hot RMA:   ${yn(r.hot)}`,
-    `Flag someone upon receipt: ${yn(r.flag_receipt)}`,
-    `Verified prior to shipping: ${r.verified || "Not answered"}`,
-    `Authorizes automatic return if no fault found: ${yn(r.auto_return)}`, "",
+    `Type:      ${r.type}`, `Urgent / Hot RMA: ${r.urgent === "Yes" ? "YES" : "No"}`,
+    `Verified prior to shipping: ${r.verified || "No (Evertz will assign as necessary)"}`,
+    `Accepts evaluation fee + automatic return if no fault found: ${yn(r.auto_return)}`, "",
     "Company address:", r.company_address, "", "Shipping address:", r.shipping_address, "",
   ];
   r.units.forEach((u, i) => lines.push(
@@ -51,7 +50,7 @@ function emailBody(r) {
 
 async function sendEmail(env, r) {
   if (!env.EMAIL || !env.FROM_EMAIL) return "not configured";
-  const subject = `RMA request ${r.ref}: ${r.company}${r.urgent === "Yes" || r.hot === "Yes" ? " (URGENT)" : ""}`;
+  const subject = `RMA request ${r.ref}: ${r.company}${r.urgent === "Yes" ? " (URGENT / HOT)" : ""}`;
   const enc = (s) => "=?UTF-8?B?" + btoa(unescape(encodeURIComponent(s))) + "?=";
   const raw = [
     `From: ${enc("Live Media RMA")} <${env.FROM_EMAIL}>`,
@@ -105,6 +104,9 @@ export default {
       if (r.email && !emailOk(r.email)) missing.push("a valid email address");
       if (!TYPES.includes(r.type)) r.type = "Other";
       for (const k of ["urgent", "flag_receipt", "hot", "auto_return"]) if (!YN.includes(r[k])) r[k] = "";
+      r.hot = r.urgent === "Yes" ? "Yes" : "No";               // urgent is always a Hot RMA
+      if (!r.verified) r.verified = "No (Evertz will assign as necessary)";
+      if (r.auto_return !== "Yes") missing.push("acceptance of the evaluation fee / automatic return");
       if (!r.units.length) missing.push("at least one unit");
       r.units.forEach((u, i) => { if (!u.part || !u.serial || !u.problem) missing.push(`part, serial and problem for unit ${i + 1}`); });
       if (missing.length) return json({ error: "Please fill in: " + missing.join(", ") + "." }, 400);

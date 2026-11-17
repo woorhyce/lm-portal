@@ -17,7 +17,14 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
-.identity-bar .identity-bar .who + .theme-switch{margin-left:18px}
+.identity-bar .who{margin-left:auto;font:600 .7rem var(--mono);letter-spacing:.06em;color:rgba(255,255,255,.72);background:none;border:0;cursor:pointer;padding:4px 6px;border-radius:6px}
+.identity-bar .who:hover{color:#fff;background:rgba(255,255,255,.08)}
+.rma-quick{display:flex;gap:8px;flex-wrap:wrap}
+.rma-quick button{background:var(--surface);border:1px solid var(--line);color:var(--ink);font:600 12px var(--sans);padding:6px 12px;border-radius:99px;cursor:pointer}
+.rma-quick button:hover{border-color:var(--ink-soft)}
+td.asg{color:var(--ink-soft);white-space:nowrap}
+td.asg.me{color:var(--accent-ink);font-weight:600}
+.identity-bar .who + .theme-switch{margin-left:18px}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .who{font-size:12px;color:var(--muted)}
@@ -122,14 +129,14 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 <div id="banner" class="banner" hidden>Showing sample data. The tools API isn’t reachable from this page.</div>
 <header class="identity-bar" id="identityBar">
   <div class="identity-brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 181.40 20" role="img" aria-label="Live Media"><g transform="translate(7,5)" fill="none" stroke-width="1.45" stroke-linecap="square" stroke-linejoin="round"><path d="M0,0 V7.4 Q0,10 2.6,10 H17" transform="translate(0.00,0)" stroke="#ffffff"/><path d="M0,0 V10" transform="translate(21.60,0)" stroke="#ffffff"/><path d="M0,0 L8.5,10 L17,0" transform="translate(26.20,0)" stroke="#ffffff"/><path d="M17,0 H2.6 Q0,0 0,2.6 V7.4 Q0,10 2.6,10 H17" transform="translate(47.80,0)" stroke="#ffffff"/><path d="M0,5.0 H14" transform="translate(47.80,0)" stroke="#ffffff"/><path d="M0,5.0 H7" transform="translate(69.40,0)" stroke="#3d8bea"/><path d="M0,10 V2.6 Q0,0 2.6,0 H14.4 Q17,0 17,2.6 V10" transform="translate(81.00,0)" stroke="#3d8bea"/><path d="M8.5,0 V10" transform="translate(81.00,0)" stroke="#3d8bea"/><path d="M17,0 H2.6 Q0,0 0,2.6 V7.4 Q0,10 2.6,10 H17" transform="translate(102.60,0)" stroke="#3d8bea"/><path d="M0,5.0 H14" transform="translate(102.60,0)" stroke="#3d8bea"/><path d="M0,0 H14.4 Q17,0 17,2.6 V7.4 Q17,10 14.4,10 H0 Z" transform="translate(124.20,0)" stroke="#3d8bea"/><path d="M0,0 V10" transform="translate(145.80,0)" stroke="#3d8bea"/><path d="M0,10 V2.6 Q0,0 2.6,0 H14.4 Q17,0 17,2.6 V10" transform="translate(150.40,0)" stroke="#3d8bea"/><path d="M0,5.8 H17" transform="translate(150.40,0)" stroke="#3d8bea"/></g></svg><span class="brand-suffix">Tool Library</span></div>
-  <span class="who" id="who"></span>
+  <button class="who" id="who" type="button" title="Set the name shown to your team"></button>
 </header>
 <div class="layout">
   <nav>
     <h3>LIBRARY</h3>
     <div id="cats"></div>
     <h3 class="recent">INBOX</h3>
-    <div id="inbox"><button data-view="rma">RMA requests<span class="n" id="rmaCount"></span></button></div>
+    <div id="inbox"><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button></div>
     <h3 class="recent">RECENTLY UPDATED</h3>
     <div id="recent"></div>
   </nav>
@@ -142,7 +149,7 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
     <div class="grid" id="grid"></div>
     <div id="rmaView" hidden>
       <div class="rma-filters" id="rmaFilters"></div>
-      <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>Contact</th><th>Type</th><th>Units</th><th>Status</th></tr></thead><tbody id="rmaRows"></tbody></table></div>
+      <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>Contact</th><th>Type</th><th>Units</th><th>Assigned</th><th>Status</th></tr></thead><tbody id="rmaRows"></tbody></table></div>
       <p class="rma-public">Customer form: <a id="rmaLink" target="_blank" rel="noopener"></a> <button class="notes-btn" id="rmaCopy">Copy link</button></p>
     </div>
   </main>
@@ -225,40 +232,59 @@ function render(){
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
 $('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; showView('tools'); render(); } });
-$('inbox').addEventListener('click', e => { if (e.target.closest('[data-view=rma]')) showView('rma'); });
+$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } });
 
 /* ---------- RMA inbox ---------- */
 const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcrma.' + location.hostname) + '/';
-let rmas = [], rmaFilter = 'Open', view = 'tools';
+let rmas = [], rmaFilter = 'Open', view = 'tools', me = null, users = [];
+const nameOf = e => { if (!e) return ''; const u = users.find(x => x.email === e); return (u && u.name) || e.split('@')[0]; };
 const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
 const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
 function showView(v){
   view = v;
   $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma';
-  document.querySelectorAll('#inbox button').forEach(b => b.classList.toggle('on', v === 'rma'));
+  document.querySelectorAll('#inbox button').forEach(b => b.classList.toggle('on', v === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', v === 'tools' && b.dataset.cat === cat));
   if (v === 'rma') { $('title').textContent = 'RMA requests'; loadRma(); }
 }
 async function loadRma(){
   try { const r = await fetch('/api/rma', {cache:'no-store'}); if (!r.ok) throw 0; rmas = (await r.json()).requests; }
   catch { rmas = SAMPLE_RMA; }
+  try { const r = await fetch('/api/users', {cache:'no-store'}); if (r.ok) users = (await r.json()).users; } catch {}
   renderRma();
 }
 function renderRma(){
   const n = rmas.filter(r => r.status === 'New').length;
   $('rmaCount').textContent = n || ''; $('rmaCount').className = 'n' + (n ? ' hot' : '');
+  const mine = rmas.filter(r => me && r.assigned === me && isOpen(r));
+  const mineNew = mine.filter(r => r.status === 'New').length;
+  $('rmaMineCount').textContent = mine.length || ''; $('rmaMineCount').className = 'n' + (mineNew ? ' hot' : '');
+  document.querySelectorAll('#inbox button').forEach(b => b.classList.toggle('on', view === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   if (view !== 'rma') return;
-  const filters = ['Open','New','All'];
+  const filters = ['Open','New','Mine','Unassigned','All'];
   $('rmaFilters').innerHTML = filters.map(f => `<button class="${f===rmaFilter?'on':''}" data-f="${f}">${f}</button>`).join('');
-  const list = rmas.filter(r => rmaFilter === 'All' || (rmaFilter === 'New' ? r.status === 'New' : isOpen(r)));
+  const list = rmas.filter(r => rmaFilter === 'All' ? true : rmaFilter === 'New' ? r.status === 'New'
+    : rmaFilter === 'Mine' ? (me && r.assigned === me && isOpen(r)) : rmaFilter === 'Unassigned' ? (!r.assigned && isOpen(r)) : isOpen(r));
+  $('title').textContent = rmaFilter === 'Mine' ? 'Assigned to me' : 'RMA requests';
   $('count').textContent = list.length + (list.length === 1 ? ' request' : ' requests');
   $('rmaRows').innerHTML = list.length ? list.map(r => `<tr data-ref="${esc(r.ref)}">
     <td class="ref">${esc(r.ref)}</td><td>${fmtWhen(r.created)}</td>
     <td>${esc(r.company)}${r.urgent==='Yes'?'<span class="flag">URGENT</span>':''}${r.hot==='Yes'?'<span class="flag">HOT</span>':''}</td>
     <td>${esc(r.contact)}</td><td>${esc(r.type)}</td><td>${(r.units||[]).length}</td>
+    <td class="asg${r.assigned && r.assigned === me ? ' me' : ''}">${r.assigned ? esc(r.assigned === me ? 'Me' : nameOf(r.assigned)) : '—'}</td>
     <td><span class="st ${esc(r.status.split(' ')[0])}">${esc(r.status)}</span></td></tr>`).join('')
-    : `<tr><td colspan="7" style="color:var(--ink-soft);padding:24px 12px">No ${rmaFilter === 'All' ? '' : rmaFilter.toLowerCase() + ' '}requests.</td></tr>`;
+    : `<tr><td colspan="8" style="color:var(--ink-soft);padding:24px 12px">${rmaFilter === 'Mine' ? 'Nothing open is assigned to you.' : 'No ' + (rmaFilter === 'All' ? '' : rmaFilter.toLowerCase() + ' ') + 'requests.'}</td></tr>`;
 }
+$('who').onclick = async () => {
+  if (!me) return;
+  const cur = $('who').textContent === me ? '' : $('who').textContent;
+  const n = prompt('Your name, as your team sees it (leaderboard, RMA assignments):', cur);
+  if (n === null) return;
+  try {
+    const r = await fetch('/api/me', {method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify({name: n})});
+    if (r.ok) { const d = await r.json(); $('who').textContent = d.name || me; const u = users.find(x => x.email === me); if (u) u.name = d.name; renderRma(); }
+  } catch {}
+};
 const fmtWhen = s => s ? new Date(s.replace(' ', 'T') + 'Z').toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
 $('rmaFilters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { rmaFilter = b.dataset.f; renderRma(); } });
 $('rmaRows').addEventListener('click', e => { const tr = e.target.closest('tr[data-ref]'); if (tr) openRma(tr.dataset.ref); });
@@ -274,27 +300,32 @@ function openRma(ref){
     ${field('Contact', r.contact)}${field('Company', r.company)}
     <div><h4>Email</h4><p><a href="mailto:${esc(r.email)}?subject=${subj}${r.cc ? '&cc=' + encodeURIComponent(r.cc) : ''}">${esc(r.email)}</a></p></div>${field('Phone', r.phone)}
     ${r.cc ? field('CC', r.cc, true) : ''}
-    ${field('Type', r.type)}${field('Urgent / Hot RMA', [r.urgent||'—', r.hot||'—'].join(' / '))}
-    ${field('Flag someone upon receipt', r.flag_receipt)}${field('Verified prior to shipping', r.verified)}
-    ${field('Automatic return if no fault found', r.auto_return, true)}
+    ${field('Type', r.type)}${field('Urgent / Hot RMA', r.urgent === 'Yes' || r.hot === 'Yes' ? 'Yes' : 'No')}
+    ${field('Fee + automatic return if no fault found', r.auto_return === 'Yes' ? 'Accepted' : r.auto_return, true)}
     ${field('Company address', r.company_address)}${field('Shipping address', r.shipping_address)}
     <div class="full"><h4>Units</h4>${(r.units||[]).map((u,i) => `<div class="unit">
       <p><b>${i+1}. ${esc(u.part)}</b> · S/N ${esc(u.serial)}${u.firmware ? ' · FW ' + esc(u.firmware) : ''}</p>
       <p style="margin-top:6px">${esc(u.problem)}</p>${u.troubleshooting ? `<p style="margin-top:6px;color:var(--ink-soft)">Tried: ${esc(u.troubleshooting)}</p>` : ''}</div>`).join('')}</div>
     <div><h4>Status</h4><select id="rmaStatus">${STATUSES.map(s => `<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></div>
-    <div><h4>Assigned to</h4><input id="rmaAssigned" value="${esc(r.assigned||'')}" placeholder="Name"></div>
+    <div><h4>Assigned to</h4><select id="rmaAssigned"><option value="">Unassigned</option>${users.map(u => `<option value="${esc(u.email)}" ${u.email === r.assigned ? 'selected' : ''}>${esc((u.name || u.email) + (u.email === me ? ' (me)' : ''))}</option>`).join('')}${r.assigned && !users.some(u => u.email === r.assigned) ? `<option value="${esc(r.assigned)}" selected>${esc(r.assigned)}</option>` : ''}</select></div>
+    <div class="full rma-quick">${r.assigned !== me ? '<button type="button" id="rmaTakeIt">Assign to me</button>' : ''}${r.status !== 'Closed' ? '<button type="button" id="rmaCloseIt">Mark closed</button>' : '<button type="button" id="rmaReopen">Reopen</button>'}</div>
     <div class="full"><h4>Internal notes</h4><textarea id="rmaNotes" placeholder="Evertz RMA #, tracking number, anything the team should know">${esc(r.notes||'')}</textarea></div>
     <div class="full rma-actions"><button class="open" id="rmaSave" style="margin-left:0;border:0;cursor:pointer">Save</button>
-      <span class="saved" id="rmaSaved"></span>${r.updated_by ? `<span style="font-size:12px;color:var(--ink-soft)">Last updated by ${esc(r.updated_by)}</span>` : ''}</div>`;
-  $('rmaSave').onclick = async () => {
-    const body = { status: $('rmaStatus').value, assigned: $('rmaAssigned').value, notes: $('rmaNotes').value };
+      <span class="saved" id="rmaSaved"></span>${r.updated_by ? `<span style="font-size:12px;color:var(--ink-soft)">Last updated by ${esc(nameOf(r.updated_by))}</span>` : ''}</div>`;
+  const save = async (body) => {
     try {
       const res = await fetch('/api/rma/' + encodeURIComponent(r.ref), {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
       if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
-      Object.assign(r, body); $('rmaSaved').textContent = 'Saved'; renderRma();
-    } catch (err) { $('rmaSaved').style.color = 'var(--err)'; $('rmaSaved').textContent = err.message || 'Save failed'; }
+      Object.assign(r, body); r.updated_by = me; $('rmaSaved').style.color = ''; $('rmaSaved').textContent = 'Saved'; renderRma();
+      return true;
+    } catch (err) { $('rmaSaved').style.color = 'var(--err)'; $('rmaSaved').textContent = err.message || 'Save failed'; return false; }
   };
-  $('rmaDlg').showModal();
+  $('rmaSave').onclick = () => save({ status: $('rmaStatus').value, assigned: $('rmaAssigned').value, notes: $('rmaNotes').value });
+  /* taking a New request counts as responding to it */
+  if ($('rmaTakeIt')) $('rmaTakeIt').onclick = async () => { if (await save({ assigned: me, status: r.status === 'New' ? 'In progress' : r.status })) openRma(r.ref); };
+  if ($('rmaCloseIt')) $('rmaCloseIt').onclick = async () => { if (await save({ status: 'Closed' })) $('rmaDlg').close(); };
+  if ($('rmaReopen')) $('rmaReopen').onclick = async () => { if (await save({ status: 'In progress' })) openRma(r.ref); };
+  if (!$('rmaDlg').open) $('rmaDlg').showModal();
 }
 $('rma-close').onclick = () => $('rmaDlg').close();
 $('rmaDlg').addEventListener('click', e => { if (e.target === $('rmaDlg')) $('rmaDlg').close(); });
@@ -376,7 +407,7 @@ new MutationObserver(() => {
   try {
     const r = await fetch('/api/tools'); if (!r.ok) throw 0;
     tools = (await r.json()).tools;
-    fetch('/api/me').then(r=>r.json()).then(u => { $('who').textContent = u.email; if (u.theme) setTheme(u.theme); }).catch(()=>{});
+    fetch('/api/me').then(r=>r.json()).then(u => { me = u.email; $('who').textContent = u.name || u.email; if (u.theme) setTheme(u.theme); renderRma(); }).catch(()=>{});
   } catch { tools = SAMPLE; $('banner').hidden = false; }
   render();
   loadRma();

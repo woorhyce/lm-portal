@@ -6,6 +6,21 @@
 //   GET    /api/data               -> all of your keys for this tool + your shared prefs (used by lm-sync.js)
 //   PUT    /api/prefs              -> {"theme":"light"|"dark"}, shared by every tool and the portal
 
+// Who is signed in. Cloudflare Access sits in front of every hostname and passes the email,
+// either as a header or inside its signed token. No sign-in = no email = API calls are refused.
+function accessEmail(request) {
+  let e = request.headers.get("Cf-Access-Authenticated-User-Email");
+  if (!e) {
+    let tok = request.headers.get("Cf-Access-Jwt-Assertion");
+    if (!tok) { const m = (request.headers.get("Cookie") || "").match(/(?:^|;\s*)CF_Authorization=([^;]+)/); if (m) tok = m[1]; }
+    try {
+      const p = tok && tok.split(".")[1];
+      if (p) e = JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(p.length / 4) * 4, "="))).email;
+    } catch {}
+  }
+  return e ? String(e).toLowerCase() : null;
+}
+
 const json = (d, s = 200) => new Response(JSON.stringify(d), {
   status: s, headers: { "content-type": "application/json", "cache-control": "no-store" },
 });
@@ -13,7 +28,8 @@ const json = (d, s = 200) => new Response(JSON.stringify(d), {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const email = (request.headers.get("Cf-Access-Authenticated-User-Email") || "dev@local").toLowerCase();
+    const email = accessEmail(request);
+    if (!email && url.pathname.startsWith("/api/")) return json({ error: "Not signed in" }, 401);
 
     if (url.pathname === "/api/me") return json({ email, portal: env.PORTAL_URL });
 
