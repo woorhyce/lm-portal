@@ -11,7 +11,7 @@ directory = "./public"
 binding = "ASSETS"
 
 [vars]
-TO_EMAIL = "lmvenuesupport@evertz.com"   # one or more, comma-separated; each must be verified in Email Routing
+TO_EMAIL = "rwoodhill@evertz.com"   # one or more, comma-separated; each must be verified in Email Routing
 FROM_EMAIL = "rma@evertz.app"
 TURNSTILE_SITE_KEY = ""    # optional spam protection; secret goes in TURNSTILE_SECRET (a Secret)
 
