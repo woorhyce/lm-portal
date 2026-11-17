@@ -11,7 +11,7 @@ directory = "./public"
 binding = "ASSETS"
 
 [vars]
-TO_EMAIL = "woorhyce@gmail.com,rwoodhill@evertz.com"   # who gets "new logs" emails; each must be verified in Email Routing
+TO_EMAIL = "livemediavenues@gmail.com"   # who gets "new logs" emails; each must be verified in Email Routing
 FROM_EMAIL = "rma@evertz.app"                           # same sender as the RMA form, so your Gmail forwarding script picks it up
 PORTAL_URL = "https://evertz.app/"
 TURNSTILE_SITE_KEY = ""                                 # optional spam check; secret goes in TURNSTILE_SECRET (a Secret)
