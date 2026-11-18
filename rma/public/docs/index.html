@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" data-lm-public>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evertz Live Media: Manuals &amp; release notes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/lm-ui.css">
+<script src="/lm-ui.js" data-suffix="Manuals"></script>
+<style>
+main{max-width:860px;margin:0 auto;padding:32px 20px 64px}
+.back{margin:0 0 10px;font-size:.82rem}.back a{color:var(--ink-soft);text-decoration:none}.back a:hover{color:var(--accent-ink)}
+h1{font-size:24px;margin:0 0 6px}
+.lede{margin:0 0 22px;color:var(--ink-soft);line-height:1.55}
+.pick{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:18px}
+.pick label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px}
+.pick select{min-width:200px;padding:9px 11px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:14px var(--sans)}
+.pick .hint{font-size:.78rem;color:var(--ink-soft);margin:0 0 8px}
+.group{margin:0 0 18px}
+.group h2{font:600 .66rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 8px}
+a.doc{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none;margin-bottom:8px;transition:border-color .12s}
+a.doc:hover{border-color:var(--accent)}
+.doc .ico{width:38px;height:38px;flex:none;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink)}
+.doc .ico svg{width:20px;height:20px}
+.doc .t{flex:1;min-width:0}
+.doc .t b{display:block;font-size:.95rem}
+.doc .t span{font-size:.8rem;color:var(--ink-soft)}
+.doc .dl{font-weight:600;font-size:.85rem;color:var(--accent-ink);white-space:nowrap}
+.tag{display:inline-block;font:600 .62rem var(--mono);letter-spacing:.06em;padding:1px 6px;border-radius:4px;background:var(--good-soft);color:var(--good-txt);margin-left:6px;vertical-align:2px}
+.lock{padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-width:520px}
+.lock h2{margin:0 0 6px;font-size:1.05rem}
+.lock p{margin:0 0 14px;color:var(--ink-soft);font-size:.9rem;line-height:1.5}
+.lock-row{display:flex;gap:10px}
+.lock-row input{flex:1;padding:9px 12px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:14px var(--sans)}
+.lock-msg{display:block;margin-top:8px;font-size:.85rem;color:var(--err)}
+.empty{color:var(--ink-soft);padding:20px 2px}
+.foot{color:var(--ink-soft);font-size:.75rem;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<main>
+  <p class="back"><a href="https://dcsupport.evertz.app/">← Support home</a></p>
+  <h1>Manuals &amp; release notes</h1>
+  <p class="lede">Pick your product and the software build running on your system to get the matching documents.</p>
+  <form class="lock" id="lock" hidden>
+    <h2>Enter your access code</h2>
+    <p>Manuals and release notes are for Evertz DreamCatcher customers. Your Evertz contact can give you the code.</p>
+    <div class="lock-row"><input type="password" id="code" autocomplete="off" placeholder="Access code" aria-label="Access code"><button type="submit" class="lm-btn primary">Open</button></div>
+    <span class="lock-msg" id="lockMsg" role="status"></span>
+  </form>
+  <div class="pick" id="pick">
+    <div><label for="prod">Product</label><select id="prod"></select></div>
+    <div><label for="ver">Your build</label><select id="ver"></select></div>
+  </div>
+  <div id="list"><p class="empty">Loading…</p></div>
+  <p class="foot">Evertz Live Media venue support · Questions? <a href="mailto:lmvenuesupport@evertz.com" style="color:inherit">lmvenuesupport@evertz.com</a></p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const vk = (v) => String(v || "").split(/[^0-9]+/).filter(Boolean).map((n) => n.padStart(6, "0")).join(".");
+const fmt = (n) => n >= 1024 ** 2 ? (n / 1024 ** 2).toFixed(1) + " MB" : Math.max(1, Math.round((n || 0) / 1024)) + " KB";
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
+let docs = [];
+const q = new URLSearchParams(location.search);
+function versions(p) { return [...new Set(docs.filter((d) => d.product === p).map((d) => d.version))].sort((a, b) => vk(b).localeCompare(vk(a))); }
+function fillVer() {
+  const vs = versions($("prod").value), want = q.get("v");
+  $("ver").innerHTML = vs.map((v, i) => `<option value="${esc(v)}">${esc(v)}${i === 0 ? " (latest)" : ""}</option>`).join("");
+  if (want && vs.includes(want)) $("ver").value = want;
+}
+function draw() {
+  const p = $("prod").value, v = $("ver").value, latest = versions(p)[0];
+  const list = docs.filter((d) => d.product === p && d.version === v);
+  if (!list.length) { $("list").innerHTML = '<p class="empty">No documents for this build yet. Email us and we\'ll send them.</p>'; return; }
+  const kinds = [...new Set(list.map((d) => d.kind))];
+  $("list").innerHTML = kinds.map((k) => `<div class="group"><h2>${esc(k)}</h2>${list.filter((d) => d.kind === k).map((d) =>
+    `<a class="doc" href="/docs/file/${esc(d.id)}" target="_blank" rel="noopener"><span class="ico">${ICON}</span>
+      <span class="t"><b>${esc(d.title)}${v === latest ? '<span class="tag">LATEST</span>' : ''}</b><span>${esc(d.filename)} · ${fmt(d.size)}${d.notes ? " · " + esc(d.notes) : ""}</span></span>
+      <span class="dl">Open</span></a>`).join("")}</div>`).join("");
+  history.replaceState(null, "", `?p=${encodeURIComponent(p)}&v=${encodeURIComponent(v)}`);
+}
+async function unlock(code) {
+  const r = await fetch("/api/docs/unlock", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({code})});
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "That code isn't right.");
+}
+$("lock").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("lockMsg").textContent = "";
+  try { await unlock($("code").value); load(); } catch (err) { $("lockMsg").textContent = err.message; $("code").select(); }
+});
+function locked() { $("lock").hidden = false; $("pick").hidden = true; $("list").innerHTML = ""; $("code").focus(); }
+async function load() {
+  // a link like /docs/?code=XXXX unlocks straight away (handy in emails); the code is then removed from the address bar
+  if (q.get("code")) { const c = q.get("code"); q.delete("code"); history.replaceState(null, "", "?" + q); try { await unlock(c); } catch {} }
+  const r = await fetch("/api/docs", {cache: "no-store"});
+  if (r.status === 401) return locked();
+  const d = await r.json();
+  $("lock").hidden = true; $("pick").hidden = false;
+  docs = d.docs || [];
+  const prods = [...new Set(docs.map((x) => x.product))].sort();
+  if (!prods.length) { $("list").innerHTML = '<p class="empty">No documents published yet.</p>'; $("prod").disabled = $("ver").disabled = true; return; }
+  $("prod").innerHTML = prods.map((x) => `<option>${esc(x)}</option>`).join("");
+  if (q.get("p") && prods.includes(q.get("p"))) $("prod").value = q.get("p");
+  fillVer(); draw();
+}
+load().catch(() => { $("list").innerHTML = '<p class="empty">Couldn\'t load the document list. Please try again.</p>'; });
+$("prod").onchange = () => { q.delete("v"); fillVer(); draw(); };
+$("ver").onchange = draw;
+</script>
+</body>
+</html>

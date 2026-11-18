@@ -138,6 +138,55 @@ async function submit(request, env) {
     return json({ ok: true, ref: r.ref });
 }
 
+
+// ---------- Manuals & release notes (read-only; the team uploads them in the portal) ----------
+// Behind an access code: DOCS_CODE is a Worker secret (one code, or several comma-separated).
+// Entering a right code sets a 30-day cookie. Changing the secret signs everyone out.
+const DOCS_COOKIE = "lm_docs";
+function docCodes(env) { return String(env.DOCS_CODE || "").split(",").map((x) => x.trim()).filter(Boolean); }
+async function docPass(env) {
+  const codes = docCodes(env); if (!codes.length) return null;
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(codes.join("|")), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode("lm-docs-v1"));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/[+/=]/g, (c) => ({ "+": "-", "/": "_", "=": "" }[c]));
+}
+async function docsUnlocked(request, env) {
+  const pass = await docPass(env); if (!pass) return false;
+  const m = (request.headers.get("Cookie") || "").match(new RegExp("(?:^|;\\s*)" + DOCS_COOKIE + "=([^;]+)"));
+  return !!m && m[1] === pass;
+}
+async function docsUnlock(request, env) {
+  const b = await request.json().catch(() => ({}));
+  const code = String(b.code || "").trim();
+  const codes = docCodes(env);
+  if (!codes.length) return json({ error: "Documents aren't available right now." }, 503);
+  if (!code || !codes.includes(code)) { await new Promise((r) => setTimeout(r, 800)); return json({ error: "That code isn't right. Check it and try again." }, 401); }
+  return new Response(JSON.stringify({ ok: true }), { headers: {
+    "content-type": "application/json", "cache-control": "no-store",
+    "set-cookie": `${DOCS_COOKIE}=${await docPass(env)}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`,
+  } });
+}
+function verKey(v) { return String(v || "").split(/[^0-9]+/).filter(Boolean).map((n) => n.padStart(6, "0")).join("."); }
+async function publicDocs(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, product, kind, version, title, filename, size, uploaded, notes FROM docs WHERE published = 1"
+  ).all().catch(() => ({ results: [] }));
+  results.sort((a, b) => verKey(b.version).localeCompare(verKey(a.version)) || a.kind.localeCompare(b.kind) || a.title.localeCompare(b.title));
+  return json({ docs: results });
+}
+async function docFile(env, id) {
+  const row = await env.DB.prepare("SELECT key, filename FROM docs WHERE id = ?1 AND published = 1").bind(id).first();
+  if (!row || !env.DOCS) return new Response("Not found", { status: 404 });
+  const obj = await env.DOCS.get(row.key);
+  if (!obj) return new Response("Not found", { status: 404 });
+  const pdf = /\.pdf$/i.test(row.filename);
+  return new Response(obj.body, { headers: {
+    "content-type": pdf ? "application/pdf" : "application/octet-stream", "content-length": String(obj.size),
+    "content-disposition": `${pdf ? "inline" : "attachment"}; filename="${row.filename.replace(/"/g, "")}"`,
+    "cache-control": "private, max-age=300",
+  } });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -145,6 +194,13 @@ export default {
     // dcsupport.evertz.app: the customer support home page (links to the RMA form and the log upload page)
     if (url.hostname.startsWith("dcsupport.") && (url.pathname === "/" || url.pathname === "/index.html"))
       return env.ASSETS.fetch(new Request(new URL("/support/", url), request));
+    if (url.pathname === "/api/docs/unlock" && request.method === "POST") return docsUnlock(request, env);
+    if (url.pathname === "/api/docs" && request.method === "GET")
+      return (await docsUnlocked(request, env)) ? publicDocs(env) : json({ error: "locked" }, 401);
+    const dm = url.pathname.match(/^\/docs\/file\/([a-z0-9]{8,40})$/);
+    if (dm && request.method === "GET")
+      return (await docsUnlocked(request, env)) ? docFile(env, dm[1]) : Response.redirect(new URL("/docs/", url), 302);
+    if (url.pathname === "/docs") return Response.redirect(new URL("/docs/", url), 301);
     if (url.pathname === "/config") return json({ turnstile: env.TURNSTILE_SITE_KEY || null });
 
     if (url.pathname === "/api/submit" && request.method === "POST") {

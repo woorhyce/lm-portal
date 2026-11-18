@@ -30,6 +30,11 @@ binding = "DB"
 database_name = "lm-db"
 database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
 
+# Manuals & release notes customers can download (uploaded by the team in the portal)
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "lm-docs"
+
 # Email: evertz.app has Email Routing on, and TO_EMAIL is a verified destination address.
 [[send_email]]
 name = "EMAIL"
