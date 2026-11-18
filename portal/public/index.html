@@ -110,6 +110,16 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 .log-files a em,.log-files span.gone em{font:500 12px var(--mono);color:var(--ink-soft);font-style:normal}
 .log-files span.gone{color:var(--ink-soft);text-decoration:line-through}
 .st.Reviewing{background:var(--accent-soft);color:var(--accent-ink)} .st.Done{background:var(--good-soft);color:var(--good-txt)}
+.doc-up{display:grid;grid-template-columns:2fr 1.2fr 1fr .8fr;gap:12px 14px;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:16px}
+.doc-up .wide{grid-column:span 2} .doc-up .row{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+@media (max-width:900px){.doc-up{grid-template-columns:1fr 1fr}}
+.doc-up label{display:block;font:600 .62rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+.doc-up input,.doc-up select{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:13px var(--sans)}
+.doc-up input[type=file]{padding:6px}
+.doc-up label.chk{display:flex;align-items:center;gap:8px;font:500 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);margin:0}
+.doc-up label.chk input{width:auto}
+td .lnk{background:none;border:0;color:var(--ink-soft);font:600 12px var(--sans);cursor:pointer;padding:2px 6px}
+td .lnk:hover{color:var(--err)}
 .st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
 .st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
 .st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
@@ -143,7 +153,7 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
     <h3>LIBRARY</h3>
     <div id="cats"></div>
     <h3 class="recent">INBOX</h3>
-    <div id="inbox"><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button><button data-view="logs">Log uploads<span class="n" id="logCount" title="New, not looked at yet"></span></button></div>
+    <div id="inbox"><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button><button data-view="logs">Log uploads<span class="n" id="logCount" title="New, not looked at yet"></span></button><button data-view="docs">Manuals &amp; release notes<span class="n" id="docCount"></span></button></div>
     <h3 class="recent">RECENTLY UPDATED</h3>
     <div id="recent"></div>
   </nav>
@@ -158,6 +168,20 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
       <div class="rma-filters" id="rmaFilters"></div>
       <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>Contact</th><th>Type</th><th>Units</th><th>Assigned</th><th>Status</th></tr></thead><tbody id="rmaRows"></tbody></table></div>
       <p class="rma-public">Customer form: <a id="rmaLink" target="_blank" rel="noopener"></a> <button class="notes-btn" id="rmaCopy">Copy link</button></p>
+    </div>
+    <div id="docsView" hidden>
+      <form class="doc-up" id="docUp">
+        <div><label>File (PDF)</label><input type="file" name="file" id="docFile" required></div>
+        <div><label>Product</label><input name="product" list="docProducts" value="DreamCatcher" required><datalist id="docProducts"></datalist></div>
+        <div><label>Type</label><select name="kind"><option>User manual</option><option>Release notes</option><option>Quick start</option><option>Other</option></select></div>
+        <div><label>Build / version</label><input name="version" placeholder="e.g. 24.05" required></div>
+        <div class="wide"><label>Title (what customers see)</label><input name="title" placeholder="e.g. DreamCatcher User Manual 24.05" required></div>
+        <div class="wide"><label>Note <span style="font-weight:400;color:var(--ink-soft)">(optional)</span></label><input name="notes" placeholder="e.g. Version 16, October 2024"></div>
+        <div class="row"><label class="chk"><input type="checkbox" name="published" value="1" checked> Show on the customer site</label>
+          <button class="open" type="submit" style="margin-left:auto;border:0;cursor:pointer">Upload</button><span class="saved" id="docMsg"></span></div>
+      </form>
+      <div class="rma-wrap"><table class="rma"><thead><tr><th>Product</th><th>Build</th><th>Type</th><th>Title</th><th>Size</th><th>On site</th><th></th></tr></thead><tbody id="docRows"></tbody></table></div>
+      <p class="rma-public">Customer page: <a id="docLink" target="_blank" rel="noopener"></a></p>
     </div>
     <div id="logsView" hidden>
       <div class="rma-filters" id="logFilters"></div>
@@ -250,7 +274,7 @@ function render(){
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
 $('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; showView('tools'); render(); } });
-$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } if (e.target.closest('[data-view=logs]')) showView('logs'); });
+$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } if (e.target.closest('[data-view=logs]')) showView('logs'); if (e.target.closest('[data-view=docs]')) showView('docs'); });
 
 /* ---------- RMA inbox ---------- */
 const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcrma.' + location.hostname) + '/';
@@ -260,12 +284,14 @@ const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
 const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
 function showView(v){
   view = v;
-  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs';
+  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs'; $('docsView').hidden = v !== 'docs';
   document.querySelectorAll('#inbox [data-view=rma]').forEach(b => b.classList.toggle('on', v === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', v === 'tools' && b.dataset.cat === cat));
   if (v === 'rma') { $('title').textContent = 'RMA requests'; loadRma(); }
   if (v === 'logs') { $('title').textContent = 'Log uploads'; loadLogs(); }
   document.querySelector('#inbox [data-view=logs]').classList.toggle('on', v === 'logs');
+  document.querySelector('#inbox [data-view=docs]').classList.toggle('on', v === 'docs');
+  if (v === 'docs') { $('title').textContent = 'Manuals & release notes'; loadDocs(); }
 }
 async function loadRma(){
   try { const r = await fetch('/api/rma', {cache:'no-store'}); if (!r.ok) throw 0; rmas = (await r.json()).requests; }
@@ -418,6 +444,61 @@ function openLog(ref){
 }
 $('log-close').onclick = () => $('logDlg').close();
 $('logDlg').addEventListener('click', e => { if (e.target === $('logDlg')) $('logDlg').close(); });
+/* ---------- Manuals & release notes (published on dcsupport.evertz.app/docs) ---------- */
+const DOCS_PAGE_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcsupport.' + location.hostname) + '/docs/';
+let docsList = [];
+const vkey = v => String(v || '').split(/[^0-9]+/).filter(Boolean).map(n => n.padStart(6, '0')).join('.');
+async function loadDocs(){
+  try { const r = await fetch('/api/docs', {cache:'no-store'}); if (!r.ok) throw 0; docsList = (await r.json()).docs; } catch { docsList = []; }
+  renderDocs();
+}
+function renderDocs(){
+  $('docCount').textContent = docsList.filter(d => d.published).length || '';
+  if (view !== 'docs') return;
+  $('docProducts').innerHTML = [...new Set(docsList.map(d => d.product).concat('DreamCatcher'))].map(p => `<option value="${esc(p)}">`).join('');
+  const list = docsList.slice().sort((a, b) => a.product.localeCompare(b.product) || vkey(b.version).localeCompare(vkey(a.version)) || a.kind.localeCompare(b.kind));
+  $('count').textContent = list.length + (list.length === 1 ? ' document' : ' documents');
+  $('docRows').innerHTML = list.length ? list.map(d => `<tr data-id="${esc(d.id)}" style="cursor:default">
+    <td>${esc(d.product)}</td><td class="ref">${esc(d.version)}</td><td>${esc(d.kind)}</td><td>${esc(d.title)}<div style="font-size:12px;color:var(--ink-soft)">${esc(d.filename)}</div></td>
+    <td style="white-space:nowrap">${fmtSize(d.size)}</td>
+    <td><label class="chk" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" class="pub" ${d.published ? 'checked' : ''}> ${d.published ? 'Shown' : 'Hidden'}</label></td>
+    <td style="white-space:nowrap">${d.published ? `<a class="lnk" style="text-decoration:none" href="${DOCS_PAGE_URL.replace(/\/docs\/$/, '')}/docs/file/${esc(d.id)}" target="_blank" rel="noopener">Open</a>` : ''}<button class="lnk del" type="button">Delete</button></td></tr>`).join('')
+    : '<tr><td colspan="7" style="color:var(--ink-soft);padding:24px 12px">Nothing uploaded yet. Add the first manual above.</td></tr>';
+}
+$('docLink').textContent = DOCS_PAGE_URL; $('docLink').href = DOCS_PAGE_URL;
+$('docRows').addEventListener('change', async e => {
+  const cb = e.target.closest('.pub'); if (!cb) return;
+  const id = cb.closest('tr').dataset.id;
+  const r = await fetch('/api/docs/' + id, {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({published: cb.checked})});
+  if (r.ok) { docsList.find(d => d.id === id).published = cb.checked ? 1 : 0; renderDocs(); } else cb.checked = !cb.checked;
+});
+$('docRows').addEventListener('click', async e => {
+  const b = e.target.closest('.del'); if (!b) return;
+  const d = docsList.find(x => x.id === b.closest('tr').dataset.id);
+  if (!d || !confirm('Delete "' + d.title + '"? Customers will no longer be able to get it.')) return;
+  const r = await fetch('/api/docs/' + d.id, {method:'DELETE'});
+  if (r.ok) { docsList = docsList.filter(x => x !== d); renderDocs(); }
+});
+$('docFile').addEventListener('change', () => {
+  const f = $('docFile').files[0], form = $('docUp'); if (!f) return;
+  const m = f.name.match(/(\d{2})[._](\d{2})/);           /* e.g. ..._24_05.pdf → 24.05 */
+  if (m && !form.version.value) form.version.value = m[1] + '.' + m[2];
+  if (/release/i.test(f.name)) form.kind.value = 'Release notes'; else if (/manual/i.test(f.name)) form.kind.value = 'User manual';
+  if (!form.title.value) form.title.value = f.name.replace(/\.[a-z0-9]+$/i, '').replace(/^AN\d+\s*-\s*/i, '').replace(/[_]+/g, ' ').replace(/(\d{2}) (\d{2})$/, '$1.$2');
+});
+$('docUp').addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.target, fd = new FormData(form);
+  if (!form.published.checked) fd.set('published', '0');
+  const f = $('docFile').files[0];
+  if (f && f.size > 95 * 1024 * 1024) { $('docMsg').style.color = 'var(--err)'; $('docMsg').textContent = 'Files over 95 MB need splitting or compressing'; return; }
+  $('docMsg').style.color = ''; $('docMsg').textContent = 'Uploading…';
+  try {
+    const r = await fetch('/api/docs', {method:'POST', body: fd});
+    if (!r.ok) throw new Error((await r.json()).error || 'Upload failed');
+    $('docMsg').textContent = 'Uploaded'; form.reset(); form.product.value = fd.get('product'); loadDocs();
+  } catch (err) { $('docMsg').style.color = 'var(--err)'; $('docMsg').textContent = err.message; }
+});
 const SAMPLE_LOGS = [
   {ref:'LOG-20261117-8X2P', created:'2026-11-17 19:12:00', status:'New', company:'Sample Arena', name:'Alex Lee', email:'alee@example.com', site:'DC-7', rma_ref:'', description:'Playout froze for about a second at 7:42 PM during the second period.', total_bytes: 734003200,
    files:[{name:'dc7-logs-2026-11-17.tar.gz', size:734003200, i:0, done:true}]}
@@ -505,6 +586,7 @@ new MutationObserver(() => {
   render();
   loadRma();
   loadLogs();
+  loadDocs();
 })();
 </script>
 </body>

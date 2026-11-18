@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, product TEXT NOT NULL, kind TEXT NOT NULL, version TEXT NOT NULL, title TEXT NOT NULL, filename TEXT NOT NULL, size INTEGER, key TEXT NOT NULL, published INTEGER NOT NULL DEFAULT 1, uploaded TEXT, uploaded_by TEXT, notes TEXT);

@@ -25,3 +25,8 @@ custom_domain = true
 [[r2_buckets]]
 binding = "LOGS"
 bucket_name = "lm-logs"
+
+# Manuals & release notes for the customer support site
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "lm-docs"

@@ -200,6 +200,47 @@ export default {
       return json({ ok: true });
     }
 
+    // Manuals & release notes shown on dcsupport.evertz.app/docs
+    if (url.pathname === "/api/docs" && request.method === "GET") {
+      const { results } = await env.DB.prepare("SELECT * FROM docs ORDER BY uploaded DESC").all().catch(() => ({ results: [] }));
+      return json({ docs: results });
+    }
+    if (url.pathname === "/api/docs" && request.method === "POST") {
+      if (!env.DOCS) return json({ error: "The lm-docs bucket isn't connected" }, 500);
+      const form = await request.formData();
+      const file = form.get("file");
+      const f = (k, n = 200) => String(form.get(k) || "").trim().slice(0, n);
+      const product = f("product", 60) || "DreamCatcher", kind = f("kind", 40), version = f("version", 30), title = f("title", 200);
+      if (!file || typeof file === "string" || !file.size) return json({ error: "Choose a file" }, 400);
+      if (!kind || !version || !title) return json({ error: "Fill in the type, version and title" }, 400);
+      const id = [...crypto.getRandomValues(new Uint8Array(10))].map((b) => b.toString(16).padStart(2, "0")).join("");
+      const filename = String(file.name || "document.pdf").replace(/[\\/]+/g, "_").replace(/[^\w.\- ()+]+/g, "_").slice(-150);
+      const key = `docs/${id}/${filename}`;
+      await env.DOCS.put(key, file.stream(), { httpMetadata: { contentType: file.type || "application/octet-stream" } });
+      await env.DB.prepare(
+        `INSERT INTO docs (id, product, kind, version, title, filename, size, key, published, uploaded, uploaded_by, notes)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, datetime('now'), ?10, ?11)`
+      ).bind(id, product, kind, version, title, filename, file.size, key, form.get("published") === "0" ? 0 : 1, email, f("notes", 500)).run();
+      return json({ ok: true, id });
+    }
+    const dm = url.pathname.match(/^\/api\/docs\/([a-f0-9]{20})$/);
+    if (dm && request.method === "PATCH") {
+      const body = await request.json();
+      const sets = [], vals = [];
+      for (const k of ["product", "kind", "version", "title", "notes"]) if (k in body) { sets.push(`${k} = ?${vals.length + 1}`); vals.push(String(body[k] ?? "").trim().slice(0, 200)); }
+      if ("published" in body) { sets.push(`published = ?${vals.length + 1}`); vals.push(body.published ? 1 : 0); }
+      if (!sets.length) return json({ error: "Nothing to update" }, 400);
+      vals.push(dm[1]);
+      await env.DB.prepare(`UPDATE docs SET ${sets.join(", ")} WHERE id = ?${vals.length}`).bind(...vals).run();
+      return json({ ok: true });
+    }
+    if (dm && request.method === "DELETE") {
+      const row = await env.DB.prepare("SELECT key FROM docs WHERE id = ?1").bind(dm[1]).first();
+      if (row && env.DOCS) await env.DOCS.delete(row.key);
+      await env.DB.prepare("DELETE FROM docs WHERE id = ?1").bind(dm[1]).run();
+      return json({ ok: true });
+    }
+
     if (url.pathname.startsWith("/api/")) return json({ error: "Not found" }, 404);
     return env.ASSETS.fetch(request);
   },
