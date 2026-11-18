@@ -118,8 +118,8 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 .doc-up input[type=file]{padding:6px}
 .doc-up label.chk{display:flex;align-items:center;gap:8px;font:500 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);margin:0}
 .doc-up label.chk input{width:auto}
-td .lnk{background:none;border:0;color:var(--ink-soft);font:600 12px var(--sans);cursor:pointer;padding:2px 6px}
-td .lnk:hover{color:var(--err)}
+td .lnk,.doc-up .lnk{background:none;border:0;color:var(--ink-soft);font:600 12px var(--sans);cursor:pointer;padding:2px 6px}
+td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
 .st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
 .st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
 .st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
@@ -171,10 +171,11 @@ td .lnk:hover{color:var(--err)}
     </div>
     <div id="docsView" hidden>
       <form class="doc-up" id="docUp">
-        <div><label>File (PDF)</label><input type="file" name="file" id="docFile" required></div>
-        <div><label>Product</label><input name="product" list="docProducts" value="DreamCatcher" required><datalist id="docProducts"></datalist></div>
-        <div><label>Type</label><select name="kind"><option>User manual</option><option>Release notes</option><option>Quick start</option><option>Other</option></select></div>
-        <div><label>Build / version</label><input name="version" placeholder="e.g. 24.05" required></div>
+        <div><label>File <span style="font-weight:400;color:var(--ink-soft)">(PDF, or any file for tools)</span></label><input type="file" name="file" id="docFile" required></div>
+        <div><label>Product</label><select name="product" class="doc-prod"></select></div>
+        <div><label>Type</label><select name="kind" class="doc-kind"></select></div>
+        <div><label>Build / version</label><input name="version" placeholder="e.g. 24.05" required>
+          <label class="chk" style="margin-top:6px"><input type="checkbox" class="doc-all"> Works with every version</label></div>
         <div class="wide"><label>Title (what customers see)</label><input name="title" placeholder="e.g. DreamCatcher User Manual 24.05" required></div>
         <div class="wide"><label>Note <span style="font-weight:400;color:var(--ink-soft)">(optional)</span></label><input name="notes" placeholder="e.g. Version 16, October 2024"></div>
         <div class="row"><label class="chk"><input type="checkbox" name="published" value="1" checked> Show on the customer site</label>
@@ -190,6 +191,22 @@ td .lnk:hover{color:var(--err)}
     </div>
   </main>
 </div>
+<dialog id="docDlg" aria-labelledby="doc-title">
+  <div class="dlg-head"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+    <div><h2 id="doc-title">Edit document</h2><div class="cat" id="doc-sub"></div></div>
+    <button class="close" id="doc-close" aria-label="Close">×</button></div>
+  <form id="docEdit" class="doc-up" style="border:0;border-radius:0;margin:0;grid-template-columns:1fr 1fr">
+    <div><label>Product</label><select name="product" class="doc-prod"></select></div>
+    <div><label>Type</label><select name="kind" class="doc-kind"></select></div>
+    <div><label>Build / version</label><input name="version" required><label class="chk" style="margin-top:6px"><input type="checkbox" class="doc-all"> Works with every version</label></div>
+    <div><label>Replace file <span style="font-weight:400;color:var(--ink-soft)">(optional)</span></label><input type="file" name="file"></div>
+    <div class="wide"><label>Title (what customers see)</label><input name="title" required></div>
+    <div class="wide"><label>Note</label><input name="notes"></div>
+    <div class="row"><label class="chk"><input type="checkbox" name="published"> Show on the customer site</label>
+      <button type="button" class="lnk del" id="docDelete" style="margin-left:auto">Delete</button>
+      <button class="open" type="submit" style="border:0;cursor:pointer">Save</button><span class="saved" id="docEditMsg"></span></div>
+  </form>
+</dialog>
 <dialog id="logDlg" class="wide" aria-labelledby="log-title">
   <div class="dlg-head"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
     <div><h2 id="log-title"></h2><div class="cat" id="log-sub"></div></div>
@@ -447,6 +464,51 @@ $('logDlg').addEventListener('click', e => { if (e.target === $('logDlg')) $('lo
 /* ---------- Manuals & release notes (published on dcsupport.evertz.app/docs) ---------- */
 const DOCS_PAGE_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcsupport.' + location.hostname) + '/docs/';
 let docsList = [];
+const DOC_PRODUCTS = ['DreamCatcher','DC-ONE-V1','DC-ONE-LX','DC-ONE-SE','Content Manager'];
+const DOC_KINDS = ['User manual','Release notes','Quick start','Shortcuts & tools','Other'];
+document.querySelectorAll('.doc-prod').forEach(s => s.innerHTML = DOC_PRODUCTS.map(p => `<option>${p}</option>`).join('') + '<option value="All products">All products (shown on every product)</option>');
+document.querySelectorAll('.doc-kind').forEach(s => s.innerHTML = DOC_KINDS.map(k => `<option>${k}</option>`).join(''));
+/* "Works with every version": stores version "All" so it shows for any build the customer picks */
+document.querySelectorAll('.doc-all').forEach(cb => cb.addEventListener('change', () => {
+  const v = cb.closest('form').version; v.readOnly = cb.checked; v.value = cb.checked ? 'All' : (v.value === 'All' ? '' : v.value);
+}));
+function syncAll(form){ const cb = form.querySelector('.doc-all'); cb.checked = form.version.value === 'All'; form.version.readOnly = cb.checked; }
+let editing = null;
+function openDoc(d){
+  editing = d; const f = $('docEdit');
+  f.product.value = DOC_PRODUCTS.includes(d.product) || d.product === 'All products' ? d.product : 'DreamCatcher';
+  f.kind.value = DOC_KINDS.includes(d.kind) ? d.kind : 'Other';
+  f.version.value = d.version; f.title.value = d.title; f.notes.value = d.notes || ''; f.published.checked = !!d.published; f.file.value = '';
+  syncAll(f);
+  $('doc-sub').textContent = d.filename + ' · ' + fmtSize(d.size);
+  $('docEditMsg').textContent = ''; $('docEditMsg').style.color = '';
+  $('docDlg').showModal();
+}
+$('doc-close').onclick = () => $('docDlg').close();
+$('docDlg').addEventListener('click', e => { if (e.target === $('docDlg')) $('docDlg').close(); });
+$('docEdit').addEventListener('submit', async e => {
+  e.preventDefault(); const f = e.target, d = editing; if (!d) return;
+  const msg = $('docEditMsg'); msg.style.color = ''; msg.textContent = 'Saving…';
+  try {
+    const body = { product: f.product.value, kind: f.kind.value, version: f.version.value.trim(), title: f.title.value.trim(), notes: f.notes.value.trim(), published: f.published.checked };
+    if (!body.version || !body.title) throw new Error('Version and title are required');
+    let r = await fetch('/api/docs/' + d.id, {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+    if (!r.ok) throw new Error((await r.json()).error || 'Save failed');
+    if (f.file.files[0]) {
+      if (f.file.files[0].size > 95 * 1024 * 1024) throw new Error('Files over 95 MB need splitting or compressing');
+      msg.textContent = 'Uploading new file…';
+      const fd = new FormData(); fd.set('file', f.file.files[0]);
+      r = await fetch('/api/docs/' + d.id + '/file', {method:'POST', body: fd});
+      if (!r.ok) throw new Error((await r.json()).error || 'File upload failed');
+    }
+    $('docDlg').close(); loadDocs();
+  } catch (err) { msg.style.color = 'var(--err)'; msg.textContent = err.message; }
+});
+$('docDelete').onclick = async () => {
+  const d = editing; if (!d || !confirm('Delete "' + d.title + '"? Customers will no longer be able to get it.')) return;
+  const r = await fetch('/api/docs/' + d.id, {method:'DELETE'});
+  if (r.ok) { $('docDlg').close(); loadDocs(); }
+};
 const vkey = v => String(v || '').split(/[^0-9]+/).filter(Boolean).map(n => n.padStart(6, '0')).join('.');
 async function loadDocs(){
   try { const r = await fetch('/api/docs', {cache:'no-store'}); if (!r.ok) throw 0; docsList = (await r.json()).docs; } catch { docsList = []; }
@@ -455,14 +517,14 @@ async function loadDocs(){
 function renderDocs(){
   $('docCount').textContent = docsList.filter(d => d.published).length || '';
   if (view !== 'docs') return;
-  $('docProducts').innerHTML = [...new Set(docsList.map(d => d.product).concat('DreamCatcher'))].map(p => `<option value="${esc(p)}">`).join('');
-  const list = docsList.slice().sort((a, b) => a.product.localeCompare(b.product) || vkey(b.version).localeCompare(vkey(a.version)) || a.kind.localeCompare(b.kind));
+  const pIdx = p => { const i = DOC_PRODUCTS.indexOf(p); return i < 0 ? 99 : i; };
+  const list = docsList.slice().sort((a, b) => pIdx(a.product) - pIdx(b.product) || vkey(b.version).localeCompare(vkey(a.version)) || a.kind.localeCompare(b.kind));
   $('count').textContent = list.length + (list.length === 1 ? ' document' : ' documents');
   $('docRows').innerHTML = list.length ? list.map(d => `<tr data-id="${esc(d.id)}" style="cursor:default">
-    <td>${esc(d.product)}</td><td class="ref">${esc(d.version)}</td><td>${esc(d.kind)}</td><td>${esc(d.title)}<div style="font-size:12px;color:var(--ink-soft)">${esc(d.filename)}</div></td>
+    <td>${esc(d.product)}</td><td class="ref">${d.version === 'All' ? 'Every version' : esc(d.version)}</td><td>${esc(d.kind)}</td><td>${esc(d.title)}<div style="font-size:12px;color:var(--ink-soft)">${esc(d.filename)}</div></td>
     <td style="white-space:nowrap">${fmtSize(d.size)}</td>
     <td><label class="chk" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" class="pub" ${d.published ? 'checked' : ''}> ${d.published ? 'Shown' : 'Hidden'}</label></td>
-    <td style="white-space:nowrap">${d.published ? `<a class="lnk" style="text-decoration:none" href="${DOCS_PAGE_URL.replace(/\/docs\/$/, '')}/docs/file/${esc(d.id)}" target="_blank" rel="noopener">Open</a>` : ''}<button class="lnk del" type="button">Delete</button></td></tr>`).join('')
+    <td style="white-space:nowrap">${d.published ? `<a class="lnk" style="text-decoration:none" href="${DOCS_PAGE_URL.replace(/\/docs\/$/, '')}/docs/file/${esc(d.id)}" target="_blank" rel="noopener">Open</a>` : ''}<button class="lnk edit" type="button">Edit</button></td></tr>`).join('')
     : '<tr><td colspan="7" style="color:var(--ink-soft);padding:24px 12px">Nothing uploaded yet. Add the first manual above.</td></tr>';
 }
 $('docLink').textContent = DOCS_PAGE_URL; $('docLink').href = DOCS_PAGE_URL;
@@ -472,18 +534,16 @@ $('docRows').addEventListener('change', async e => {
   const r = await fetch('/api/docs/' + id, {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({published: cb.checked})});
   if (r.ok) { docsList.find(d => d.id === id).published = cb.checked ? 1 : 0; renderDocs(); } else cb.checked = !cb.checked;
 });
-$('docRows').addEventListener('click', async e => {
-  const b = e.target.closest('.del'); if (!b) return;
-  const d = docsList.find(x => x.id === b.closest('tr').dataset.id);
-  if (!d || !confirm('Delete "' + d.title + '"? Customers will no longer be able to get it.')) return;
-  const r = await fetch('/api/docs/' + d.id, {method:'DELETE'});
-  if (r.ok) { docsList = docsList.filter(x => x !== d); renderDocs(); }
+$('docRows').addEventListener('click', e => {
+  const b = e.target.closest('.edit'); if (!b) return;
+  const d = docsList.find(x => x.id === b.closest('tr').dataset.id); if (d) openDoc(d);
 });
 $('docFile').addEventListener('change', () => {
   const f = $('docFile').files[0], form = $('docUp'); if (!f) return;
   const m = f.name.match(/(\d{2})[._](\d{2})/);           /* e.g. ..._24_05.pdf → 24.05 */
   if (m && !form.version.value) form.version.value = m[1] + '.' + m[2];
-  if (/release/i.test(f.name)) form.kind.value = 'Release notes'; else if (/manual/i.test(f.name)) form.kind.value = 'User manual';
+  if (/release/i.test(f.name)) form.kind.value = 'Release notes'; else if (/manual/i.test(f.name)) form.kind.value = 'User manual'; else if (/shortcut|hotkey|keyboard/i.test(f.name)) form.kind.value = 'Shortcuts & tools';
+  const pm = f.name.match(/DC[-_ ]?ONE[-_ ]?(V1|LX|SE)/i); if (pm) form.product.value = 'DC-ONE-' + pm[1].toUpperCase(); else if (/content[-_ ]?manager|\bCM\b/i.test(f.name)) form.product.value = 'Content Manager';
   if (!form.title.value) form.title.value = f.name.replace(/\.[a-z0-9]+$/i, '').replace(/^AN\d+\s*-\s*/i, '').replace(/[_]+/g, ' ').replace(/(\d{2}) (\d{2})$/, '$1.$2');
 });
 $('docUp').addEventListener('submit', async e => {
@@ -496,7 +556,7 @@ $('docUp').addEventListener('submit', async e => {
   try {
     const r = await fetch('/api/docs', {method:'POST', body: fd});
     if (!r.ok) throw new Error((await r.json()).error || 'Upload failed');
-    $('docMsg').textContent = 'Uploaded'; form.reset(); form.product.value = fd.get('product'); loadDocs();
+    $('docMsg').textContent = 'Uploaded'; form.reset(); form.product.value = fd.get('product'); syncAll(form); loadDocs();
   } catch (err) { $('docMsg').style.color = 'var(--err)'; $('docMsg').textContent = err.message; }
 });
 const SAMPLE_LOGS = [

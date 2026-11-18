@@ -234,6 +234,20 @@ export default {
       await env.DB.prepare(`UPDATE docs SET ${sets.join(", ")} WHERE id = ?${vals.length}`).bind(...vals).run();
       return json({ ok: true });
     }
+    const df = url.pathname.match(/^\/api\/docs\/([a-f0-9]{20})\/file$/);
+    if (df && request.method === "POST") {
+      const row = await env.DB.prepare("SELECT key FROM docs WHERE id = ?1").bind(df[1]).first();
+      if (!row || !env.DOCS) return json({ error: "Not found" }, 404);
+      const form = await request.formData(), file = form.get("file");
+      if (!file || typeof file === "string" || !file.size) return json({ error: "Choose a file" }, 400);
+      const filename = String(file.name || "document.pdf").replace(/[\\/]+/g, "_").replace(/[^\w.\- ()+]+/g, "_").slice(-150);
+      const key = `docs/${df[1]}/${Date.now().toString(36)}-${filename}`;
+      await env.DOCS.put(key, file.stream(), { httpMetadata: { contentType: file.type || "application/octet-stream" } });
+      await env.DB.prepare("UPDATE docs SET key = ?1, filename = ?2, size = ?3, uploaded = datetime('now'), uploaded_by = ?4 WHERE id = ?5")
+        .bind(key, filename, file.size, email, df[1]).run();
+      if (row.key !== key) await env.DOCS.delete(row.key);
+      return json({ ok: true });
+    }
     if (dm && request.method === "DELETE") {
       const row = await env.DB.prepare("SELECT key FROM docs WHERE id = ?1").bind(dm[1]).first();
       if (row && env.DOCS) await env.DOCS.delete(row.key);
