@@ -41,7 +41,7 @@ a.doc:hover{border-color:var(--accent)}
 <main>
   <p class="back"><a href="https://dcsupport.evertz.app/">← Support home</a></p>
   <h1>Manuals &amp; release notes</h1>
-  <p class="lede">Pick your product and the software build running on your system to get the matching documents.</p>
+  <p class="lede">Pick your product and the software build running on your system to get the matching documents. Shortcuts and tools that work on every version are listed too.</p>
   <form class="lock" id="lock" hidden>
     <h2>Enter your access code</h2>
     <p>Manuals and release notes are for Evertz DreamCatcher customers. Your Evertz contact can give you the code.</p>
@@ -63,22 +63,32 @@ const fmt = (n) => n >= 1024 ** 2 ? (n / 1024 ** 2).toFixed(1) + " MB" : Math.ma
 const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
 let docs = [];
 const q = new URLSearchParams(location.search);
-function versions(p) { return [...new Set(docs.filter((d) => d.product === p).map((d) => d.version))].sort((a, b) => vk(b).localeCompare(vk(a))); }
+const PRODUCTS = ["DreamCatcher", "DC-ONE-V1", "DC-ONE-LX", "DC-ONE-SE", "Content Manager"];
+const isAll = (v) => String(v).toLowerCase() === "all";
+function versions(p) { return [...new Set(docs.filter((d) => d.product === p && !isAll(d.version)).map((d) => d.version))].sort((a, b) => vk(b).localeCompare(vk(a))); }
+// documents for every version of this product, plus anything marked "All products"
+function general(p) { return docs.filter((d) => (d.product === p && isAll(d.version)) || d.product === "All products"); }
 function fillVer() {
   const vs = versions($("prod").value), want = q.get("v");
+  $("ver").disabled = !vs.length;
+  if (!vs.length) { $("ver").innerHTML = '<option value="">No version-specific documents</option>'; return; }
   $("ver").innerHTML = vs.map((v, i) => `<option value="${esc(v)}">${esc(v)}${i === 0 ? " (latest)" : ""}</option>`).join("");
   if (want && vs.includes(want)) $("ver").value = want;
 }
+function card(d, latest) {
+  return `<a class="doc" href="/docs/file/${esc(d.id)}" target="_blank" rel="noopener"><span class="ico">${ICON}</span>
+      <span class="t"><b>${esc(d.title)}${latest ? '<span class="tag">LATEST</span>' : ''}</b><span>${esc(d.filename)} · ${fmt(d.size)}${d.notes ? " · " + esc(d.notes) : ""}</span></span>
+      <span class="dl">${/\.pdf$/i.test(d.filename) ? "Open" : "Download"}</span></a>`;
+}
 function draw() {
   const p = $("prod").value, v = $("ver").value, latest = versions(p)[0];
-  const list = docs.filter((d) => d.product === p && d.version === v);
-  if (!list.length) { $("list").innerHTML = '<p class="empty">No documents for this build yet. Email us and we\'ll send them.</p>'; return; }
+  const list = v ? docs.filter((d) => d.product === p && d.version === v) : [];
+  const gen = general(p);
   const kinds = [...new Set(list.map((d) => d.kind))];
-  $("list").innerHTML = kinds.map((k) => `<div class="group"><h2>${esc(k)}</h2>${list.filter((d) => d.kind === k).map((d) =>
-    `<a class="doc" href="/docs/file/${esc(d.id)}" target="_blank" rel="noopener"><span class="ico">${ICON}</span>
-      <span class="t"><b>${esc(d.title)}${v === latest ? '<span class="tag">LATEST</span>' : ''}</b><span>${esc(d.filename)} · ${fmt(d.size)}${d.notes ? " · " + esc(d.notes) : ""}</span></span>
-      <span class="dl">Open</span></a>`).join("")}</div>`).join("");
-  history.replaceState(null, "", `?p=${encodeURIComponent(p)}&v=${encodeURIComponent(v)}`);
+  let out = kinds.map((k) => `<div class="group"><h2>${esc(k)}</h2>${list.filter((d) => d.kind === k).map((d) => card(d, v === latest)).join("")}</div>`).join("");
+  if (gen.length) out += `<div class="group"><h2>Shortcuts, tools &amp; guides · every version</h2>${gen.map((d) => card(d, false)).join("")}</div>`;
+  $("list").innerHTML = out || `<p class="empty">No documents for ${esc(p)}${v ? " " + esc(v) : ""} yet. Email us and we'll send them.</p>`;
+  history.replaceState(null, "", `?p=${encodeURIComponent(p)}${v ? "&v=" + encodeURIComponent(v) : ""}`);
 }
 async function unlock(code) {
   const r = await fetch("/api/docs/unlock", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({code})});
@@ -97,8 +107,8 @@ async function load() {
   const d = await r.json();
   $("lock").hidden = true; $("pick").hidden = false;
   docs = d.docs || [];
-  const prods = [...new Set(docs.map((x) => x.product))].sort();
-  if (!prods.length) { $("list").innerHTML = '<p class="empty">No documents published yet.</p>'; $("prod").disabled = $("ver").disabled = true; return; }
+  const extra = [...new Set(docs.map((x) => x.product))].filter((x) => x !== "All products" && !PRODUCTS.includes(x)).sort();
+  const prods = PRODUCTS.concat(extra);
   $("prod").innerHTML = prods.map((x) => `<option>${esc(x)}</option>`).join("");
   if (q.get("p") && prods.includes(q.get("p"))) $("prod").value = q.get("p");
   fillVer(); draw();
