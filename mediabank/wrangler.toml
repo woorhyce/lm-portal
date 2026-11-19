@@ -1,0 +1,22 @@
+name = "lm-mediabank"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = false
+preview_urls = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+TOOL = "mediabank"
+PORTAL_URL = "https://evertz.app/"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lm-db"
+database_id = "04b131fe-c2aa-4a9a-9d63-8ae0459fff1e"
+
+[[routes]]
+pattern = "mediabank.evertz.app"
+custom_domain = true
