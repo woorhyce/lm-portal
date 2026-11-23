@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <script src="/lm-sync.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LM Games</title>
+<title>LM Arcade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>try{var t=localStorage.getItem('lmmon-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <link rel="stylesheet" href="/lm-ui.css">
-<script src="/lm-ui.js" data-suffix="Games"></script>
+<script src="/lm-ui.js" data-suffix="Arcade"></script>
 <style>
 :root{ --panel:var(--rail-bg); --card:var(--surface); --text:var(--ink); --muted:var(--ink-soft); }
 *{box-sizing:border-box}
@@ -82,9 +82,12 @@ const ICONS = {
   cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/>',
   bricks:'<rect x="3" y="4" width="8" height="4" rx="1"/><rect x="13" y="4" width="8" height="4" rx="1"/><rect x="3" y="10" width="8" height="4" rx="1"/><path d="M8 20h8"/><circle cx="16" cy="15.5" r="1.5"/>',
   team:'<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5M12 20c0-3 2-5 4-5s5 2 5 5"/>',
+  lane:'<path d="M8 3h8l2 18H6z"/><path d="M12 3v18"/><circle cx="12" cy="7" r="1.2"/>',
   mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>',
 };
 const GAMES = [
+  { slug:'sixteen', href:'sixteen.html', key:'s16-best', time:true, name:'Sixteen', cat:'Arcade', icon:'lane',
+    desc:'Sixteen letters, no hints. Type the word as fast as you can and hit Enter while the scoreboard yells at you. Fastest time on the team wins.' },
   { slug:'replay-op', href:'replay-op.html', key:'rop-hi', unit:'pts', name:'Replay Op', cat:'Simulator', icon:'panel',
     desc:'Run RED and BLUE outputs in DreamCatcher VUE with a virtual RCP-10 and real keyboard shortcuts, while the producer calls replays and the server throws real faults at you.' },
   { slug:'academy', href:'academy.html', key:'dcra-hi', unit:'pts', name:'DreamCatcher Replay Academy', cat:'Training', icon:'cap',
@@ -99,6 +102,7 @@ const GAMES = [
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
 const fmt = n => Number(n).toLocaleString();
+const show = (g, n) => g.time ? (n / 1000).toFixed(3) + 's' : fmt(n);
 const best = g => { try { return +localStorage.getItem(g.key) || 0; } catch (e) { return 0; } };
 const boards = {};
 let cat = 'All games', q = '';
@@ -107,21 +111,21 @@ function render(){
   const cats = {'All games': GAMES.length};
   GAMES.forEach(g => cats[g.cat] = (cats[g.cat] || 0) + 1);
   $('cats').innerHTML = Object.entries(cats).map(([c,n]) => `<button class="${c===cat?'on':''}" data-cat="${esc(c)}">${esc(c)}<span class="n">${n}</span></button>`).join('');
-  $('bests').innerHTML = GAMES.map(g => `<a href="${esc(g.href)}">${esc(g.name)}<span class="n">${best(g) ? fmt(best(g)) : '–'}</span></a>`).join('');
+  $('bests').innerHTML = GAMES.map(g => `<a href="${esc(g.href)}">${esc(g.name)}<span class="n">${best(g) ? show(g, best(g)) : '–'}</span></a>`).join('');
   const list = GAMES.filter(g => (cat === 'All games' || g.cat === cat) && (!q || (g.name + ' ' + g.desc + ' ' + g.cat).toLowerCase().includes(q)));
   $('title').textContent = cat;
   $('count').textContent = `${list.length} game${list.length === 1 ? '' : 's'}`;
   $('grid').innerHTML = list.length ? list.map(g => {
     const b = best(g), rows = boards[g.slug];
     const lb = rows === undefined ? '' : rows.length
-      ? `<p class="lb-h">TEAM TOP 3</p><ol class="lb">${rows.slice(0,3).map(r => `<li class="${r.you?'you':''}"><span class="r">${r.rank}</span><span>${esc(r.name)}</span><span class="s">${fmt(r.score)}</span></li>`).join('')}</ol>`
+      ? `<p class="lb-h">TEAM TOP 3</p><ol class="lb">${rows.slice(0,3).map(r => `<li class="${r.you?'you':''}"><span class="r">${r.rank}</span><span>${esc(r.name)}</span><span class="s">${show(g, r.score)}</span></li>`).join('')}</ol>`
       : '<p class="lb-empty">No team scores yet. Be the first.</p>';
     return `<article class="card">
       <div class="head"><div class="ico">${svg(g.icon)}</div>
         <div><div class="name">${esc(g.name)}</div><div class="cat">${esc(g.cat.toUpperCase())}</div></div></div>
       <p class="desc">${esc(g.desc)}</p>
       ${lb}
-      <div class="foot"><div class="vd"><span class="ver">${b ? fmt(b) + ' ' + g.unit : 'No score yet'}</span><span class="date">Your best</span></div>
+      <div class="foot"><div class="vd"><span class="ver">${b ? (g.time ? show(g, b) : fmt(b) + ' ' + g.unit) : 'No score yet'}</span><span class="date">Your best</span></div>
         <a class="open" href="${esc(g.href)}">Play</a></div>
     </article>`; }).join('') : `<p class="empty">No games match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }

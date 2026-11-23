@@ -6,6 +6,21 @@
 //   GET    /api/data               -> all of your keys for this tool + your shared prefs (used by lm-sync.js)
 //   PUT    /api/prefs              -> {"theme":"light"|"dark"}, shared by every tool and the portal
 
+// Who is signed in. Cloudflare Access sits in front of every hostname and passes the email,
+// either as a header or inside its signed token. No sign-in = no email = API calls are refused.
+function accessEmail(request) {
+  let e = request.headers.get("Cf-Access-Authenticated-User-Email");
+  if (!e) {
+    let tok = request.headers.get("Cf-Access-Jwt-Assertion");
+    if (!tok) { const m = (request.headers.get("Cookie") || "").match(/(?:^|;\s*)CF_Authorization=([^;]+)/); if (m) tok = m[1]; }
+    try {
+      const p = tok && tok.split(".")[1];
+      if (p) e = JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(p.length / 4) * 4, "="))).email;
+    } catch {}
+  }
+  return e ? String(e).toLowerCase() : null;
+}
+
 const json = (d, s = 200) => new Response(JSON.stringify(d), {
   status: s, headers: { "content-type": "application/json", "cache-control": "no-store" },
 });
@@ -13,7 +28,8 @@ const json = (d, s = 200) => new Response(JSON.stringify(d), {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const email = (request.headers.get("Cf-Access-Authenticated-User-Email") || "dev@local").toLowerCase();
+    const email = accessEmail(request);
+    if (!email && url.pathname.startsWith("/api/")) return json({ error: "Not signed in" }, 401);
 
     if (url.pathname === "/api/me") return json({ email, portal: env.PORTAL_URL });
 
@@ -35,20 +51,23 @@ export default {
       return json({ ok: true });
     }
 
-    // Leaderboard: everyone's synced high score for one game.
+    // Leaderboard: everyone's synced best score for one game.
     //   /api/leaderboard            -> Replay Academy ("dcra-hi"), kept for the Academy page
     //   /api/leaderboard?key=ib-hi  -> any key in GAME_KEYS
-    const GAME_KEYS = ["dcra-hi", "rop-hi", "ib-hi", "mfr-best", "vt-hi"];
+    // LOW_KEYS are fastest-time games, where the smallest number wins.
+    const GAME_KEYS = ["dcra-hi", "rop-hi", "ib-hi", "mfr-best", "vt-hi", "s16-best"];
+    const LOW_KEYS = ["s16-best"];
     if (url.pathname === "/api/leaderboard") {
       const lbKey = url.searchParams.get("key") || "dcra-hi";
       if (!GAME_KEYS.includes(lbKey)) return json({ error: "unknown game" }, 400);
+      const order = LOW_KEYS.includes(lbKey) ? "ASC" : "DESC";
       const { results } = await env.DB.prepare(
         `SELECT d.email, u.name, CAST(json_extract(d.value, '$') AS INTEGER) AS score, d.updated
            FROM tool_data d LEFT JOIN users u ON u.email = d.email
-          WHERE d.tool = ?1 AND d.key = ?2 AND CAST(json_extract(d.value, '$') AS INTEGER) > 0
-          ORDER BY score DESC, d.updated ASC LIMIT 10`
+          WHERE d.tool = ?1 AND d.key = ?2 AND d.email LIKE '%@%.%' AND CAST(json_extract(d.value, '$') AS INTEGER) > 0
+          ORDER BY score ${order}, d.updated ASC LIMIT 10`
       ).bind(env.TOOL, lbKey).all();
-      const label = (r) => (r.name || r.email.split("@")[0].replace(/[._-]+/g, " ")).toUpperCase().slice(0, 14);
+      const label = (r) => (r.name || r.email.split("@")[0].replace(/[._-]+/g, " ")).toUpperCase().slice(0, 16);
       return json({ me: email, rows: results.map((r, i) => ({ rank: i + 1, name: label(r), score: r.score, you: r.email === email })) });
     }
 
