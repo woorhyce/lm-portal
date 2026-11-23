@@ -890,6 +890,13 @@ button.builtin-row.is-off .bl-knob{left:3px}
 button.builtin-row:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
 button.builtin-row:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .dz-plus{border:none;width:auto;height:auto;font-size:2rem;font-weight:300;line-height:1}
+.mx-per{grid-column:1/-1;margin-top:2px}
+.mx-per-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 14px;margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.mx-per-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.82rem}
+.mx-per-row b{font-family:var(--mono,monospace);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mx-per-row select{padding:4px 6px;font-size:.8rem}
+.mx-per-row.diff b{color:var(--accent-ink,var(--accent))}
+.mx-per-empty{font-size:.8rem;color:var(--ink-soft)}
 #mxCardSel.need{border-color:var(--err);box-shadow:0 0 0 1px var(--err)}
 .net-warn{margin:0 0 12px}
 .net-warn .pj-link{font-size:.78rem}
@@ -1774,7 +1781,7 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div id="psSideList" hidden></div>
     <div class="rail-foot">
-      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.50<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
+      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.51<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
     </div>
   </nav>
 
@@ -1878,6 +1885,10 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
                     <option value="red">Red only (Main)</option>
                     <option value="redblue">Red / Blue (Main / Backup)</option>
                   </select>
+                </div>
+                <div class="mx-per" id="mxPerWrap">
+                  <label class="ns-check"><input type="checkbox" id="mxPerCb"> Different Matrox card on some servers</label>
+                  <div class="mx-per-list" id="mxPerList" hidden></div>
                 </div>
               </div>
               <div class="pm-err" id="pjErr"></div>
@@ -3754,10 +3765,52 @@ function syncMxSelects(){
   var cs = document.getElementById('mxCardSel'), ss = document.getElementById('mxSysSel');
   if (!cs) return;
   cs.value = c.card; ss.value = c.sys; ss.disabled = !c.card;
+  renderMxPerList();
+}
+/* Per-server Matrox card (2110): state.mxCardBy = { hostname: '25g' | '50g' } overrides the project card for that server.
+   Server Commissioning enables every port any server needs; each server's own install script only configures its card's ports.
+   The Matrox pages switch to the picked server's card, and Package & Deploy builds each server with its own card. */
+function mxCardBy(){ if (!state.mxCardBy || typeof state.mxCardBy !== 'object') state.mxCardBy = {}; return state.mxCardBy; }
+function cardForServer(name){ var o = name && mxCardBy()[name]; return o === '25g' || o === '50g' ? o : mxCardState().card; }
+function mxCardsInUse(){
+  var c = mxCardState(), set = {};
+  if (c.card) set[c.card] = 1;
+  (state.bulk && state.bulk.servers || []).forEach(function(s){ if (s.hostname && (s.role || 'replay') !== 'cm') { var k = cardForServer(s.hostname); if (k) set[k] = 1; } });
+  return Object.keys(set);
+}
+function serverMvkKeys(hostname){
+  var c = mxCardState(); return mvkPortsFor(cardForServer(hostname), c.sys);
+}
+function renderMxPerList(){
+  var cb = document.getElementById('mxPerCb'), list = document.getElementById('mxPerList'); if (!cb || !list) return;
+  var by = mxCardBy(), c = mxCardState();
+  var names = (state.bulk && state.bulk.servers || []).filter(function(s){ return (s.role || 'replay') !== 'cm'; }).map(function(s){ return s.hostname; }).filter(Boolean);
+  Object.keys(by).forEach(function(n){ if (names.indexOf(n) < 0) delete by[n]; });   // forget servers that were renamed or removed
+  if (Object.keys(by).length && !cb.checked) cb.checked = true;
+  list.hidden = !cb.checked;
+  document.getElementById('mxPerWrap').hidden = !c.card;
+  if (!cb.checked) return;
+  if (!names.length) { list.innerHTML = '<span class="mx-per-empty">Add servers in Network Settings first.</span>'; return; }
+  var dflt = c.card === '25g' ? '25G' : '50G';
+  list.innerHTML = names.map(function(n){
+    var v = by[n] || '';
+    return '<label class="mx-per-row' + (v && v !== c.card ? ' diff' : '') + '"><b title="' + n + '">' + n + '</b><select data-srv="' + n + '">'
+      + '<option value="">Project (' + dflt + ')</option><option value="25g"' + (v === '25g' ? ' selected' : '') + '>25G card</option><option value="50g"' + (v === '50g' ? ' selected' : '') + '>50G card</option></select></label>';
+  }).join('');
+}
+function onMxPerChange(){
+  applyMxCard();
+  renderIfaceLists();
+  renderServerTableHeader();
+  renderServerTable();
+  renderPreviewSelect(true);
+  renderPreview();
+  if (window.MX && window.MX.followServerCard) window.MX.followServerCard();
 }
 function applyMxCard(){
   var c = mxCardState();
-  var on = mvkPortsFor(c.card, c.sys);
+  var on = [];   // every Matrox port any server needs (each server's own script only configures its own)
+  mxCardsInUse().forEach(function(card){ mvkPortsFor(card, c.sys).forEach(function(k){ if (on.indexOf(k) < 0) on.push(k); }); });
   ['mvk0', 'mvk1', 'mvk2', 'mvk3'].forEach(function(k){ state.ifaces[k].enabled = on.indexOf(k) >= 0; });
 }
 function onMxCardChange(){
@@ -3771,8 +3824,9 @@ function onMxCardChange(){
   renderServerTable();
   renderPreviewSelect(true);
   renderPreview();
-  // keep the Matrox 2110 tool's card type in step
-  if (c.card) {
+  // keep the Matrox 2110 tool's card type in step (the server picked there may have its own card)
+  if (window.MX && window.MX.followServerCard) window.MX.followServerCard();
+  else if (c.card) {
     var r = document.querySelector('input[name="cardType"][value="' + c.card + '"]');
     if (r && !r.checked) { r.checked = true; if (window.MX) window.MX.onCardTypeChange(); }
   }
@@ -5653,7 +5707,8 @@ document.getElementById('toggleHostname').addEventListener('change', e => {
 function buildInstallScript(server){
   server = server || { hostname: 'unnamed-server', ips: {} };
   const netplanIfaces = IFACE_DEFS.filter(def => def.group === 'netplan' && state.ifaces[def.key].enabled);
-  const matroxIfaces = IFACE_DEFS.filter(def => def.group === 'matrox' && state.ifaces[def.key].enabled);
+  const srvMvk = serverMvkKeys(server.hostname);
+  const matroxIfaces = IFACE_DEFS.filter(def => def.group === 'matrox' && state.ifaces[def.key].enabled && (!srvMvk.length || srvMvk.indexOf(def.key) >= 0));
   const sec = state.sections;
 
   const lines = [];
@@ -6327,6 +6382,7 @@ function serializeConfig(){
     builtinOutputs: state.builtinOutputs === true,
     rcp: state.rcp !== false,
     mxCard: Object.assign({}, mxCardState()),
+    mxCardBy: Object.assign({}, state.mxCardBy || {}),
     lm25: !!state.lm25,
     meshRing: !!state.meshRing,
     seq: Object.assign({}, state.seq || {}),
@@ -6347,6 +6403,7 @@ function applyConfig(cfg){
   if (!cfg || cfg.app !== CONFIG_APP) throw new Error('not a DC Configurator config file');
   if (cfg.version > CONFIG_VERSION) throw new Error('config was saved by a newer version of this tool');
   state.mxCard = Object.assign({ card:'', sys:'redblue' }, cfg.mxCard || {});
+  state.mxCardBy = Object.assign({}, cfg.mxCardBy || {});
   syncMxSelects();
   state.builtinLayout = cfg.builtinLayout !== false;
   state.ioLimit = cfg.ioLimit !== false;   // older saves only had the unused ioLock placeholder: the limit is on
@@ -6540,6 +6597,22 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
    away so the rail shows just the headers. State is remembered; jumping into a folded group opens it.
 --------------------------------------------------------- */
 document.getElementById('mxCardSel').addEventListener('change', onMxCardChange);
+document.getElementById('mxPerCb').addEventListener('change', function(e){
+  if (!e.target.checked) state.mxCardBy = {};
+  renderMxPerList(); onMxPerChange();
+});
+// keep the per-server list in step with the server names
+(function(){
+  var orig = renderServerTable;
+  renderServerTable = function(){ var r = orig.apply(this, arguments); var w = document.getElementById('mxPerWrap'); if (w && !w.contains(document.activeElement)) renderMxPerList(); return r; };
+  var w = document.getElementById('mxPerWrap');
+  w.addEventListener('pointerenter', function(){ if (!w.contains(document.activeElement)) renderMxPerList(); });
+})();
+document.getElementById('mxPerList').addEventListener('change', function(e){
+  var s = e.target.closest('select[data-srv]'); if (!s) return;
+  if (s.value) mxCardBy()[s.dataset.srv] = s.value; else delete mxCardBy()[s.dataset.srv];
+  renderMxPerList(); onMxPerChange();
+});
 document.getElementById('mxSysSel').addEventListener('change', onMxCardChange);
 syncMxSelects();
 document.getElementById('builtinLayoutCb').addEventListener('change', e => { state.builtinLayout = e.target.checked; renderPreview(); });
@@ -9345,10 +9418,14 @@ function generateBatchEfps(){
   // Build every server's .efp in memory first. With more than one, bundle them into a single
   // .zip - triggering several separate downloads at once gets silently blocked by the browser
   // after the first one (its multiple-download protection), so one zip sidesteps that entirely.
-  const built = servers.map(server => ({
-    filename: `deploy-${sanitizeForFilename(server.hostname)}-combined.efp`,
-    bytes: buildCombinedEfpForServer(server, template, nmosHost, nmosPort, enabled),
-  }));
+  // each server is built with its own Matrox card (Project Details can set a different card per server)
+  const built = servers.map(server => {
+    const own = cardFor(server.hostname);
+    const bytes = own && own !== curCardRadio()
+      ? withCard(own, () => buildCombinedEfpForServer(Object.assign({}, server, { addresses: addrFor(server.hostname) }), readConnectorTemplate(), nmosHost, nmosPort, enabled))
+      : buildCombinedEfpForServer(server, template, nmosHost, nmosPort, enabled);
+    return { filename: `deploy-${sanitizeForFilename(server.hostname)}-combined.efp`, bytes };
+  });
 
   // Advanced mode: preview the first server's dc_routes.json as a representative sample -
   // structure is identical across servers, only the addresses/hostname differ.
@@ -9705,13 +9782,12 @@ function syncFromProject(){
     return;
   }
   let changed = false;
-  const card = state.mxCard && state.mxCard.card;
+  const card = state.mxCard && state.mxCard.card ? cardFor(mxCurSrv) : '';
   if (card) {
     const r = document.querySelector('input[name="cardType"][value="' + card + '"]');
     if (r && !r.checked) { r.checked = true; changed = true; }
     fromProj.hidden = false; cardRow.hidden = true;
-    fromProj.querySelector('b').textContent = card === '25g' ? '25G card' : '50G card';
-    fromProj.querySelector('span').textContent = card === '25g' ? 'SFP A Red / SFP B Blue' : 'SFP A / C Red · SFP B / D Blue';
+    paintCardFromProj();
   } else { fromProj.hidden = true; cardRow.hidden = false; }
   const sv = (k) => String(state.system[k] == null ? '' : state.system[k]);
   [['numVideoIn', sv('ninputs')], ['numVideoOut', sv('nsdioutputs')], ['videoGbps', String(RATE_FOR_STANDARD(sv('video_standard')))]].forEach(([id, v]) => {
@@ -10318,6 +10394,39 @@ document.getElementById('mxConnTable').addEventListener('change', e => {
 
 /* ---- 2.28: each server keeps its own addresses on Streams & Connectors ---- */
 var mxAddrBy = {}, mxCurSrv = '';
+/* ---- per-server Matrox card: the Matrox pages show the picked server with its own card ---- */
+function curCardRadio(){ return (document.querySelector('input[name="cardType"]:checked') || {}).value || '50g'; }
+function setCardRadio(card){
+  const r = document.querySelector('input[name="cardType"][value="' + card + '"]'); if (!r) return false;
+  if (r.checked) return false;
+  r.checked = true;
+  updateLaneOptionLabels(card);
+  document.getElementById('lanePanel').classList.toggle('disabled', card === '25g');   // lane modes stay as set for 50G servers
+  return true;
+}
+function cardFor(name){ return (typeof cardForServer === 'function' ? cardForServer(name) : '') || curCardRadio(); }
+// run fn with the connector rows generated for `card`, then put the page back the way it was
+function withCard(card, fn){
+  const cur = curCardRadio();
+  if (!card || card === cur) return fn();
+  syncCur();
+  setCardRadio(card); generateStreams();
+  try { return fn(); }
+  finally { setCardRadio(cur); generateStreams(); writeRowsAddr(mxAddrBy[mxCurSrv] || {}); }
+}
+function paintCardFromProj(){
+  const fromProj = document.getElementById('mxCardFromProj'); if (!fromProj || fromProj.hidden) return;
+  const card = curCardRadio(), own = typeof state !== 'undefined' && state.mxCardBy && state.mxCardBy[mxCurSrv];
+  fromProj.querySelector('b').textContent = card === '25g' ? '25G card' : '50G card';
+  fromProj.querySelector('span').textContent = card === '25g' ? 'SFP A Red / SFP B Blue' : 'SFP A / C Red · SFP B / D Blue';
+  fromProj.querySelector('em').textContent = own ? 'set for ' + mxCurSrv + ' in Project Details' : 'from Project Details';
+}
+function followServerCard(){
+  if (typeof state === 'undefined') return;
+  const want = cardFor(mxCurSrv);
+  if (want && setCardRadio(want)) { syncCur(); generateStreams(); writeRowsAddr(mxAddrBy[mxCurSrv] || {}); afterRows(); }
+  paintCardFromProj();
+}
 function srvList(){ return (typeof state !== 'undefined' ? state.bulk.servers : []).filter(s => (s.role || 'replay') !== 'cm').map(s => s.hostname).filter(Boolean); }
 function syncCur(){ if (mxCurSrv) mxAddrBy[mxCurSrv] = readLiveAddressesByKey(); }
 function addrFor(name){ return name === mxCurSrv ? readLiveAddressesByKey() : (mxAddrBy[name] || {}); }
@@ -10354,7 +10463,9 @@ function setCurSrv(name){
   if (name === mxCurSrv) return;
   syncCur();
   mxCurSrv = name;
+  { const want = cardFor(name); if (want && setCardRadio(want)) generateStreams(); }   // this server's own Matrox card
   writeRowsAddr(mxAddrBy[name] || {});
+  paintCardFromProj();
   // the Matrox page and the drawing follow the server picked here
   const i = baseServers().findIndex(sv => sv.name === name);
   const bs = document.getElementById('mxBaseSrv');
@@ -10445,7 +10556,8 @@ function dpFiles(kind){
   const chosen = dpChosen(); if (!chosen.length) return;
   syncCur();
   const template = readConnectorTemplate();
-  const one = n => kind === 'persistence' ? buildPersistenceJsonForServer(template, addrFor(n)) : buildDcRoutesJsonForServer(template, addrFor(n));
+  const oneWith = (t, n) => kind === 'persistence' ? buildPersistenceJsonForServer(t, addrFor(n)) : buildDcRoutesJsonForServer(t, addrFor(n));
+  const one = n => { const own = cardFor(n); return own && own !== curCardRadio() ? withCard(own, () => oneWith(readConnectorTemplate(), n)) : oneWith(template, n); };
   const fname = kind === 'persistence' ? 'persistence.json' : 'dc_routes.json';
   if (chosen.length === 1) {
     const name = downloadBlob(one(chosen[0]), fname, 'application/json');
@@ -10500,7 +10612,7 @@ parseBatchRows = function(rows2D){
   if (window.dcProjects) window.dcProjects.save();
 };
 
-window.MX = { dpPicked, renderDeploy, batchOneSel, renderConn, fillBatchOne, routesSummary, persistenceText, routesText, afterRows, syncFromProject, previewParts, downloadNodeFile, downloadDcRoutes, downloadPersistence, refreshConnectOver, openMcast, getState, setState, fillBatchFromBase, refreshBasePick, addRow, applyPaste, buildCombinedEfp, clearRows, convertOutputSpreadsheetToBatch, copyBatchTemplate, copyJSON, downloadBatchTemplate, downloadJSON, exportBatchPasteAreaAsXlsx, generateBatchEfps, generateJSON, generateStreams, importDcRoutesJson, importSpreadsheet, parseBatchSpreadsheet, onCardTypeChange };
+window.MX = { followServerCard, dpPicked, renderDeploy, batchOneSel, renderConn, fillBatchOne, routesSummary, persistenceText, routesText, afterRows, syncFromProject, previewParts, downloadNodeFile, downloadDcRoutes, downloadPersistence, refreshConnectOver, openMcast, getState, setState, fillBatchFromBase, refreshBasePick, addRow, applyPaste, buildCombinedEfp, clearRows, convertOutputSpreadsheetToBatch, copyBatchTemplate, copyJSON, downloadBatchTemplate, downloadJSON, exportBatchPasteAreaAsXlsx, generateBatchEfps, generateJSON, generateStreams, importDcRoutesJson, importSpreadsheet, parseBatchSpreadsheet, onCardTypeChange };
 })();
 </script>
 <script>
