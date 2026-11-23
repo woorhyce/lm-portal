@@ -10589,7 +10589,10 @@ function paintSrvBar(){
   const box = document.getElementById('scSrv'); if (!box) return;
   const names = srvList(), total = document.querySelectorAll('#rows tr').length;
   syncCur();
-  box.innerHTML = names.map(n => { const c = countAddr(mxAddrBy[n] || {}); return '<button type="button" role="tab" class="sc-srv-tab' + (n === mxCurSrv ? ' on' : '') + (c ? '' : ' empty') + '" aria-selected="' + (n === mxCurSrv) + '" data-srv="' + esc(n) + '"><b>' + esc(n) + '</b><span>' + c + ' / ' + total + '</span></button>'; }).join('');
+  // each server's own connector count: (its inputs + outputs) x (video + audio + anc)
+  const apv = parseInt(mxVal('audioPerVideo'), 10) || 0;
+  const totalFor = n => { if (n === mxCurSrv) return total; const sh = shapeFor(n); const io = (parseInt(sh.nin, 10) || 0) + (parseInt(sh.nout, 10) || 0); return io ? io * (2 + apv) : total; };
+  box.innerHTML = names.map(n => { const c = countAddr(mxAddrBy[n] || {}); return '<button type="button" role="tab" class="sc-srv-tab' + (n === mxCurSrv ? ' on' : '') + (c ? '' : ' empty') + '" aria-selected="' + (n === mxCurSrv) + '" data-srv="' + esc(n) + '"><b>' + esc(n) + '</b><span>' + c + ' / ' + totalFor(n) + '</span></button>'; }).join('');
   document.getElementById('scSrvBar').hidden = names.length < 1;
   const i = names.indexOf(mxCurSrv);
   document.getElementById('scSrvPrev').disabled = i <= 0;
