@@ -891,12 +891,27 @@ button.builtin-row:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
 button.builtin-row:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .dz-plus{border:none;width:auto;height:auto;font-size:2rem;font-weight:300;line-height:1}
 .mx-per{grid-column:1/-1;margin-top:2px}
+.bk-link{margin-left:10px;white-space:nowrap}
+.bk-link select{font-size:.75rem;padding:1px 3px}
 .mx-per-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 14px;margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 .mx-per-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.82rem}
 .mx-per-row b{font-family:var(--mono,monospace);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mx-per-row select{padding:4px 6px;font-size:.8rem}
 .mx-per-row.diff b{color:var(--accent-ink,var(--accent))}
 .mx-per-empty{font-size:.8rem;color:var(--ink-soft)}
+.nic-w{display:flex;align-items:center;gap:4px}
+.nic-tg{flex:none;font:600 .6rem var(--mono,monospace);letter-spacing:.04em;text-transform:uppercase;padding:2px 5px;border-radius:4px;border:1px solid var(--line);background:var(--surface);color:var(--good-txt,var(--ink-soft));cursor:pointer}
+.nic-tg.off{color:var(--ink-soft);background:var(--bg)}
+.nic-tg:disabled{cursor:default;opacity:.7}
+td.nic-off{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(127,127,127,.08) 6px 12px)}
+.nic-offl{font:600 .66rem var(--mono,monospace);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+.wk-calc{margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px;background:var(--bg)}
+.wk-h{font-size:.72rem;font-weight:600;margin-bottom:6px}.wk-h span{font-weight:400;color:var(--ink-soft);margin-left:6px}
+.wk-row{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:.78rem}
+.wk-t{min-width:92px;font-family:var(--mono,monospace);font-size:.74rem}
+.wk-row .wk-cores{width:76px;padding:3px 6px}
+.wk-eq{color:var(--ink-soft)}.wk-eq b{color:var(--ink)}
+.wk-note{font-size:.7rem;color:var(--ink-soft);margin-top:6px}
 #mxCardSel.need{border-color:var(--err);box-shadow:0 0 0 1px var(--err)}
 .net-warn{margin:0 0 12px}
 .net-warn .pj-link{font-size:.78rem}
@@ -1781,7 +1796,7 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div id="psSideList" hidden></div>
     <div class="rail-foot">
-      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.51<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
+      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.52<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
     </div>
   </nav>
 
@@ -2422,18 +2437,18 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
         <div class="sc-lane-sel">
           <div class="sc-lane-col"><label class="cfg-label">Inputs
         <select class="cfg-select" id="modeIn">
-          <option value="auto" data-label50g="Fill A/B, spill to C/D (recommended)" data-label25g="Fill A/B">Fill A/B, spill to C/D (recommended)</option>
+          <option value="auto" data-label50g="Fill A/B, spill to C/D" data-label25g="Fill A/B">Fill A/B, spill to C/D</option>
           <option value="half" data-label50g="Split evenly (1st half / 2nd half)" data-label25g="Split evenly (1st half / 2nd half)">Split evenly (1st half / 2nd half)</option>
-          <option value="spread" data-label50g="Spread across (alternating)" data-label25g="Spread across (alternating)">Spread across (alternating)</option>
+          <option value="spread" selected data-label50g="Alternate red ports A, C, A, C… (recommended)" data-label25g="Spread across (alternating)">Alternate red ports A, C, A, C… (recommended)</option>
           <option value="ac" data-label50g="A/B only" data-label25g="A/B only">A/B only</option>
           <option value="bd" data-label50g="C/D only" data-label25g="C/D only">C/D only</option>
         </select>
           </label><div class="sc-mode-hint" id="modeInHint"></div></div>
           <div class="sc-lane-col"><label class="cfg-label">Outputs
         <select class="cfg-select" id="modeOut">
-          <option value="auto" data-label50g="Fill A/B, spill to C/D (recommended)" data-label25g="Fill A/B">Fill A/B, spill to C/D (recommended)</option>
+          <option value="auto" data-label50g="Fill A/B, spill to C/D" data-label25g="Fill A/B">Fill A/B, spill to C/D</option>
           <option value="half" data-label50g="Split evenly (1st half / 2nd half)" data-label25g="Split evenly (1st half / 2nd half)">Split evenly (1st half / 2nd half)</option>
-          <option value="spread" data-label50g="Spread across (alternating)" data-label25g="Spread across (alternating)">Spread across (alternating)</option>
+          <option value="spread" selected data-label50g="Alternate red ports A, C, A, C… (recommended)" data-label25g="Spread across (alternating)">Alternate red ports A, C, A, C… (recommended)</option>
           <option value="ac" data-label50g="A/B only" data-label25g="A/B only">A/B only</option>
           <option value="bd" data-label50g="C/D only" data-label25g="C/D only">C/D only</option>
         </select>
@@ -2469,7 +2484,8 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
             <th style="width:24%">Label</th>
             <th>Key</th>
             <th><div class="sc-th-ip"><span>IP address <label class="seq-chk" title="Checked: each Input/Output video, audio and anc group counts up from its first row. Unchecked: type each one yourself."><input type="checkbox" id="scSeq0" data-c="0" checked> Sequential</label></span><div class="sc-count" id="scRowCount"></div></div></th>
-            <th>Backup IP <label class="seq-chk" title="Checked: each Input/Output video, audio and anc group counts up from its first row. Unchecked: type each one yourself."><input type="checkbox" id="scSeq1" data-c="1" checked> Sequential</label></th>
+            <th>Backup IP <label class="seq-chk" title="Checked: each Input/Output video, audio and anc group counts up from its first row. Unchecked: type each one yourself."><input type="checkbox" id="scSeq1" data-c="1" checked> Sequential</label>
+              <label class="seq-chk bk-link" title="Blue matches Red with one octet changed, e.g. 239.10.1.3 → 239.11.1.3"><input type="checkbox" id="scBkLink"> Match IP, octet <select id="scBkOct"><option>1</option><option selected>2</option><option>3</option><option>4</option></select> <select id="scBkOff"><option value="1" selected>+1</option><option value="2">+2</option><option value="-1">−1</option><option value="100">+100</option></select></label></th>
             <th>Port</th>
             <th>Backup port</th>
             <th></th>
@@ -3771,35 +3787,52 @@ function syncMxSelects(){
    Server Commissioning enables every port any server needs; each server's own install script only configures its card's ports.
    The Matrox pages switch to the picked server's card, and Package & Deploy builds each server with its own card. */
 function mxCardBy(){ if (!state.mxCardBy || typeof state.mxCardBy !== 'object') state.mxCardBy = {}; return state.mxCardBy; }
-function cardForServer(name){ var o = name && mxCardBy()[name]; return o === '25g' || o === '50g' ? o : mxCardState().card; }
+/* MG servers never have a Matrox card: a hostname with "MG" in it (DC-MG, LV-MG2…) defaults to no card, unless set otherwise */
+function looksLikeMg(name){ return /(^|[-_ ])MG\d*([-_ ]|$)/i.test(String(name || '')); }
+function cardForServer(name){
+  var o = name && mxCardBy()[name];
+  if (o === '25g' || o === '50g' || o === 'none') return o;
+  if (looksLikeMg(name)) return 'none';
+  return mxCardState().card;
+}
+/* NICs off per server: s.nicOff = { ifaceKey: true }. Off = left out of that server's install script. */
+function nicIsOff(s, k){
+  if (!s) return false;
+  if (s.nicOff && s.nicOff[k]) return true;
+  return /^mvk/.test(k) && cardForServer(s.hostname) === 'none';
+}
 function mxCardsInUse(){
   var c = mxCardState(), set = {};
   if (c.card) set[c.card] = 1;
-  (state.bulk && state.bulk.servers || []).forEach(function(s){ if (s.hostname && (s.role || 'replay') !== 'cm') { var k = cardForServer(s.hostname); if (k) set[k] = 1; } });
+  (state.bulk && state.bulk.servers || []).forEach(function(s){ if (s.hostname && (s.role || 'replay') !== 'cm') { var k = cardForServer(s.hostname); if (k && k !== 'none') set[k] = 1; } });
   return Object.keys(set);
 }
 function serverMvkKeys(hostname){
-  var c = mxCardState(); return mvkPortsFor(cardForServer(hostname), c.sys);
+  var c = mxCardState(), k = cardForServer(hostname);
+  return k === 'none' ? null : mvkPortsFor(k, c.sys);   // null = no Matrox card on this server
 }
 function renderMxPerList(){
+  if (typeof renderWorkerCalc === 'function') renderWorkerCalc();
   var cb = document.getElementById('mxPerCb'), list = document.getElementById('mxPerList'); if (!cb || !list) return;
   var by = mxCardBy(), c = mxCardState();
   var names = (state.bulk && state.bulk.servers || []).filter(function(s){ return (s.role || 'replay') !== 'cm'; }).map(function(s){ return s.hostname; }).filter(Boolean);
   Object.keys(by).forEach(function(n){ if (names.indexOf(n) < 0) delete by[n]; });   // forget servers that were renamed or removed
-  if (Object.keys(by).length && !cb.checked) cb.checked = true;
+  if ((Object.keys(by).length || names.some(looksLikeMg)) && !cb.checked) cb.checked = true;
   list.hidden = !cb.checked;
   document.getElementById('mxPerWrap').hidden = !c.card;
   if (!cb.checked) return;
   if (!names.length) { list.innerHTML = '<span class="mx-per-empty">Add servers in Network Settings first.</span>'; return; }
   var dflt = c.card === '25g' ? '25G' : '50G';
   list.innerHTML = names.map(function(n){
-    var v = by[n] || '';
-    return '<label class="mx-per-row' + (v && v !== c.card ? ' diff' : '') + '"><b title="' + n + '">' + n + '</b><select data-srv="' + n + '">'
-      + '<option value="">Project (' + dflt + ')</option><option value="25g"' + (v === '25g' ? ' selected' : '') + '>25G card</option><option value="50g"' + (v === '50g' ? ' selected' : '') + '>50G card</option></select></label>';
+    var v = by[n] || '', mg = looksLikeMg(n);
+    var auto = mg ? 'Auto: no card (MG)' : 'Project (' + dflt + ')';
+    return '<label class="mx-per-row' + ((v && v !== c.card) || (!v && mg) ? ' diff' : '') + '"><b title="' + n + '">' + n + '</b><select data-srv="' + n + '">'
+      + '<option value="">' + auto + '</option><option value="25g"' + (v === '25g' ? ' selected' : '') + '>25G card</option><option value="50g"' + (v === '50g' ? ' selected' : '') + '>50G card</option><option value="none"' + (v === 'none' ? ' selected' : '') + '>No Matrox card</option></select></label>';
   }).join('');
 }
 function onMxPerChange(){
   applyMxCard();
+  if (typeof renderNetSheet === 'function') renderNetSheet(true);
   renderIfaceLists();
   renderServerTableHeader();
   renderServerTable();
@@ -4092,7 +4125,11 @@ function renderNetSheet(force){
     cols.forEach(function(x){
       var v = noMask(s.ips[x.key]);
       var lock = ringLocked(x.key) ? 'ring' : (i > 0 && isSeq(x.key) && !(isIcKey(x.key) && isIcAnchor(i)) ? 'seq' : '');
-      if (ed) h += '<td class="ip' + side(x) + '">' + ipCell('data-i="' + i + '" data-k="' + x.key + '"', v, maskOf(s.ips[x.key]), lock) + '</td>';
+      var off = nicIsOff(s, x.key), auto = off && !(s.nicOff && s.nicOff[x.key]);
+      var tg = '<button type="button" class="nic-tg' + (off ? ' off' : '') + '" data-nic-i="' + i + '" data-nic-k="' + x.key + '"' + (auto ? ' disabled' : '')
+        + ' title="' + (auto ? 'No Matrox card on this server (Project Details)' : off ? 'Off on this server: click to turn it on' : 'On: click to turn this port off on this server') + '">' + (off ? 'off' : 'on') + '</button>';
+      if (off) h += '<td class="ip nic-off' + side(x) + '">' + (ed ? tg : '<span class="nic-offl">off</span>') + '</td>';
+      else if (ed) h += '<td class="ip' + side(x) + '"><div class="nic-w">' + ipCell('data-i="' + i + '" data-k="' + x.key + '"', v, maskOf(s.ips[x.key]), lock) + tg + '</div></td>';
       else h += '<td class="ip' + side(x) + '"' + (ringLocked(x.key) ? '' : ' ') + '>' + escHtml(v || '—') + gwSub(v && state.ifaces[x.key].gateway) + '</td>';
     });
     h += '</tr>';
@@ -4733,7 +4770,7 @@ function regenerateCascade(){
     IFACE_DEFS.forEach(def => { ips[def.key] = incrementIp(state.ifaces[def.key].base, i); });
     // per-server overrides are config, not addressing - carry them over by position
     const overrides = (prev[i] && prev[i].overrides) ? prev[i].overrides : emptyOverrides();
-    servers.push({ hostname: `${prefix}${start + i}`, ips, overrides, role: (prev[i] && prev[i].role) || 'replay', rcpCount: prev[i] ? prev[i].rcpCount : undefined, hw: prev[i] ? prev[i].hw : undefined });
+    servers.push({ hostname: `${prefix}${start + i}`, ips, overrides, role: (prev[i] && prev[i].role) || 'replay', nicOff: prev[i] && prev[i].nicOff ? prev[i].nicOff : undefined, rcpCount: prev[i] ? prev[i].rcpCount : undefined, hw: prev[i] ? prev[i].hw : undefined });
   }
   state.bulk.servers = servers;
   ['net_eth2', 'net_eth3'].forEach(k => { const ips2 = roleIps(state.ifaces[k].base, k); servers.forEach((s, i) => { s.ips[k] = ips2[i]; }); });
@@ -5463,12 +5500,53 @@ function renderSystemFields(){
       renderPreview();
     });
     wrap.appendChild(input);
+    if (f.key === 'force_worker_pool') { const calc = document.createElement('div'); calc.className = 'wk-calc'; calc.id = 'wkCalc'; wrap.appendChild(calc); }
     systemFieldsEl.appendChild(wrap);
     systemFieldCtl[f.key] = { input, wrap, note };
   });
+  renderWorkerCalc();
   syncGlobalTimeSource();
   if (typeof updateJpegxsNotice === 'function') updateJpegxsNotice();
 }
+/* Worker calculator: max workers = CPU cores − 16 (cores depend on the server hardware).
+   Cores are remembered per hardware type; the number field above can still be typed in by hand. */
+var WK_RESERVED = 16;
+function renderWorkerCalc(){
+  const box = document.getElementById('wkCalc'); if (!box) return;
+  state.hwCores = state.hwCores || {};
+  const hw = (typeof hwListNow === 'function' ? hwListNow() : []);
+  const types = hw.length ? hw : ['Servers'];
+  box.innerHTML = '<div class="wk-h">Worker calculator <span>cores − ' + WK_RESERVED + ' = max workers</span></div>' + types.map(t => {
+    const c = parseInt(state.hwCores[t], 10), n = c > WK_RESERVED ? c - WK_RESERVED : '';
+    return '<div class="wk-row" data-hw="' + escHtml(t) + '"><span class="wk-t">' + escHtml(t) + '</span>'
+      + '<input type="number" class="wk-cores" min="1" max="512" placeholder="cores" value="' + (c > 0 ? c : '') + '">'
+      + '<span class="wk-eq">= <b>' + (n === '' ? '—' : n) + '</b> workers</span>'
+      + '<button type="button" class="btn-mini wk-use"' + (n === '' ? ' disabled' : '') + '>Use</button></div>';
+  }).join('') + (types.length > 1 ? '<div class="wk-note">With more than one hardware type, Use sets force_worker_pool per server for that hardware.</div>' : '');
+}
+document.getElementById('systemFields').addEventListener('input', e => {
+  const inp = e.target.closest('.wk-cores'); if (!inp) return;
+  const row = inp.closest('.wk-row'), c = parseInt(inp.value, 10);
+  state.hwCores = state.hwCores || {};
+  if (c > 0) state.hwCores[row.dataset.hw] = c; else delete state.hwCores[row.dataset.hw];
+  const n = c > WK_RESERVED ? c - WK_RESERVED : '';
+  row.querySelector('.wk-eq b').textContent = n === '' ? '—' : n;
+  row.querySelector('.wk-use').disabled = n === '';
+});
+document.getElementById('systemFields').addEventListener('click', e => {
+  const b = e.target.closest('.wk-use'); if (!b) return;
+  const row = b.closest('.wk-row'), c = parseInt(state.hwCores[row.dataset.hw], 10), n = c - WK_RESERVED;
+  if (!(n > 0)) return;
+  const hw = (typeof hwListNow === 'function' ? hwListNow() : []);
+  if (hw.length > 1) {
+    state.bulk.servers.forEach(s => { if ((s.role || 'replay') !== 'cm' && hwOf(s) === row.dataset.hw) getSrvOverrides(s).system.force_worker_pool = String(n); });
+  } else {
+    state.system.force_worker_pool = String(n);
+    if (systemFieldCtl.force_worker_pool) systemFieldCtl.force_worker_pool.input.value = String(n);
+  }
+  renderPerServer(); renderPreview();
+  b.textContent = 'Set'; setTimeout(() => { b.textContent = 'Use'; }, 1200);
+});
 renderSystemFields();
 
 const renderDelayFieldsEl = document.getElementById('renderDelayFields');
@@ -5706,9 +5784,10 @@ document.getElementById('toggleHostname').addEventListener('change', e => {
 --------------------------------------------------------- */
 function buildInstallScript(server){
   server = server || { hostname: 'unnamed-server', ips: {} };
-  const netplanIfaces = IFACE_DEFS.filter(def => def.group === 'netplan' && state.ifaces[def.key].enabled);
+  const netplanIfaces = IFACE_DEFS.filter(def => def.group === 'netplan' && state.ifaces[def.key].enabled && !nicIsOff(server, def.key));
   const srvMvk = serverMvkKeys(server.hostname);
-  const matroxIfaces = IFACE_DEFS.filter(def => def.group === 'matrox' && state.ifaces[def.key].enabled && (!srvMvk.length || srvMvk.indexOf(def.key) >= 0));
+  const matroxIfaces = IFACE_DEFS.filter(def => def.group === 'matrox' && state.ifaces[def.key].enabled && !nicIsOff(server, def.key)
+    && srvMvk !== null && (!srvMvk.length || srvMvk.indexOf(def.key) >= 0));
   const sec = state.sections;
 
   const lines = [];
@@ -6362,6 +6441,7 @@ function serializeConfig(){
       servers: state.bulk.servers.map(srv => ({
         hostname: srv.hostname,
         role: srv.role || 'replay',
+        nicOff: srv.nicOff && Object.keys(srv.nicOff).length ? Object.assign({}, srv.nicOff) : undefined,
         rcpCount: srv.rcpCount,
         hw: srv.hw,
         ips: Object.assign({}, srv.ips),
@@ -6383,6 +6463,7 @@ function serializeConfig(){
     rcp: state.rcp !== false,
     mxCard: Object.assign({}, mxCardState()),
     mxCardBy: Object.assign({}, state.mxCardBy || {}),
+    hwCores: Object.assign({}, state.hwCores || {}),
     lm25: !!state.lm25,
     meshRing: !!state.meshRing,
     seq: Object.assign({}, state.seq || {}),
@@ -6404,6 +6485,7 @@ function applyConfig(cfg){
   if (cfg.version > CONFIG_VERSION) throw new Error('config was saved by a newer version of this tool');
   state.mxCard = Object.assign({ card:'', sys:'redblue' }, cfg.mxCard || {});
   state.mxCardBy = Object.assign({}, cfg.mxCardBy || {});
+  state.hwCores = Object.assign({}, cfg.hwCores || {});
   syncMxSelects();
   state.builtinLayout = cfg.builtinLayout !== false;
   state.ioLimit = cfg.ioLimit !== false;   // older saves only had the unused ioLock placeholder: the limit is on
@@ -6476,7 +6558,7 @@ function applyConfig(cfg){
     Object.keys(ov.features || {}).forEach(k => {
       if (k in FEATURE_DEFAULTS) overrides.features[k] = !!ov.features[k];
     });
-    return { hostname: srv.hostname, ips, overrides, role: srv.role || 'replay', rcpCount: srv.rcpCount != null ? srv.rcpCount : undefined, hw: srv.hw || undefined };
+    return { hostname: srv.hostname, ips, overrides, role: srv.role || 'replay', nicOff: srv.nicOff && typeof srv.nicOff === 'object' ? Object.assign({}, srv.nicOff) : undefined, rcpCount: srv.rcpCount != null ? srv.rcpCount : undefined, hw: srv.hw || undefined };
   });
   const wantIdx = (b.previewIndex >= 0 && b.previewIndex < state.bulk.servers.length) ? b.previewIndex : 0;
   state.bulk.previewIndex = wantIdx;
@@ -6608,6 +6690,14 @@ document.getElementById('mxPerCb').addEventListener('change', function(e){
   var w = document.getElementById('mxPerWrap');
   w.addEventListener('pointerenter', function(){ if (!w.contains(document.activeElement)) renderMxPerList(); });
 })();
+document.getElementById('netSheet').addEventListener('click', function(e){
+  var b = e.target.closest('.nic-tg'); if (!b || b.disabled) return;
+  var s = state.bulk.servers[parseInt(b.dataset.nicI, 10)], k = b.dataset.nicK; if (!s) return;
+  s.nicOff = s.nicOff || {};
+  if (s.nicOff[k]) delete s.nicOff[k]; else s.nicOff[k] = true;
+  renderNetSheet(true); renderPreviewSelect(true); renderPreview();
+  if (window.dcProjects) window.dcProjects.save();
+});
 document.getElementById('mxPerList').addEventListener('change', function(e){
   var s = e.target.closest('select[data-srv]'); if (!s) return;
   if (s.value) mxCardBy()[s.dataset.srv] = s.value; else delete mxCardBy()[s.dataset.srv];
@@ -7619,6 +7709,8 @@ function onCardTypeChange(){
     document.getElementById('modeOut').value = 'ac';
   } else {
     lanePanel.classList.remove('disabled');
+    // two lanes: go back and forth between the red ports (A, C, A, C…) unless another split was picked
+    ['modeIn', 'modeOut'].forEach(id => { const el = document.getElementById(id); if (el.value === 'ac') el.value = 'spread'; });
   }
   generateStreams();
 }
@@ -9420,10 +9512,11 @@ function generateBatchEfps(){
   // after the first one (its multiple-download protection), so one zip sidesteps that entirely.
   // each server is built with its own Matrox card (Project Details can set a different card per server)
   const built = servers.map(server => {
-    const own = cardFor(server.hostname);
-    const bytes = own && own !== curCardRadio()
-      ? withCard(own, () => buildCombinedEfpForServer(Object.assign({}, server, { addresses: addrFor(server.hostname) }), readConnectorTemplate(), nmosHost, nmosPort, enabled))
-      : buildCombinedEfpForServer(server, template, nmosHost, nmosPort, enabled);
+    const sh = shapeFor(server.hostname), cur = curShape();
+    const same = sh.card === cur.card && sh.nin === cur.nin && sh.nout === cur.nout;
+    const bytes = same
+      ? buildCombinedEfpForServer(server, template, nmosHost, nmosPort, enabled)
+      : withServer(server.hostname, () => buildCombinedEfpForServer(Object.assign({}, server, { addresses: addrFor(server.hostname) }), readConnectorTemplate(), nmosHost, nmosPort, enabled));
     return { filename: `deploy-${sanitizeForFilename(server.hostname)}-combined.efp`, bytes };
   });
 
@@ -9495,6 +9588,7 @@ function getState(){
     curSrv: mxCurSrv,
     seqIp: seqIp.slice(),
     seqOct: Object.assign({}, seqOct),
+    bkLink: Object.assign({}, bkLink),
     routes: routesFileText !== null ? { text: routesFileText, name: routesFileName } : null
   };
 }
@@ -9549,6 +9643,7 @@ function setState(s){
       parseBatchRows(lines.map(l => l.split(d)));
     }
   }
+  bkLink = Object.assign({ on: false, oct: 2, off: 1 }, s.bkLink || {});
   seqRestore(s.seqIp, s.seqOct);
   updatePreview();
   updateOperatorSummary();
@@ -9789,7 +9884,8 @@ function syncFromProject(){
     fromProj.hidden = false; cardRow.hidden = true;
     paintCardFromProj();
   } else { fromProj.hidden = true; cardRow.hidden = false; }
-  const sv = (k) => String(state.system[k] == null ? '' : state.system[k]);
+  const cs = srvObj(mxCurSrv);
+  const sv = (k) => (cs && (k === 'ninputs' || k === 'nsdioutputs') && typeof sysVal === 'function') ? String(sysVal(cs, k)).trim() : String(state.system[k] == null ? '' : state.system[k]);
   [['numVideoIn', sv('ninputs')], ['numVideoOut', sv('nsdioutputs')], ['videoGbps', String(RATE_FOR_STANDARD(sv('video_standard')))]].forEach(([id, v]) => {
     const el = document.getElementById(id);
     if (v && el.value !== v) { el.value = v; changed = true; }
@@ -9910,6 +10006,18 @@ document.querySelectorAll('.sc-src[data-goto-sys]').forEach(a => a.addEventListe
 /* ---- sequential multicast: start address per group, one chosen octet steps per input / output,
         and audio streams inside one input step the last octet (.1, .2, ...) ---- */
 var seqIp = [true, true];
+var bkLink = { on: false, oct: 2, off: 1 };   // backup (Blue) = IP (Red) with one octet moved
+function bkFrom(ip){
+  if (!ip || ipToInt(ip) === null) return '';
+  const parts = ip.trim().split('.').map(n => parseInt(n, 10)), o = (parseInt(bkLink.oct, 10) || 2) - 1;
+  parts[o] += parseInt(bkLink.off, 10) || 1;
+  return parts.some(n => n < 0 || n > 255) ? '' : parts.join('.');
+}
+function paintBkLink(){
+  const cb = document.getElementById('scBkLink'); if (!cb) return;
+  cb.checked = !!bkLink.on; document.getElementById('scBkOct').value = String(bkLink.oct); document.getElementById('scBkOff').value = String(bkLink.off);
+  document.getElementById('scSeq1').closest('label').style.display = bkLink.on ? 'none' : '';
+}
 var seqOct = { video: 4, audio: 3, anc: 4 };
 function ipGroups(){
   const g = {};
@@ -9955,7 +10063,14 @@ function applySeq(){
       });
     });
   });
+  // Blue follows Red, one octet off
+  if (bkLink.on) document.querySelectorAll('#rows tr').forEach(tr => {
+    const ips = tr.querySelectorAll('input.ip'); if (ips.length < 2) return;
+    ips[1].value = bkFrom(ips[0].value); ips[1].readOnly = true; ips[1].classList.add('seq'); ips[1].placeholder = '';
+    ips[1].title = 'Matches the IP address with octet ' + bkLink.oct + ' ' + (bkLink.off > 0 ? '+' : '') + bkLink.off;
+  });
   document.querySelectorAll('#scSeq0, #scSeq1').forEach(cb => { cb.checked = seqIp[parseInt(cb.dataset.c, 10)]; });
+  paintBkLink();
 }
 // a column only stays sequential if every group already follows the count-up
 function detectSeq(){
@@ -10018,13 +10133,18 @@ function paintOctets(groups){
     td.appendChild(l);
   });
 }
+['scBkLink', 'scBkOct', 'scBkOff'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+  bkLink = { on: document.getElementById('scBkLink').checked, oct: parseInt(document.getElementById('scBkOct').value, 10) || 2, off: parseInt(document.getElementById('scBkOff').value, 10) || 1 };
+  applySeq(); afterRows();
+  if (window.dcProjects) window.dcProjects.save();
+}));
 document.querySelectorAll('#scSeq0, #scSeq1').forEach(cb => cb.addEventListener('change', () => {
   seqIp[parseInt(cb.dataset.c, 10)] = cb.checked;
   afterRows();
   if (window.dcProjects) window.dcProjects.save();
 }));
 document.getElementById('rows').addEventListener('input', e => {
-  if (e.target.classList.contains('ip')) { if (seqIp[0] || seqIp[1]) applySeq(); renderRowCount(); renderPlate(); if (mxCurSrv) paintSrvBar(); }
+  if (e.target.classList.contains('ip')) { if (seqIp[0] || seqIp[1] || bkLink.on) applySeq(); renderRowCount(); renderPlate(); if (mxCurSrv) paintSrvBar(); }
 });
 document.getElementById('rows').addEventListener('click', e => {
   if (e.target.classList.contains('rm')) setTimeout(afterRows, 0);
@@ -10404,16 +10524,33 @@ function setCardRadio(card){
   document.getElementById('lanePanel').classList.toggle('disabled', card === '25g');   // lane modes stay as set for 50G servers
   return true;
 }
-function cardFor(name){ return (typeof cardForServer === 'function' ? cardForServer(name) : '') || curCardRadio(); }
-// run fn with the connector rows generated for `card`, then put the page back the way it was
-function withCard(card, fn){
-  const cur = curCardRadio();
-  if (!card || card === cur) return fn();
-  syncCur();
-  setCardRadio(card); generateStreams();
-  try { return fn(); }
-  finally { setCardRadio(cur); generateStreams(); writeRowsAddr(mxAddrBy[mxCurSrv] || {}); }
+function cardFor(name){ const c = typeof cardForServer === 'function' ? cardForServer(name) : ''; return c && c !== 'none' ? c : curCardRadio(); }
+function mxVal(id){ const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+function srvObj(name){ return typeof state !== 'undefined' ? state.bulk.servers.find(s => s.hostname === name) : null; }
+/* what one server's connector table looks like: its Matrox card and its own input / output counts
+   (per-server inputs and outputs from System Configuration carry into the Matrox flows) */
+function shapeFor(name){
+  const s = srvObj(name);
+  const io = k => s && typeof sysVal === 'function' ? String(sysVal(s, k)).trim() : (k === 'ninputs' ? mxVal('numVideoIn') : mxVal('numVideoOut'));
+  return { card: cardFor(name), nin: io('ninputs'), nout: io('nsdioutputs') };
 }
+function curShape(){ return { card: curCardRadio(), nin: mxVal('numVideoIn'), nout: mxVal('numVideoOut') }; }
+// set the page to a shape; true if anything changed (caller regenerates the rows)
+function setShape(sh){
+  let changed = setCardRadio(sh.card);
+  [['numVideoIn', sh.nin], ['numVideoOut', sh.nout]].forEach(([id, v]) => { const el = document.getElementById(id); if (v !== '' && v != null && el.value !== v) { el.value = v; changed = true; } });
+  return changed;
+}
+// run fn with the connector rows built for server `name`, then put the page back the way it was
+function withServer(name, fn){
+  const cur = curShape(), want = shapeFor(name);
+  if (want.card === cur.card && want.nin === cur.nin && want.nout === cur.nout) return fn();
+  syncCur();
+  setShape(want); generateStreams();
+  try { return fn(); }
+  finally { setShape(cur); generateStreams(); writeRowsAddr(mxAddrBy[mxCurSrv] || {}); }
+}
+function withCard(card, fn){ return fn(); }   // kept for older calls: withServer does the work now
 function paintCardFromProj(){
   const fromProj = document.getElementById('mxCardFromProj'); if (!fromProj || fromProj.hidden) return;
   const card = curCardRadio(), own = typeof state !== 'undefined' && state.mxCardBy && state.mxCardBy[mxCurSrv];
@@ -10422,12 +10559,12 @@ function paintCardFromProj(){
   fromProj.querySelector('em').textContent = own ? 'set for ' + mxCurSrv + ' in Project Details' : 'from Project Details';
 }
 function followServerCard(){
-  if (typeof state === 'undefined') return;
-  const want = cardFor(mxCurSrv);
-  if (want && setCardRadio(want)) { syncCur(); generateStreams(); writeRowsAddr(mxAddrBy[mxCurSrv] || {}); afterRows(); }
+  if (typeof state === 'undefined' || !mxCurSrv) return;
+  syncCur();
+  if (setShape(shapeFor(mxCurSrv))) { generateStreams(); writeRowsAddr(mxAddrBy[mxCurSrv] || {}); afterRows(); }
   paintCardFromProj();
 }
-function srvList(){ return (typeof state !== 'undefined' ? state.bulk.servers : []).filter(s => (s.role || 'replay') !== 'cm').map(s => s.hostname).filter(Boolean); }
+function srvList(){ return (typeof state !== 'undefined' ? state.bulk.servers : []).filter(s => (s.role || 'replay') !== 'cm' && !(typeof cardForServer === 'function' && cardForServer(s.hostname) === 'none')).map(s => s.hostname).filter(Boolean); }
 function syncCur(){ if (mxCurSrv) mxAddrBy[mxCurSrv] = readLiveAddressesByKey(); }
 function addrFor(name){ return name === mxCurSrv ? readLiveAddressesByKey() : (mxAddrBy[name] || {}); }
 function writeRowsAddr(map){
@@ -10463,7 +10600,7 @@ function setCurSrv(name){
   if (name === mxCurSrv) return;
   syncCur();
   mxCurSrv = name;
-  { const want = cardFor(name); if (want && setCardRadio(want)) generateStreams(); }   // this server's own Matrox card
+  if (setShape(shapeFor(name))) generateStreams();   // this server's own Matrox card and input / output counts
   writeRowsAddr(mxAddrBy[name] || {});
   paintCardFromProj();
   // the Matrox page and the drawing follow the server picked here
@@ -10557,7 +10694,7 @@ function dpFiles(kind){
   syncCur();
   const template = readConnectorTemplate();
   const oneWith = (t, n) => kind === 'persistence' ? buildPersistenceJsonForServer(t, addrFor(n)) : buildDcRoutesJsonForServer(t, addrFor(n));
-  const one = n => { const own = cardFor(n); return own && own !== curCardRadio() ? withCard(own, () => oneWith(readConnectorTemplate(), n)) : oneWith(template, n); };
+  const one = n => withServer(n, () => oneWith(readConnectorTemplate(), n));
   const fname = kind === 'persistence' ? 'persistence.json' : 'dc_routes.json';
   if (chosen.length === 1) {
     const name = downloadBlob(one(chosen[0]), fname, 'application/json');
