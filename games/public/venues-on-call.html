@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="/lm-sync.js"></script>
+<script src="/lm-games-nav.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Venues On Call</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c1220; --panel:#141c2e; --panel2:#1a2338; --line:#28334d; --ink:#e8edf6; --sub:#93a0b8;
+  --p1:#ff5a4e; --p2:#f2a93b; --p3:#7d8aa3; --good:#45c46a; --accent:#5aa8ff;
+  --CM:#b18cff; --LOG:#ffb547; --IP:#4fc3f7; --OPS:#7be08a; --STO:#ff8a65;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#0c1220; color-scheme:dark; } }
+:root[data-theme="dark"]{ --bg:#0c1220; color-scheme:dark; }
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:#070b14;color:var(--ink);font:14px/1.4 "IBM Plex Sans",system-ui,sans-serif}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:"IBM Plex Mono",monospace}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--k,1));background:var(--bg);display:grid;grid-template-columns:1260px 1fr;grid-template-rows:64px 690px 1fr;gap:10px;padding:10px}
+.top{grid-column:1/-1;display:flex;align-items:center;gap:26px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 18px}
+.top h1{margin:0;font-size:24px;letter-spacing:.01em}
+.top h1 small{display:block;font:500 11px "IBM Plex Mono",monospace;color:var(--sub);letter-spacing:.12em}
+.sp{flex:1}
+.st{display:grid;line-height:1.1}
+.st span{font-size:11px;color:var(--sub)}
+.st b{font:600 22px "IBM Plex Mono",monospace}
+.csat{width:180px;height:10px;background:#0a0f1a;border-radius:5px;overflow:hidden;margin-top:4px}
+.csat i{display:block;height:100%;background:var(--good);transition:width .3s,background .3s}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 14px;cursor:pointer;font-weight:600}
+.btn:hover{background:#222c45}
+/* map */
+.map{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.map svg{display:block;width:100%;height:100%}
+.maplbl{position:absolute;left:14px;top:10px;font:600 11px "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--sub)}
+.legend{position:absolute;right:12px;top:10px;display:flex;gap:12px;font-size:12px;color:var(--sub)}
+.legend span{display:flex;gap:5px;align-items:center}
+.legend i{width:10px;height:10px;border-radius:50%}
+.toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(8,12,22,.92);border:1px solid var(--line);padding:6px 16px;border-radius:16px;font-weight:600;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+/* queue */
+.queue{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.qh{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.qh h2{margin:0;font-size:16px}
+.qh small{color:var(--sub)}
+.tlist{overflow:hidden;padding:8px;display:grid;gap:7px;align-content:start}
+.tk{all:unset;cursor:pointer;display:grid;gap:4px;background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:6px;padding:8px 10px}
+.tk:hover{background:#202a43}
+.tk.sel{outline:2px solid var(--accent);outline-offset:-1px;background:#1f2b47}
+.tk:focus-visible{outline:2px solid var(--accent)}
+.tr{display:flex;align-items:center;gap:8px;font-size:12px}
+.pri{font:600 11px "IBM Plex Mono",monospace;padding:1px 6px;border-radius:3px;background:var(--pc);color:#0c1220}
+.ven{font-weight:700;font-size:14px}
+.cat{font:600 10px "IBM Plex Mono",monospace;padding:1px 6px;border-radius:3px;border:1px solid var(--cc);color:var(--cc);margin-left:auto}
+.onsite{font-size:11px;color:#ffd27a}
+.ttl{font-size:13px;color:#d6deec}
+.bar{height:6px;background:#0a0f1a;border-radius:3px;overflow:hidden;flex:1}
+.bar i{display:block;height:100%}
+.who{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.av{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font:700 10px "IBM Plex Mono",monospace;color:#0c1220;flex:none}
+/* team */
+.team{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.pc{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;grid-template-rows:auto auto auto auto 1fr;gap:7px;position:relative}
+.pc.busy{border-color:#2f3d5e}
+.pc .hd{display:flex;gap:10px;align-items:center}
+.pc .big{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:700 16px "IBM Plex Mono",monospace;color:#0c1220;flex:none;position:relative}
+.pc .big.lead::after{content:"★";position:absolute;right:-4px;top:-6px;font-size:16px;color:#ffd27a;text-shadow:0 1px 2px #000}
+.pc h3{margin:0;font-size:17px}
+.pc .role{font-size:12px;color:var(--sub)}
+.sk{display:flex;gap:6px;flex-wrap:wrap}
+.sk span{font:600 10px "IBM Plex Mono",monospace;padding:2px 6px;border-radius:3px;border:1px solid var(--cc);color:var(--cc)}
+.sk span.pri2{opacity:.75}
+.stat{font-size:12.5px;min-height:18px}
+.stat b{color:#ffd27a}
+.fat{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--sub)}
+.fat .bar i{background:linear-gradient(90deg,#45c46a,#f2a93b 60%,#ff5a4e)}
+.acts{display:flex;gap:6px;align-self:end;flex-wrap:wrap}
+.acts button{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:7px 6px;cursor:pointer;font-weight:600;font-size:12.5px;white-space:nowrap}
+.acts button.go{background:#1f4a7a;border-color:#2e6bb0}
+.acts button.fly{background:#4a3a14;border-color:#8a6a1e}
+.acts button:disabled{opacity:.35;cursor:default}
+.acts button.sp{background:#2a2142;border-color:#5a4590}
+.acts button.sp .cd{font:500 10px "IBM Plex Mono",monospace;color:var(--sub)}
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(4,7,14,.8);display:grid;place-items:center;padding:16px;z-index:20}
+.overlay[hidden]{display:none}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:min(760px,100%);max-height:calc(100% - 20px);overflow:auto;padding:22px 26px}
+.sheet h2{margin:0 0 6px;font-size:28px}
+.sheet p{margin:8px 0;color:#cfd8e8}
+.roster{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}
+.roster div{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;display:grid;gap:4px;justify-items:center;text-align:center}
+.cta{background:#2e6bb0;border:0;color:#fff;border-radius:7px;padding:11px 22px;font-weight:700;font-size:17px;cursor:pointer}
+.results{display:grid;grid-template-columns:1fr auto;gap:4px 18px;margin:14px 0;font-size:15px}
+.results b{font-family:"IBM Plex Mono",monospace;text-align:right}
+.note{font-size:12.5px;color:var(--sub)}
+
+.tk.needs{box-shadow:0 0 0 1px #5aa8ff inset}
+.dg{margin-left:auto;background:#2e6bb0;color:#fff;font-weight:700;padding:2px 9px;border-radius:4px;font-size:12px;cursor:pointer;animation:blinkb 1.2s ease-in-out infinite}
+@keyframes blinkb{50%{background:#4b8fda}}
+.slow{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:#2a2142;border:1px solid #5a4590;padding:3px 12px;border-radius:12px;font:600 11px "IBM Plex Mono",monospace;color:#cbb6ff}
+.slow[hidden]{display:none}
+.ses{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:min(1240px,100%);height:min(760px,100%);display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
+.ses header{padding:14px 18px;border-bottom:1px solid var(--line)}
+.ses h2{margin:0 0 6px;font-size:21px}
+.ses .sub{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ses .pri{color:#0c1220}
+.sbody{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);min-height:0}
+.tpane{display:grid;grid-template-rows:minmax(0,1fr) auto auto;border-right:1px solid var(--line);min-height:0}
+#term{margin:0;padding:12px 14px;overflow:auto;background:#05080f;font:12.5px/1.5 "IBM Plex Mono",monospace;color:#b9c6d8;white-space:pre-wrap;word-break:break-word}
+#term .err{color:#ff8f7a}
+#term .pr{color:#7be08a}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-top:1px solid var(--line);background:#0a0f1a}
+.chip{all:unset;cursor:pointer;font:12px "IBM Plex Mono",monospace;background:#16203a;border:1px solid #2c3b5f;border-radius:4px;padding:4px 8px}
+.chip:hover{background:#1f2c4d}
+.chip.ran{opacity:.55}
+.chip:focus-visible{outline:2px solid var(--accent)}
+#cmdForm{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#05080f;border-top:1px solid var(--line);font:12.5px "IBM Plex Mono",monospace;color:#7be08a}
+#cmdIn{flex:1;background:transparent;border:0;color:#e8edf6;font:inherit;outline:none}
+.qpane{padding:14px 16px;overflow:auto;display:grid;gap:10px;align-content:start}
+.qpane h3{margin:0;font-size:16px}
+.opt{all:unset;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:4px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:14px}
+.opt b{grid-row:span 2;width:22px;height:22px;border-radius:50%;background:#28334d;display:grid;place-items:center;font-size:12px}
+.opt small{grid-column:2;color:#ffb4ad;font-size:12px}
+.opt:hover:not(:disabled){background:#202a43}
+.opt:disabled{cursor:default;opacity:.55}
+.opt.right{border-color:#45c46a;background:#16301f;opacity:1}
+.opt.wrong{border-color:#8a3b30}
+.opt:focus-visible{outline:2px solid var(--accent)}
+.lbl{margin:6px 0 4px;font-weight:600;font-size:13px}
+.lbl small{color:var(--sub);font-weight:400}
+.friends{display:flex;gap:6px;flex-wrap:wrap}
+.friends button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:3px 10px 3px 3px;font-size:13px}
+.friends button:hover{background:#202a43}
+.friends button:focus-visible{outline:2px solid var(--accent)}
+.hint{display:flex;gap:10px;align-items:flex-start;background:#1c2540;border:1px solid #33456f;border-radius:8px;padding:10px 12px;font-size:13.5px}
+.fb{min-height:1.4em;font-size:13.5px;margin:0}
+.fb.good{color:#8ff0a6} .fb.bad{color:#ffb4ad}
+.sfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--sub)}
+
+@keyframes pulse{0%{r:8;opacity:.9}100%{r:22;opacity:0}}
+.ring{animation:pulse 1.4s ease-out infinite}
+@media (prefers-reduced-motion: reduce){.ring{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header class="top">
+    <h1>Venues On Call<small>DREAMCATCHER VENUES TEAM</small></h1>
+    <span class="sp"></span>
+    <div class="st"><span>Week</span><b id="clock">Mon 08:00</b></div>
+    <div class="st"><span>Score</span><b id="score">0</b></div>
+    <div class="st"><span>Tickets closed</span><b id="closed">0</b></div>
+    <div class="st"><span>Customer satisfaction <span id="csatN">100%</span></span><div class="csat"><i id="csat" style="width:100%"></i></div></div>
+    <button class="btn" id="soundBtn" type="button">Sound on</button>
+    <button class="btn" id="pauseBtn" type="button">Pause</button>
+  </header>
+  <section class="map" aria-label="Venue map">
+    <svg id="map" viewBox="0 0 1260 690" role="img" aria-label="Map of venues with open tickets and where the team is"></svg>
+    <span class="maplbl">VENUES</span>
+    <div class="legend"><span><i style="background:var(--p1)"></i>P1 show tonight</span><span><i style="background:var(--p2)"></i>P2</span><span><i style="background:var(--p3)"></i>P3</span></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <div class="slow" id="slow" hidden>REMOTE SESSION OPEN: TIME AT 25%</div>
+  </section>
+  <section class="queue" aria-label="Ticket queue">
+    <div class="qh"><h2>Ticket queue</h2><small id="qn">0 open</small></div>
+    <div class="tlist" id="tlist"></div>
+  </section>
+  <section class="team" id="team" aria-label="The team"></section>
+</div>
+
+<div class="overlay" id="startOv">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sH">
+    <h2 id="sH">One week on call</h2>
+    <p>Tickets roll in from venues all week. Pick a ticket and have someone <b>remote in</b>. Once they’re connected, open the session: read the logs, run commands, and pick the fix. Stuck? <b>Phone a friend</b> on the team. Or let them work it alone, which is slower and they can guess wrong.</p>
+    <p>Most problems get fixed remotely. When it’s hardware (a drive, a Karak or Matrox card, RAM, a panel), they grab the part and get on a plane. Close tickets before the customer runs out of patience, especially P1s with a show tonight. Time runs at a quarter speed while a session is open.</p>
+    <div class="roster" id="roster"></div>
+    <p class="note">Keys: ↑ ↓ picks a ticket, 1 to 5 remotes that teammate in (or opens their session), Enter opens the next session waiting, Q uses the teammate’s special, P pauses. In a session: type commands (Tab completes, “help” lists them), 1 to 4 picks an answer, Esc steps out.</p>
+    <button class="cta" id="startBtn" type="button">Start the week</button>
+  </div>
+</div>
+<div class="overlay" id="sesOv" hidden>
+  <div class="ses" role="dialog" aria-modal="true" aria-labelledby="sesH">
+    <header><h2 id="sesH"></h2><div class="sub" id="sesSub"></div></header>
+    <div class="sbody">
+      <div class="tpane"><pre id="term" aria-live="polite"></pre><div class="chips" id="chips"></div>
+        <form id="cmdForm" autocomplete="off"><span>$</span><input id="cmdIn" aria-label="Command" placeholder="type a command, Tab to complete, help to list"></form></div>
+      <div class="qpane"><h3 id="qText"></h3><div style="display:grid;gap:8px" id="qOpts"></div><p class="fb" id="sesFb" aria-live="polite"></p><div id="friend"></div></div>
+    </div>
+    <div class="sfoot"><span>Wrong answers cost 12 s of customer patience. First-try fixes earn a bonus.</span><button class="btn" id="sesLeave" type="button">Let them work it alone</button></div>
+  </div>
+</div>
+<div class="overlay" id="endOv" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="eH">
+    <h2 id="eH">That’s the week</h2>
+    <p id="eT"></p>
+    <div class="results" id="eR"></div>
+    <button class="cta" id="againBtn" type="button">Run another week</button>
+  </div>
+</div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+/* ---------- data ---------- */
+const CATS = {
+  CM:{name:'Commissioning & training', short:'COMMISSION'},
+  LOG:{name:'Logs & upgrades', short:'LOGS/UPGRADE'},
+  IP:{name:'IP, PTP & NMOS', short:'IP/PTP'},
+  OPS:{name:'Operators & panels', short:'OPERATORS'},
+  STO:{name:'Storage & exports', short:'STORAGE'},
+};
+const TEAM = [
+  {id:'brandon', home:{name:'Austin', lat:30.27, lon:-97.74}, name:'Brandon', ini:'BL', color:'#ffd27a', role:'Program Manager, Venues (lead)', lead:true, pri:'CM', sec:'OPS',
+   sp:{name:'Huddle', cd:50, desc:'Whole team works 50% faster for 12 s'}},
+  {id:'paul', home:{name:'Toronto', lat:43.65, lon:-79.38}, name:'Paul', ini:'PM', color:'#ffb547', role:'Venues team', pri:'LOG', sec:'CM',
+   sp:{name:'dclog.py', cd:45, desc:'Instantly diagnoses Paul’s ticket, or halves the rest of its work'}},
+  {id:'abby', home:{name:'Denver', lat:39.74, lon:-104.99}, name:'Abby', ini:'AS', color:'#7be08a', role:'Venues team', pri:'OPS', sec:'CM',
+   sp:{name:'Call the customer', cd:35, desc:'Buys 25 s of patience on the selected ticket'}},
+  {id:'abigail', home:{name:'Charleston', lat:32.78, lon:-79.93}, name:'Abigail', ini:'AK', color:'#ff8a65', role:'Venues team', pri:'STO', sec:'IP',
+   sp:{name:'KB article', cd:40, desc:'Rules out two wrong answers on a ticket'}},
+  {id:'rhyce', home:{name:'Waco', lat:31.55, lon:-97.15}, name:'Rhyce', ini:'RW', color:'#4fc3f7', role:'Venues team', pri:'IP', sec:'LOG',
+   sp:{name:'Ship a tool', cd:60, desc:'His ticket’s category goes 25% faster all week'}},
+];
+const HQ = {name:'Evertz HQ, Burlington', lat:43.33, lon:-79.80};
+const V = {
+  mets:{name:'Mets, Citi Field', lat:40.76, lon:-73.85}, metlife:{name:'MetLife Stadium', lat:40.81, lon:-74.07},
+  vikings:{name:'Vikings, US Bank', lat:44.97, lon:-93.26}, grizz:{name:'Grizzlies, Memphis', lat:35.14, lon:-90.05},
+  lsu:{name:'LSU', lat:30.41, lon:-91.18}, ut:{name:'Tennessee', lat:35.95, lon:-83.93}, mlse:{name:'MLSE, Toronto', lat:43.64, lon:-79.38},
+  lca:{name:'Little Caesars Arena', lat:42.34, lon:-83.05}, scripps:{name:'ScrippsTV Atlanta', lat:33.75, lon:-84.39},
+  heat:{name:'Miami Heat', lat:25.78, lon:-80.19}, cogeco:{name:'Cogeco Sarnia', lat:42.97, lon:-82.40},
+  rockets:{name:'Rockets, Houston', lat:29.75, lon:-95.36}, pitt:{name:'Pitt', lat:40.44, lon:-79.96},
+  seahawks:{name:'Seahawks, Lumen Field', lat:47.60, lon:-122.33}, giants:{name:'SF Giants', lat:37.78, lon:-122.39},
+  auburn:{name:'Auburn', lat:32.60, lon:-85.49}, uva:{name:'Virginia', lat:38.03, lon:-78.51},
+  vandy:{name:'Vanderbilt', lat:36.14, lon:-86.80}, nesn:{name:'NESN, Boston', lat:42.35, lon:-71.06},
+  japan:{name:'Japan 8K demo', japan:true},
+};
+/* ---------- issue library: logs, commands, answers (from the team KB) ---------- */
+// kind: sw = fixed remotely, hw = remote diagnosis then fly out with a part, cm = plan remotely then go on site
+const ISSUES = [
+  { id:'vik-os', venue:'vikings', cat:'LOG', kind:'hw', part:'OS drive', host:'VIKINGS-SLOMO6',
+    title:'SLOMO6 won’t bootstrap after the 26.05.8 upgrade',
+    log:['efpinstall: writing rootfs to /dev/sda ...','!efpinstall: I/O error, dev sda, sector 1953280','!bootstrap failed: could not write rootfs'],
+    cmds:{
+      'sudo smartctl -a /dev/sda':'Device Model: SSD 240GB\n  5 Reallocated_Sector_Ct ......... 1832\n197 Current_Pending_Sector ........ 412\n!SMART overall-health self-assessment test result: FAILED!',
+      'dmesg | tail':'!ata1.00: failed command: WRITE FPDMA QUEUED\n!blk_update_request: I/O error, dev sda, sector 1953280\nata1: hard resetting link',
+      'lsblk':'sda       223.6G disk\nsdb        14.9G disk   (bootstrap USB)\nnvme0n1     7.0T disk   /clips',
+      'ls -lh /media/usb':'bootstrap-26.05.8.efp  4.6G\nrootfs-26.05.8.efp     3.1G\n(filesystem: exFAT)'},
+    q:'What gets SLOMO6 back?',
+    opts:[{t:'Fly out with a replacement OS drive', ok:1, why:'SMART failed with hundreds of pending sectors. The OS drive is dead.'},
+      {t:'Re-copy the EFPs to a FAT32 USB stick', why:'EFPs over 4 GB need exFAT or NTFS, and this USB is already exFAT. The drive is the problem.'},
+      {t:'Unplug the KVM USB and retry the bootstrap', why:'Good habit, but the writes are failing on the drive itself.'},
+      {t:'Run the rootfs EFP before the bootstrap EFP', why:'Bootstrap goes first, and the drive still can’t take writes.'}]},
+  { id:'scr-karak', venue:'scripps', cat:'IP', kind:'hw', part:'Karak card', host:'DC-CORE',
+    title:'Outputs freezing with missed vsync floods',
+    log:['!karakproxy: system error 31','!karakproxy: io cnt heartbeat dropped','!dcsoutput@1: missed vsync (x2210)'],
+    cmds:{
+      'lspci -d 1172:':'(no output)',
+      'sudo ipmitool power cycle':'Chassis Power Control: Cycle\n... server back up after 4 min\n$ lspci -d 1172:\n(no output)',
+      'cat /proc/evadd/evadd0/mem_ctrl_status':'!cat: /proc/evadd/evadd0/mem_ctrl_status: No such file or directory',
+      'cat ~/site-notes.txt':'Venue tech swapped the DIN cables this morning: the fault stays with the card.'},
+    q:'The Karak isn’t showing up. What now?',
+    opts:[{t:'Fly out with a replacement Karak card', ok:1, why:'Still not detected after a power cycle, and the fault follows the card, not the cables.'},
+      {t:'Reinstall the EFP', why:'Software can’t bring back a card that isn’t on the PCI bus.'},
+      {t:'Swap the DIN cables again', why:'Already done: the fault follows the card.'},
+      {t:'Add --free-run to DCSOUTPUT_FLAGS', why:'That’s for Live Edit outputs, and it won’t bring back a missing card.'}]},
+  { id:'grz-matrox', venue:'grizz', cat:'IP', kind:'hw', part:'Matrox card', host:'GRIZZ-02',
+    title:'Server 02 lost every 2110 input after a power hit',
+    log:['!mvproxy: failed to open card 0','!dcsencodev@1: no input frames for 30 s'],
+    cmds:{
+      'lspci | grep -i matrox':'!3b:00.0 Multimedia controller: Matrox Electronics Systems Ltd. Device 9030',
+      'mvstat':'!mvstat: no Matrox devices found',
+      'ptpstat':'eno1  port state: SLAVE  domain 127  offset -14 ns',
+      'cat /opt/dreamcatcher/matrox/card_options.cfg':'serial=A1B2C3\nmac0=00:20:fc:1e:22:10'},
+    q:'lspci shows device 9030. What’s going on?',
+    opts:[{t:'Bricked card: fly out with a Matrox card, then update card_options.cfg and the MACs', ok:1, why:'9030 or 9070 means a bricked card. After the swap, update the serial and the MACs.'},
+      {t:'Wrap source_ips in arrays in dc-routes.json', why:'That’s the post-upgrade routes break. This card isn’t even enumerating.'},
+      {t:'Restart the Matrox daemons', why:'There’s no working card for the daemons to talk to.'},
+      {t:'Reapply the ISOLCPUS EFP', why:'CPU isolation has nothing to do with a card that won’t enumerate.'}]},
+  { id:'mets-ram', venue:'mets', cat:'LOG', kind:'hw', part:'RAM kit', host:'METS-DC-07',
+    title:'Server beeps on boot and runs sluggish',
+    log:['ipmi: POST beep code reported','!dcsrepo: frame took 410 ms'],
+    cmds:{
+      'free -g':'              total   used   free\nMem:           95     71     24\n(expected 192)',
+      'sudo dmidecode -t memory | grep Size':'Size: 32 GB\nSize: 32 GB\nSize: 32 GB\n!Size: No Module Installed\n!Size: No Module Installed\n!Size: No Module Installed',
+      'uptime':'up 6 min, load average: 14.2, 12.8, 9.1',
+      'sensors':'CPU: 61 °C   NVMe: 49 °C'},
+    q:'What’s wrong with this server?',
+    opts:[{t:'Bad RAM bank: fly out with a replacement RAM kit', ok:1, why:'Beeps and running on half its memory is a bad RAM bank.'},
+      {t:'The NVMe is overheating', why:'49 °C is fine. The limit is 65 °C.'},
+      {t:'The /etc/hosts and hostname don’t match', why:'That causes a slow boot, not beeps and missing memory.'},
+      {t:'Run Ctrl+Alt+R on VUE', why:'The UI isn’t the problem. Half the memory is gone.'}]},
+  { id:'lsu-nvme', venue:'lsu', cat:'STO', kind:'hw', part:'NVMe drive', host:'LSU-DC-3',
+    title:'Record storage flagged as degraded',
+    log:['!collectd: nvme1 wear warning','dcsrepo: storage ok, 14 h 02 m remaining'],
+    cmds:{
+      'sudo smartctl -a /dev/nvme1':'Temperature: 58 Celsius\n!241 Total_LBAs_Written ........ 1,612,004\nPercentage Used: 96%',
+      'df -h /clips':'Filesystem  Size  Used Avail Use% Mounted on\n/dev/nvme1  7.0T  2.1T  4.9T  30% /clips',
+      'sensors':'NVMe: 58 °C',
+      'sudo dcs pids':'dcsrepo 2211  dcscommander 2302  mvproxy 2120  (all running)'},
+    q:'What do we do about nvme1?',
+    opts:[{t:'Fly out with a replacement NVMe drive', ok:1, why:'Attribute 241 is past 1,474,560 (about 45 TB written). The drive is degraded.'},
+      {t:'Fix the airflow, it’s running hot', why:'58 °C is under the 65 °C limit.'},
+      {t:'Clear old clips to free space', why:'It’s only 30% full. The drive is worn out.'},
+      {t:'Reformat the drive', why:'Reformatting doesn’t un-wear an SSD.'}]},
+  { id:'cog-rcp', venue:'cogeco', cat:'OPS', kind:'hw', part:'spare RCP-10', host:'RCP-10',
+    title:'RCP-10 died mid-show, third game this month',
+    log:['!vue: MUISystemPluginDCRCP1: panel lost','!magnumvue: rcp10 10.20.4.61 not responding'],
+    cmds:{
+      'ping -c3 10.20.4.61':'!3 packets transmitted, 0 received, 100% packet loss',
+      'cat ~/rcp-notes.txt':'Last visit: sudo hdparm -i /dev/sda\nModel=Micron_M500IT  FwRev=MG01\nPower-on hours: 28,244',
+      'journalctl -r -u vue | head -3':'!MUISystemPluginDCRCP1::init() panel lost\nvue: retrying panel connection',
+      'uptime':'up 12 days'},
+    q:'What’s the plan for the panel?',
+    opts:[{t:'Fly out with a spare RCP-10 and start the RMA', ok:1, why:'It’s died 3 games out of 7 and it’s an M500IT on MG01 firmware, which can’t be updated. Swap it and RMA.'},
+      {t:'Flash the panel SSD to MU02 firmware', why:'MG01 isn’t upgradable, and you never flash other firmware.'},
+      {t:'In VUE, point the panel host at 10.20.4.61', why:'The panel isn’t even answering ping.'},
+      {t:'Restart VUE', why:'VUE is fine. The panel is dead.'}]},
+  { id:'vik-arp', venue:'vikings', cat:'STO', kind:'sw', host:'VIKINGS-CM',
+    title:'NAS unreachable after the 26.05.8 upgrade',
+    log:['!mount error(115): Operation now in progress','!dcsexport: destination /mnt/nas not available'],
+    cmds:{
+      'traceroute 10.40.8.15':'!  1  10.40.4.1  0.41 ms !H',
+      'ip neigh | grep 10.40.4.1':'10.40.4.1 dev eth2 lladdr 00:1c:73:aa:10:01 REACHABLE',
+      'cat /etc/fstab | grep nas':'//10.40.8.15/replay /mnt/nas cifs credentials=/root/.smb 0 0',
+      'sudo ufw status':'Status: inactive'},
+    q:'What’s the fix?',
+    opts:[{t:'Have venue IT clear the stale ARP entry on the core router', ok:1, why:'After an upgrade or NIC change, the router can hold the old MAC. Clearing ARP fixed it.'},
+      {t:'Re-enter the SMB credentials', why:'Error -115 is reachability, not credentials.'},
+      {t:'Disable the server firewall', why:'ufw is already inactive.'},
+      {t:'Downgrade back to 26.05.4', why:'Long downtime, and the router still has the stale ARP.'}]},
+  { id:'heat-fw', venue:'heat', cat:'IP', kind:'sw', host:'HEAT-HF',
+    title:'Highlight Factory can’t pull NBA stats',
+    log:['!statsfeed: SSL handshake failed: api.nba.com','statsfeed: provider SMT (NGSS retired, DC-11208)'],
+    cmds:{
+      'curl -sI https://api.nba.com':'!curl: (35) OpenSSL SSL_connect: Connection reset by peer',
+      'curl -sI https://www.evertz.com':'HTTP/2 200',
+      'nslookup api.nba.com':'Name: api.nba.com\nAddress: 23.215.0.136',
+      'cat ~/it-email.txt':'Venue IT: “We allowed the NBA IP address on the firewall last week.”'},
+    q:'What do you tell venue IT?',
+    opts:[{t:'Allow api.nba.com by domain, not by IP', ok:1, why:'Their firewall filters on SNI, so it looks like an SSL error. The NBA’s IPs move, so allow the domain.'},
+      {t:'Switch the stats provider back to NGSS', why:'NBA moved from NGSS to SMT. NGSS is gone.'},
+      {t:'Install a new SSL certificate on the server', why:'Other HTTPS sites work. Only api.nba.com is blocked.'},
+      {t:'Fix the DNS server', why:'DNS resolves fine.'}]},
+  { id:'mlse-234', venue:'mlse', cat:'STO', kind:'sw', host:'MLSE-REPLAY-3',
+    title:'Exports fail with internal process error (writer, 234)',
+    log:['!dcsexport: internal process error (writer, 234)','dcsexport: destination //nas via MLSE-REPLAY-1'],
+    cmds:{
+      'dcs version (all nodes)':'MLSE-REPLAY-1  25.05.2\nMLSE-REPLAY-2  24.11.6\nMLSE-REPLAY-3  25.05.2\nMLSE-MG        24.11.6',
+      'mount | grep nas':'//nas/exports on /mnt/nas type cifs (mounted on MLSE-REPLAY-1 only)',
+      'df -h /mnt/nas':'/mnt/nas  40T  22T  18T  55%',
+      'sudo dcs pids':'all services running'},
+    q:'How do you fix the exports?',
+    opts:[{t:'Upgrade every node to the same build and move the NAS mount to the MG', ok:1, why:'Mixed code versions plus a NAS hung off one replay server. Same build everywhere and the NAS on the MG fixed it.'},
+      {t:'Free up space on the NAS', why:'It’s only 55% full.'},
+      {t:'Set Default Export Angles to All', why:'That’s for exports that skip angles, not writer errors.'},
+      {t:'Re-enter the SMB credentials', why:'The mount works. The problem is versions and where the NAS hangs.'}]},
+  { id:'gnt-ptp', venue:'giants', cat:'IP', kind:'sw', host:'GIANTS-DC-2',
+    title:'Record trains went blue before batting practice',
+    log:['!ptp4l[mvk0]: port 1: LISTENING','!phc2sys: clock not synchronized'],
+    cmds:{
+      'ptpstat':'!mvk0 port state: LISTENING  domain 0\nGM on network announces domain 127',
+      'grep domain /etc/timemaster.conf':'!ptp_domain 0',
+      'mvstat | grep -i ptp':'!PTP: FollowerUnlocked',
+      'timedatectl':'System clock synchronized: no'},
+    q:'What’s the fix?',
+    opts:[{t:'Set PTP domain 127 in configshell and save so timemaster rebuilds', ok:1, why:'The server is on domain 0 and the grandmaster is on 127. Change it in configshell, not by hand.'},
+      {t:'Hand-edit timemaster.conf', why:'The next configshell save overwrites it.'},
+      {t:'Make the DreamCatcher the grandmaster', why:'linuxptp can’t be forced to master.'},
+      {t:'Restart Elasticsearch', why:'Search has nothing to do with time.'}]},
+  { id:'lca-isol', venue:'lca', cat:'LOG', kind:'sw', host:'LCA-438E',
+    title:'Playout stutters since the firmware install',
+    log:['!dcsoutput@2: render late by 18 ms','!dcsoutput@2: render late by 22 ms'],
+    cmds:{
+      'cat /proc/cmdline':'BOOT_IMAGE=/vmlinuz root=/dev/sda2 quiet splash\n!(no isolcpus=)',
+      'cat /etc/default/dccpus':'SYSTEM_CPUS=0-3\nCORE_CPUS=4-27',
+      'cset set -lr':'!cset: no cpusets defined',
+      'sensors':'CPU: 64 °C'},
+    q:'What’s missing?',
+    opts:[{t:'The ISOLCPUS patch: re-apply the EFP and reboot', ok:1, why:'The firmware install dropped isolcpus= from the kernel command line. Re-apply the EFP.'},
+      {t:'Raise the CPU fan speed', why:'64 °C is normal for this load.'},
+      {t:'Edit dccpus and do a Quick System Restart', why:'dccpus changes need a reboot, and the real gap is the missing isolcpus.'},
+      {t:'Lower DCSREPO pacing', why:'Pacing is for IP output skips.'}]},
+  { id:'grz-tz', venue:'grizz', cat:'LOG', kind:'sw', host:'GRIZZ-01',
+    title:'Clips show the wrong time on two servers after 26.05.9',
+    log:['dcscommander: session time 13:02 (GRIZZ-01)','!dcscommander: session time 14:02 (GRIZZ-02, GRIZZ-03)'],
+    cmds:{
+      'timedatectl (all nodes)':'GRIZZ-01  America/Chicago\n!GRIZZ-02  America/New_York\n!GRIZZ-03  America/New_York',
+      'ptpstat':'port state: SLAVE  domain 127',
+      'date -u':'Sat Nov 14 19:02:11 UTC 2026',
+      'cat /etc/features.conf.d/*':'FEATURE_VAR=True (GRIZZ-01 only)'},
+    q:'What’s the fix?',
+    opts:[{t:'Set the timezone in configshell on 02 and 03', ok:1, why:'PTP and UTC are fine. Two servers came back from the upgrade on the wrong timezone.'},
+      {t:'Change /etc/localtime by hand', why:'Configshell owns it, so hand edits don’t stick.'},
+      {t:'Restart timemaster', why:'Time is right in UTC. It’s the timezone.'},
+      {t:'Turn on FEATURE_VAR on 02 and 03', why:'Worth doing, but it isn’t the time problem.'}]},
+  { id:'uva-loc', venue:'uva', cat:'OPS', kind:'sw', host:'UVA-DC-2',
+    title:'Operator can’t find DC-2’s clips in cluster search',
+    log:['vueweb: cluster search, 2 of 3 nodes responded'],
+    cmds:{
+      'systemctl status dclocate':'!dclocate.service: inactive (dead) since 10:14',
+      "curl -s localhost:9200/_cat/health":'green',
+      'mount | grep clips':'/dev/nvme0n1 on /clips type xfs',
+      'df -h /':'/dev/sda2  110G  41G  64G  39% /'},
+    q:'What’s the fix?',
+    opts:[{t:'sudo systemctl restart dclocate', ok:1, why:'dclocate stopped, so that server dropped out of cluster search.'},
+      {t:'Re-add the Internal Storage NAS mount', why:'That’s for Internal Storage missing in VUE.'},
+      {t:'curl -XDELETE localhost:9200/*', why:'Never. ES is green anyway.'},
+      {t:'sudo dcs clearall', why:'That wipes every clip on the server.'}]},
+  { id:'nesn-probe', venue:'nesn', cat:'STO', kind:'sw', host:'DCCM2',
+    title:'Imports fail with “cannot probe” on the FTP Visitor share',
+    log:['!dcsimport: cannot probe /imports/watch/game1.mxf.filepart','dcsimport: game1.mxf appeared 3 s later'],
+    cmds:{
+      'ls /imports/watch':'game1.mxf\ngame2.mxf.filepart',
+      'cat ~/customer-email.txt':'“We upload with WinSCP from the truck.”',
+      'df -h /imports':'/imports  2.0T  0.4T  1.6T  20%',
+      'smbstatus -b':'1 client connected (WinSCP)'},
+    q:'What do you tell the customer?',
+    opts:[{t:'Turn off WinSCP’s temporary .filepart filenames (transfer resume)', ok:1, why:'WinSCP writes to a temp name and renames at the end. The watch folder probes the temp file and fails (DC-10352).'},
+      {t:'Make the share bigger', why:'It’s only 20% full.'},
+      {t:'Switch the share to NFS', why:'The protocol isn’t the problem. The temp filenames are.'},
+      {t:'Restart dcsimport after every upload', why:'That treats the symptom forever.'}]},
+  { id:'mets-vue', venue:'mets', cat:'OPS', kind:'sw', host:'METS-VUE-1',
+    title:'VUE froze during batting practice',
+    log:['!vue watchdog: GUI froze (1000 ms)','!vue watchdog: GUI froze (1000 ms)'],
+    cmds:{
+      'sudo dcs pids':'dcscommander 2302  dcsoutput@1 2410  dcsoutput@2 2411 (running)',
+      'top -bn1 | head -5':'vue  98% CPU',
+      'uptime':'up 31 days',
+      'journalctl -r -u dcsoutput@1 | head -2':'dcsoutput@1: playing normally'},
+    q:'Outputs are fine. What’s the least disruptive fix?',
+    opts:[{t:'Ctrl+Alt+R to restart the UI only', ok:1, why:'Bottom rung of the ladder. Outputs never moved.'},
+      {t:'Full System Restart', why:'That blacks the outputs during BP for a UI problem.'},
+      {t:'Reboot the server', why:'Four minutes down for a UI freeze.'},
+      {t:'Email lmsupport and wait', why:'Support is the top rung, and this is a 10-second fix.'}]},
+  { id:'ut-src', venue:'ut', cat:'IP', kind:'sw', host:'UT-XXX',
+    title:'Every 2110 input dead after the upgrade',
+    log:['!mvproxy: rapidjson value "source_ips" is not of type GenericArray','!mvproxy: failed to load dc-routesCAP3.json'],
+    cmds:{
+      'grep -c source_ips /etc/dc-routesCAP3.json':'84',
+      'grep -m2 source_ips /etc/dc-routesCAP3.json':'!"source_ips": "239.10.20.11",\n"source_ips": null,',
+      'ptpstat':'port state: SLAVE  domain 127',
+      'ip -br link':'mvkEthernet0 UP\nmvkEthernet1 UP'},
+    q:'What’s the fix?',
+    opts:[{t:'Wrap the string source_ips in arrays, leave the nulls, and repeat for each capture-group file', ok:1, why:'The new build wants arrays. Strings break the load; nulls are fine.'},
+      {t:'Restart the Matrox daemons', why:'The routes file won’t even load.'},
+      {t:'Re-route every input in Magnum', why:'Routing isn’t the issue. The JSON is.'},
+      {t:'Fix PTP', why:'PTP is locked.'}]},
+  { id:'lca-menus', venue:'lca', cat:'OPS', kind:'sw', host:'LCA-VUE',
+    title:'Operators say right-click menus vanished after the update',
+    log:['vue: features loaded from /etc/features.conf'],
+    cmds:{
+      'grep CONTEXT /etc/features.conf':'(no match)',
+      'ls /etc/features.conf.d/':'50-venue.conf',
+      'cat /etc/vue/panel_config/config.ini | head -3':'[dc]\nedit_mode_enabled=false',
+      'uptime':'up 2 days'},
+    q:'What’s the fix?',
+    opts:[{t:'Add FEATURE_CONTEXT_MENUS=True to features.conf', ok:1, why:'Context menus ship off (DC-8717). Turn them on.'},
+      {t:'Set edit_mode_enabled=true', why:'Different setting.'},
+      {t:'Reinstall VUE', why:'Same features.conf, same missing menus.'},
+      {t:'Downgrade VUE', why:'They just need the feature flag.'}]},
+  { id:'sea-train', venue:'seahawks', cat:'OPS', kind:'sw', host:'SEAHAWKS-VUE', train:true,
+    title:'New operator needs a quick lesson before kickoff',
+    log:['Operator: “How do I get back to live without losing my marks?”'],
+    cmds:{'cat ~/shortcut-sheet.txt':'Pause = Record (clears marks)\nShift+Pause = Return\nSpace/F1 = Play or pause\n[ ] = Mark IN / OUT'},
+    q:'What do you teach them?',
+    opts:[{t:'Shift+Pause (Return): back to live and the marks stay', ok:1, why:'Pause alone is Record and clears the marks.'},
+      {t:'Pause', why:'That’s Record. It clears the marks.'},
+      {t:'Space', why:'Space plays or pauses the output.'},
+      {t:'Ctrl+Alt+R', why:'That restarts the UI.'}]},
+  { id:'lsu-comm', venue:'lsu', cat:'CM', kind:'cm', part:'laptop and checklist', host:'LSU',
+    title:'Phase 2 commissioning, Day 1',
+    log:['Scope: DC-1 to DC-4, LM-CORE-HC7T + MX8, 6 in / 2 out, NATX DC-SW-1'],
+    cmds:{'cat ~/LSU-Commissioning-Checklist.md':'Day 1: IP servers, then RCPs. KVM check. Upgrade to latest ECO. Pair panels. Configshell (timezone, PTP, firewall, hostname)...'},
+    q:'What comes first on Day 1?',
+    opts:[{t:'IP the servers, then the RCPs', ok:1, why:'Nothing else works until everything has an address.'},
+      {t:'Load the venue layouts', why:'That’s near the end of Day 1.'},
+      {t:'Set render delay to 5 everywhere', why:'That’s Day 2.'},
+      {t:'Install Motion+', why:'Day 2.'}]},
+  { id:'van-train', venue:'vandy', cat:'CM', kind:'cm', part:'training kit', host:'VANDERBILT',
+    title:'Training day for the new crew',
+    log:['Crew: 4 new operators, 1 TD'],
+    cmds:{'cat ~/Trainers-Playbook.md':'After the show: export, confirm, clear, stop captures. Keep 2.5 to 3 h of record free.'},
+    q:'What’s the after-show routine you teach?',
+    opts:[{t:'Export, confirm, clear, stop captures', ok:1, why:'Straight from the Trainer’s Playbook.'},
+      {t:'Clear, then export', why:'Clear first and the clips are gone.'},
+      {t:'Stop captures and power off', why:'You’ve skipped exporting the show.'},
+      {t:'Run dcs clearall', why:'That wipes everything, protected clips aside.'}]},
+  { id:'gnt-comm', venue:'giants', cat:'CM', kind:'cm', part:'laptop and checklist', host:'GIANTS',
+    title:'Commission the new LM-CORE before the homestand',
+    log:['Day 2 checklist open'],
+    cmds:{'cat ~/day2.md':'Render delay everywhere, MG workers, Motion+, clip player Key/Fill + AMP, layouts, Live Edit, UMDs...'},
+    q:'Day 2: what render delay goes on everything?',
+    opts:[{t:'5', ok:1, why:'Render delay 5 everywhere is step one of Day 2.'},
+      {t:'0', why:'Too tight for these outputs.'},
+      {t:'12', why:'Way more delay than needed.'},
+      {t:'Leave the default', why:'Day 2 sets it to 5 everywhere.'}]},
+];
+
+/* ---------- map ---------- */
+const MW = 1260, MH = 690;
+const prj = (lat, lon) => [((lon + 127)/(127 - 64))*MW, ((51.5 - lat)/(51.5 - 23))*MH];
+const JP = [1150, 610];
+const posOf = v => v.japan ? JP : prj(v.lat, v.lon);
+const US = [[-124.7,48.4],[-123.1,49],[-95.2,49],[-89.6,48],[-84.8,46.5],[-83.5,46],[-82.5,43],[-79,43.3],[-76.5,44.2],[-75,45],[-71.5,45],[-69.2,47.4],[-67.8,47.1],[-67,44.8],[-70,43.7],[-70.6,42.6],[-70,41.7],[-71.8,41.3],[-74,40.6],[-74,39.4],[-75.5,38.5],[-75.9,37],[-75.5,35.3],[-77.9,33.9],[-79.2,33.2],[-81,32],[-81.4,30.3],[-80,26.8],[-80.4,25.2],[-81.1,25.1],[-81.8,26.7],[-82.7,28],[-82.8,29.7],[-84,30.1],[-85.4,29.7],[-86.5,30.4],[-88,30.6],[-89.6,30.2],[-89.4,29],[-90.9,29.1],[-93.8,29.7],[-94.8,29.3],[-97.4,27.9],[-97.2,26],[-99.1,26.4],[-100,28],[-101.4,29.8],[-103,29],[-104.4,29.6],[-106.5,31.8],[-108.2,31.3],[-111,31.3],[-114.8,32.5],[-117.1,32.5],[-118.5,34],[-120.6,34.6],[-121.9,36.6],[-122.5,37.8],[-123.8,39.8],[-124.2,41.9],[-124,44],[-124.1,46.3]];
+function buildMap(){
+  const svg = $('#map');
+  const d = US.map(([lon,lat],i) => (i ? 'L' : 'M') + prj(lat,lon).map(n => n.toFixed(1)).join(',')).join('') + 'Z';
+  let g = '';
+  for(let lon = -125; lon <= -65; lon += 5){ const [x] = prj(30, lon); g += `<line x1="${x}" y1="0" x2="${x}" y2="${MH}" stroke="#1a2438" stroke-width="1"/>`; }
+  for(let lat = 25; lat <= 50; lat += 5){ const [,y] = prj(lat, -100); g += `<line x1="0" y1="${y}" x2="${MW}" y2="${y}" stroke="#1a2438" stroke-width="1"/>`; }
+  const [hx, hy] = prj(HQ.lat, HQ.lon);
+  svg.innerHTML = `${g}<path d="${d}" fill="#18233a" stroke="#34466b" stroke-width="2"/>
+    <text x="${prj(49.6,-90)[0]}" y="${prj(49.6,-90)[1]}" fill="#3d4d6e" font-size="14" font-family="IBM Plex Mono" letter-spacing="4">CANADA</text>
+    <rect x="1080" y="560" width="160" height="110" rx="8" fill="#141c2e" stroke="#34466b"/><text x="1092" y="580" fill="#93a0b8" font-size="11" font-family="IBM Plex Mono">JAPAN</text>
+    <path d="M1170 590 l14 10 l-6 22 l-22 18 l-14 -2 l12 -18 z" fill="#18233a" stroke="#34466b"/>
+    <g id="homes">${TEAM.map(t => { const [x,y] = prj(t.home.lat, t.home.lon); return `<path d="M${x-7},${y+1} L${x},${y-7} L${x+7},${y+1} L${x+5},${y+1} L${x+5},${y+7} L${x-5},${y+7} L${x-5},${y+1} Z" fill="none" stroke="${t.color}" stroke-width="1.6"/><text x="${x + (t.id === 'brandon' ? -12 : 12)}" y="${y + (t.id === 'rhyce' ? -8 : 5)}" text-anchor="${t.id === 'brandon' ? 'end' : 'start'}" fill="${t.color}" font-size="11" font-family="IBM Plex Mono" opacity=".8">${t.name}, ${t.home.name}</text>`; }).join('')}</g>
+    <g id="venues"></g><g id="trips"></g><g id="people"></g>`;
+  $('#venues').innerHTML = Object.entries(V).map(([k,v]) => { const [x,y] = posOf(v); return `<g data-v="${k}"><title>${v.name}</title><circle cx="${x}" cy="${y}" r="4" fill="#53607a"/></g>`; }).join('') + '<g id="pins"></g>';
+}
+function kmBetween(a, b){
+  if(a.japan || b.japan) return 10500;
+  const R = 6371, t = Math.PI/180, dLat = (b.lat-a.lat)*t, dLon = (b.lon-a.lon)*t;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+const travelSecs = (a, b) => (a === b ? 0 : 3 + kmBetween(a, b)/1000*2.2);
+
+
+/* ---------- state ---------- */
+const WEEK = 300, SLOW = .25;
+const PRI = {1:{t:80, m:2.2, c:'var(--p1)', lbl:'P1 SHOW TONIGHT', pen:20}, 2:{t:120, m:1.4, c:'var(--p2)', lbl:'P2', pen:12}, 3:{t:160, m:1, c:'var(--p3)', lbl:'P3', pen:8}};
+let now = 0, running = false, paused = false, ended = false, score = 0, csat = 100;
+let tickets = [], ppl = [], selT = null, nextSpawn = 0, tid = 1, huddleUntil = 0, toolBonus = {}, stats, session = null;
+let soundOn = true; try { soundOn = localStorage.getItem('voc-sound') !== 'off'; } catch(e) {}
+const P = id => ppl.find(p => p.id === id);
+const skillOf = (p, cat) => p.pri === cat ? 2.2 : p.sec === cat ? 1.4 : .8;
+const hitChance = (p, cat) => p.pri === cat ? .9 : p.sec === cat ? .7 : .45;
+
+function reset(){
+  now = 0; score = 0; csat = 100; tickets = []; selT = null; nextSpawn = 2; tid = 1; huddleUntil = 0; toolBonus = {}; session = null;
+  stats = {closed:0, expired:0, p1:0, flights:0, km:0, firstTry:0, wrong:0, calls:0, parts:0};
+  ppl = TEAM.map(t => ({...t, loc:t.home, at:null, trip:null, job:null, fat:0, cd:0, onCall:0}));
+}
+function spawn(){
+  const open = new Set(tickets.map(t => t.issue.id));
+  const pool = ISSUES.filter(i => !open.has(i.id));
+  if(!pool.length) return;
+  // more software than hardware, like real life
+  const want = Math.random() < .62 ? 'sw' : Math.random() < .7 ? 'hw' : 'cm';
+  const sub = pool.filter(i => i.kind === want);
+  const issue = pick(sub.length ? sub : pool);
+  const r = Math.random(), p = r < .2 + now/WEEK*.18 ? 1 : r < .62 ? 2 : 3;
+  tickets.push({id:tid++, issue, venue:issue.venue, cat:issue.cat, p, born:now, life:PRI[p].t, who:null, stage:'open',
+    stageT:0, auto:0, done:0, work:0, order:issue.opts.map((_,i) => i).sort(() => Math.random() - .5), tried:new Set(), ran:new Set(), out:[], friend:null, kb:false, bonus:0});
+  sfx('new');
+  if(tickets.length > 8){
+    const drop = tickets.filter(x => !x.who).sort((a,b) => b.p - a.p || a.born - b.born)[0];
+    if(drop) expire(drop, 'Queue overflow: ');
+  }
+}
+const timeLeft = t => t.born + t.life - now;
+function expire(t, why = ''){
+  tickets = tickets.filter(x => x !== t);
+  const p = t.who && P(t.who); if(p){ p.job = null; if(p.trip && p.trip.tid === t.id){ /* keeps flying, lands with nothing to do */ p.trip.tid = null; } }
+  csat = clamp(csat - PRI[t.p].pen, 0, 100); stats.expired++;
+  if(selT === t.id) selT = null;
+  if(session && session.tid === t.id) closeSession();
+  toast(`${why}${V[t.venue].name} escalated: ${t.issue.title}`); sfx('bad');
+}
+function rate(p, t){
+  const tired = 1 - Math.max(0, p.fat - 60)/100;
+  const site = p.at === t.venue ? 1.15 : 1;
+  return skillOf(p, t.cat)*tired*site*(now < huddleUntil ? 1.5 : 1)*(1 + (toolBonus[t.cat] || 0));
+}
+function assign(p, t){
+  if(!running || paused) return;
+  if(!t || t.who) return toast('Pick an unassigned ticket first');
+  if(p.job || p.trip) return toast(`${p.name} is busy`);
+  t.who = p.id; p.job = t.id; t.stage = 'connect'; t.stageT = 2;
+  t.auto = 20; selT = null;
+  toast(`${p.name} remoting into ${t.issue.host} at ${V[t.venue].name}`); sfx('go');
+}
+
+/* diagnosis outcome, from the player or from the teammate working it alone */
+function resolveDiag(t, opt, byPlayer){
+  const p = P(t.who); if(!p) return;
+  const iss = t.issue;
+  if(!opt.ok){
+    t.life -= 12; stats.wrong++; sfx('bad');
+    return false;
+  }
+  if(byPlayer && t.tried.size === 0){ t.bonus += 150; stats.firstTry++; }
+  if(iss.kind === 'sw'){ t.stage = 'fix'; t.work = byPlayer ? 6 : 9; t.done = 0; }
+  else { t.stage = 'pack'; t.stageT = 1.5; }
+  sfx('done');
+  return true;
+}
+function launch(t){
+  const p = P(t.who), dest = V[t.venue];
+  if(p.at === t.venue){ t.stage = 'onsite'; t.work = t.issue.kind === 'cm' ? 22 : 9; t.done = 0; return; }
+  const secs = travelSecs(p.loc, dest), km = kmBetween(p.loc, dest);
+  p.trip = {from:p.loc, to:dest, venue:t.venue, start:now, dur:secs, tid:t.id, part:t.issue.part};
+  t.stage = 'travel'; stats.flights++; stats.km += km; if(t.issue.kind === 'hw') stats.parts++;
+  toast(`${p.name} flying to ${dest.name} with a ${t.issue.part} (${Math.round(secs)} s)`); sfx('fly');
+}
+function finish(p, t){
+  tickets = tickets.filter(x => x !== t); p.job = null; p.fat = Math.min(100, p.fat + 8);
+  const left = clamp(timeLeft(t)/t.life, 0, 1);
+  const base = t.issue.kind === 'sw' ? 220 : 340;
+  const pts = Math.round(base*PRI[t.p].m*(.7 + .6*left)) + t.bonus;
+  score += pts; csat = clamp(csat + 3, 0, 100); stats.closed++; if(t.p === 1) stats.p1++;
+  if(session && session.tid === t.id) closeSession();
+  toast(`${p.name} closed ${V[t.venue].name}: +${pts}`); sfx('done');
+}
+function special(p){
+  if(!running || paused || p.cd > now) return;
+  const sel = tickets.find(t => t.id === (session ? session.tid : selT));
+  const mine = tickets.find(t => t.id === p.job);
+  if(p.id === 'brandon'){ huddleUntil = now + 12; toast('Brandon: huddle up. Everyone 50% faster for 12 s'); }
+  else if(p.id === 'paul'){
+    if(!mine || p.trip) return toast('Paul needs to be on a ticket');
+    if(mine.stage === 'diag'){ resolveDiag(mine, mine.issue.opts.find(o => o.ok), false); toast(`Paul ran dclog.py on ${mine.issue.host}. Found it.`); }
+    else { mine.done += (mine.work - mine.done)/2; toast('Paul’s dclog.py cut the rest of the work in half'); }
+  }
+  else if(p.id === 'abby'){ if(!sel) return toast('Select a ticket for Abby to call about'); sel.life += 25; toast(`Abby called ${V[sel.venue].name}. They’ll give us 25 more seconds.`); }
+  else if(p.id === 'abigail'){
+    if(!sel) return toast('Select a ticket for the KB article');
+    sel.kb = true; toast(`Abigail found the KB article for ${V[sel.venue].name}: two wrong answers ruled out`);
+    if(session && session.tid === sel.id) renderSession();
+  }
+  else if(p.id === 'rhyce'){ if(!mine || p.trip) return toast('Rhyce needs to be on a ticket'); toolBonus[mine.cat] = Math.min(.5, (toolBonus[mine.cat] || 0) + .25); toast(`Rhyce shipped a tool: ${CATS[mine.cat].name} work is ${Math.round(toolBonus[mine.cat]*100)}% faster all week`); }
+  p.cd = now + p.sp.cd; sfx('special');
+}
+
+/* ---------- loop ---------- */
+function update(dtReal){
+  const dt = dtReal*(session ? SLOW : 1);
+  now += dt;
+  if(now >= nextSpawn){ spawn(); nextSpawn = now + Math.max(9, 19 - now/WEEK*9) + Math.random()*4; }
+  for(const p of ppl){
+    if(p.onCall > now){ p.fat = Math.min(100, p.fat + dt*.2); continue; }
+    if(p.trip){
+      p.fat = Math.min(100, p.fat + dt*.15);
+      if(now - p.trip.start >= p.trip.dur){
+        p.loc = p.trip.to; p.at = p.trip.venue;
+        const t = tickets.find(x => x.id === p.trip.tid);
+        p.trip = null;
+        if(t){ t.stage = 'onsite'; t.work = t.issue.kind === 'cm' ? 22 : 9; t.done = 0; toast(`${p.name} landed at ${V[t.venue].name}`); }
+      }
+      continue;
+    }
+    const t = tickets.find(x => x.id === p.job);
+    if(!t){ p.fat = Math.max(0, p.fat - dt*2.2); continue; }
+    p.fat = Math.min(100, p.fat + dt*.3);
+    if(t.stage === 'connect'){ t.stageT -= dt; if(t.stageT <= 0){ t.stage = 'diag'; sfx('ping'); } }
+    else if(t.stage === 'diag'){
+      if(session && session.tid === t.id) continue;          // you’re driving this one
+      t.auto -= dt*rate(p, t)/1.6;
+      if(t.auto <= 0){
+        if(Math.random() < hitChance(p, t.cat)){ resolveDiag(t, t.issue.opts.find(o => o.ok), false); toast(`${p.name} worked out ${V[t.venue].name} on their own`); }
+        else { t.auto = 10; t.life -= 8; toast(`${p.name} went down the wrong path at ${V[t.venue].name}`); }
+      }
+    }
+    else if(t.stage === 'pack'){ t.stageT -= dt; if(t.stageT <= 0) launch(t); }
+    else if(t.stage === 'fix' || t.stage === 'onsite'){ t.done += dt*rate(p, t); if(t.done >= t.work) finish(p, t); }
+  }
+  for(const t of [...tickets]) if(timeLeft(t) <= 0) expire(t);
+  if(now >= WEEK || csat <= 0) end();
+}
+function end(){
+  running = false; ended = true; closeSession();
+  let hi = 0; try { hi = +localStorage.getItem('vt-hi') || 0; if(score > hi){ hi = score; localStorage.setItem('vt-hi', String(score)); } } catch(e) {}
+  $('#eT').textContent = csat <= 0 ? 'Customer satisfaction hit zero. Time for a long talk on Monday.' :
+    score >= 9000 ? 'Legendary week. Every venue is sending thank-you emails.' :
+    score >= 6000 ? 'Strong week. The venues barely noticed anything broke.' :
+    score >= 3500 ? 'Solid week. A few escalations, nothing on fire.' : 'Rough week. Time for a team retro.';
+  const rows = [['Score', score.toLocaleString()],['Personal best', hi.toLocaleString()],['Tickets closed', stats.closed],['Solved first try', stats.firstTry],['Wrong calls', stats.wrong],['Phone a friend', stats.calls],['P1 show-day saves', stats.p1],['Parts flown out', stats.parts],['Escalations', stats.expired],['Customer satisfaction', Math.round(csat) + '%'],['Kilometres flown', Math.round(stats.km).toLocaleString()]];
+  $('#eR').innerHTML = rows.map(([k,v]) => `<span>${k}</span><b>${v}</b>`).join('');
+  $('#endOv').hidden = false; $('#againBtn').focus(); sfx(csat > 0 ? 'done' : 'bad');
+}
+
+/* ---------- remote session ---------- */
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const logHTML = lines => lines.map(l => l[0] === '!' ? `<span class="err">${esc(l.slice(1))}</span>` : esc(l)).join('\n');
+function openSession(t){
+  if(!t || t.stage !== 'diag') return;
+  session = {tid:t.id}; selT = null;
+  $('#sesOv').hidden = false; renderSession(true);
+  setTimeout(() => $('#cmdIn').focus(), 30);
+}
+function closeSession(){ session = null; $('#sesOv').hidden = true; }
+function runCmd(t, raw){
+  const cmd = raw.trim(); if(!cmd) return;
+  const iss = t.issue;
+  let out;
+  if(iss.cmds[cmd] !== undefined) out = iss.cmds[cmd];
+  else if(cmd === 'help' || cmd === '?') out = 'Try one of:\n' + Object.keys(iss.cmds).join('\n');
+  else {
+    const m = Object.keys(iss.cmds).find(k => k.startsWith(cmd) || k.split(' ')[0] === cmd.split(' ')[0] && cmd.length > 3);
+    out = m ? `(did you mean: ${m})` : `!bash: ${cmd.split(' ')[0]}: command not found`;
+  }
+  t.out.push({cmd, out}); t.ran.add(cmd); sfx('key');
+  renderSession();
+}
+function phoneFriend(t, f){
+  const me = P(t.who);
+  if(t.friend) return;
+  f.onCall = now + 6;       // they stop what they’re doing for a few seconds
+  const good = Math.random() < hitChance(f, t.cat);
+  const right = t.issue.opts.find(o => o.ok), wrongs = t.issue.opts.filter(o => !o.ok);
+  const sug = good ? right : pick(wrongs);
+  const look = Object.keys(t.issue.cmds)[0];
+  const conf = f.pri === t.cat ? 'I’ve seen this a dozen times.' : f.sec === t.cat ? 'Pretty sure.' : 'Not really my area, but…';
+  t.friend = {name:f.name, color:f.color, text:`${conf} Run ${look} if you haven’t. I’d go with “${sug.t}”.`};
+  t.bonus -= 50; stats.calls++; sfx('ring');
+  toast(`${me.name} called ${f.name}`);
+  renderSession();
+}
+function renderSession(scrollEnd){
+  const t = tickets.find(x => x.id === (session && session.tid));
+  if(!t){ closeSession(); return; }
+  const iss = t.issue, p = P(t.who);
+  $('#sesH').textContent = `${V[t.venue].name}: ${iss.title}`;
+  $('#sesSub').innerHTML = `<span class="av" style="background:${p.color}">${p.ini}</span> ${p.name} remoted into <b>${esc(iss.host)}</b> &nbsp;·&nbsp; <span class="pri" style="background:${PRI[t.p].c}">${PRI[t.p].lbl}</span> &nbsp;·&nbsp; ${CATS[t.cat].name}`;
+  let term = `<span class="pr">dcadmin@${esc(iss.host.toLowerCase())}:~$</span> journalctl -r | head\n${logHTML(iss.log)}\n`;
+  for(const r of t.out) term += `\n<span class="pr">dcadmin@${esc(iss.host.toLowerCase())}:~$</span> ${esc(r.cmd)}\n${logHTML(r.out.split('\n'))}\n`;
+  $('#term').innerHTML = term;
+  if(scrollEnd !== false) $('#term').scrollTop = 1e9;
+  $('#chips').innerHTML = Object.keys(iss.cmds).map(c => `<button type="button" class="chip ${t.ran.has(c) ? 'ran' : ''}" data-cmd="${esc(c)}">${esc(c)}</button>`).join('');
+  $('#qText').textContent = iss.q;
+  const kbHide = t.kb ? new Set(iss.opts.filter(o => !o.ok).slice(0, 2).map(o => o.t)) : new Set();
+  $('#qOpts').innerHTML = t.order.map((i, pos) => {
+    const o = iss.opts[i], gone = kbHide.has(o.t), tried = t.tried.has(i);
+    return `<button type="button" class="opt ${tried ? 'wrong' : ''}" data-opt="${i}" ${gone || tried ? 'disabled' : ''}><b>${pos+1}</b>${esc(o.t)}${gone ? ' <small>(ruled out by the KB)</small>' : ''}${tried ? `<small>${esc(o.why)}</small>` : ''}</button>`;
+  }).join('');
+  const fr = $('#friend');
+  if(t.friend) fr.innerHTML = `<div class="hint"><span class="av" style="background:${t.friend.color}">${t.friend.name[0]}</span><div><b>${t.friend.name}:</b> ${esc(t.friend.text)}</div></div>`;
+  else fr.innerHTML = `<p class="lbl">Phone a friend <small>(once per ticket, −50, they stop for a moment)</small></p><div class="friends">${ppl.filter(f => f.id !== p.id).map(f => `<button type="button" data-friend="${f.id}" title="${CATS[f.pri].name}"><span class="av" style="background:${f.color}">${f.ini}</span>${f.name}${f.pri === t.cat ? ' ★' : f.sec === t.cat ? ' ☆' : ''}</button>`).join('')}</div>`;
+  $('#sesLeave').textContent = `Let ${p.name} work it alone`;
+  $('#sesFb').textContent = '';
+}
+$('#sesOv').addEventListener('click', e => {
+  const t = tickets.find(x => x.id === (session && session.tid)); if(!t) return;
+  const c = e.target.closest('[data-cmd]'); if(c) return runCmd(t, c.dataset.cmd);
+  const o = e.target.closest('[data-opt]');
+  if(o){
+    const i = +o.dataset.opt, opt = t.issue.opts[i];
+    if(resolveDiag(t, opt, true)){
+      const fb = $('#sesFb'); fb.className = 'fb good';
+      fb.textContent = `${opt.why} ${t.issue.kind === 'sw' ? 'Fixing it remotely now.' : t.issue.kind === 'hw' ? `Grabbing a ${t.issue.part} and heading to the airport.` : 'Packing up and heading out.'}`;
+      $('#qOpts').querySelectorAll('button').forEach(b => b.disabled = true);
+      o.classList.add('right');
+      setTimeout(closeSession, 1600);
+    } else { t.tried.add(i); renderSession(false); const fb = $('#sesFb'); fb.className = 'fb bad'; fb.textContent = `Not it. The customer waited 12 s longer. ${opt.why}`; }
+    return;
+  }
+  const f = e.target.closest('[data-friend]'); if(f) return phoneFriend(t, P(f.dataset.friend));
+});
+$('#cmdForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const t = tickets.find(x => x.id === (session && session.tid)); if(!t) return;
+  runCmd(t, $('#cmdIn').value); $('#cmdIn').value = '';
+});
+$('#cmdIn').addEventListener('keydown', e => {
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const t = tickets.find(x => x.id === (session && session.tid)); if(!t) return;
+    const v = e.target.value, m = Object.keys(t.issue.cmds).find(k => k.startsWith(v));
+    if(m) e.target.value = m;
+  }
+});
+$('#sesLeave').addEventListener('click', closeSession);
+
+/* ---------- render ---------- */
+const catVar = c => `var(--${c})`;
+function stageText(t){
+  const p = t.who && P(t.who);
+  switch(t.stage){
+    case 'open': return '';
+    case 'connect': return 'Remoting in…';
+    case 'diag': return 'Needs diagnosis';
+    case 'fix': return 'Fixing remotely';
+    case 'pack': return `Grabbing a ${t.issue.part}`;
+    case 'travel': return p && p.trip ? `Flying in with a ${t.issue.part}, ${Math.ceil(p.trip.start + p.trip.dur - now)} s` : 'Flying in';
+    case 'onsite': return t.issue.kind === 'cm' ? 'On site' : `Swapping the ${t.issue.part} on site`;
+  }
+}
+function render(){
+  const day = Math.min(6, Math.floor(now/WEEK*7)), frac = (now/WEEK*7) % 1;
+  const hr = 8 + Math.floor(frac*15), mn = Math.floor((frac*15 % 1)*4)*15;
+  $('#clock').textContent = `${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][day]} ${String(hr).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
+  $('#score').textContent = score.toLocaleString();
+  $('#closed').textContent = stats ? stats.closed : 0;
+  $('#csatN').textContent = Math.round(csat) + '%';
+  const cs = $('#csat'); cs.style.width = csat + '%'; cs.style.background = csat > 60 ? 'var(--good)' : csat > 30 ? 'var(--p2)' : 'var(--p1)';
+  $('#slow').hidden = !session;
+  if(now - lastList > .2 || !running){ lastList = now; renderQueue(); renderTeam(); }
+  renderMapDyn();
+}
+let qLast = '', lastList = -1;
+function renderQueue(){
+  const order = {diag:0, open:1, connect:2, pack:3, fix:4, travel:5, onsite:6};
+  const list = [...tickets].sort((a,b) => order[a.stage] - order[b.stage] || a.p - b.p || timeLeft(a) - timeLeft(b));
+  $('#qn').textContent = `${tickets.length} open`;
+  const html = list.map(t => {
+    const p = t.who && P(t.who), left = Math.max(0, timeLeft(t)), lf = clamp(left/t.life, 0, 1);
+    const prog = t.work ? t.done/t.work : 0;
+    const kindTag = t.issue.kind === 'hw' && (t.stage === 'pack' || t.stage === 'travel' || t.stage === 'onsite') ? `<span class="onsite">${t.issue.part.toUpperCase()}</span>` : t.issue.kind === 'cm' ? '<span class="onsite">✈ ON SITE</span>' : '';
+    const who = p ? `<div class="who"><span class="av" style="background:${p.color}">${p.ini}</span><span>${stageText(t)}</span>${t.stage === 'diag' ? `<span class="dg" data-open="${t.id}">Open session ▸</span>` : `<div class="bar"><i style="width:${(prog*100).toFixed(1)}%;background:var(--good)"></i></div>`}</div>` : '';
+    return `<button type="button" class="tk ${selT === t.id ? 'sel' : ''} ${t.stage === 'diag' ? 'needs' : ''}" data-t="${t.id}" style="--pc:${PRI[t.p].c};--cc:${catVar(t.cat)}">
+      <div class="tr"><span class="pri">${PRI[t.p].lbl}</span><span class="ven">${V[t.venue].name}</span>${kindTag}<span class="cat">${CATS[t.cat].short}</span></div>
+      <div class="ttl">${esc(t.issue.title)}</div>
+      <div class="tr"><div class="bar"><i style="width:${(lf*100).toFixed(1)}%;background:${lf > .4 ? 'var(--p3)' : lf > .2 ? 'var(--p2)' : 'var(--p1)'}"></i></div><span class="mono" style="color:${left < 12 ? 'var(--p1)' : 'var(--sub)'}">${Math.ceil(left)} s</span></div>
+      ${who}</button>`;
+  }).join('') || '<p style="color:var(--sub);padding:10px">All quiet. Enjoy it while it lasts.</p>';
+  if(html !== qLast){ $('#tlist').innerHTML = html; qLast = html; }
+}
+let tLast = '';
+function renderTeam(){
+  const sel = tickets.find(t => t.id === selT && !t.who);
+  const html = ppl.map((p, i) => {
+    const t = tickets.find(x => x.id === p.job);
+    let st;
+    if(p.onCall > now) st = `☎ On the phone helping out`;
+    else if(p.trip) st = `✈ Flying to <b>${p.trip.to.name}</b>${p.trip.part ? ` with a ${p.trip.part}` : ''}, ${Math.ceil(p.trip.start + p.trip.dur - now)} s`;
+    else if(t) st = `${stageText(t)}: <b>${V[t.venue].name}</b>`;
+    else st = p.at ? `Free, on site at ${V[p.at].name}` : `Free, home in ${p.home.name}`;
+    const free = !p.job && !p.trip;
+    const cd = Math.max(0, Math.ceil(p.cd - now));
+    const fit = sel ? (p.pri === sel.cat ? '★ ' : p.sec === sel.cat ? '☆ ' : '') : '';
+    const sess = t && t.stage === 'diag';
+    return `<article class="pc ${p.job ? 'busy' : ''}" aria-label="${p.name}">
+      <div class="hd"><span class="big ${p.lead ? 'lead' : ''}" style="background:${p.color}">${p.ini}</span><div><h3>${i+1}. ${p.name}</h3><div class="role">${p.role}, ${p.home.name}</div></div></div>
+      <div class="sk"><span style="--cc:${catVar(p.pri)}">★ ${CATS[p.pri].short}</span><span class="pri2" style="--cc:${catVar(p.sec)}">☆ ${CATS[p.sec].short}</span></div>
+      <div class="stat">${st}</div>
+      <div class="fat">Fatigue<div class="bar"><i style="width:${p.fat.toFixed(0)}%"></i></div>${p.fat > 60 ? 'slowing' : ''}</div>
+      <div class="acts">
+        ${sess ? `<button type="button" class="go" data-a="session" data-p="${p.id}">Open session</button>` : `<button type="button" class="go" data-a="remote" data-p="${p.id}" ${free && sel ? '' : 'disabled'}>${fit}Remote in</button>`}
+        <button type="button" class="sp" data-a="sp" data-p="${p.id}" title="${p.sp.desc}" ${cd ? 'disabled' : ''}>${p.sp.name} <span class="cd">${cd ? cd + ' s' : 'Q'}</span></button>
+      </div></article>`;
+  }).join('');
+  if(html !== tLast){ $('#team').innerHTML = html; tLast = html; }
+}
+function renderMapDyn(){
+  const pins = tickets.map(t => {
+    const [x,y] = posOf(V[t.venue]), c = PRI[t.p].c, s = selT === t.id;
+    const lx = x > 1000 ? x - 12 : x + 12, anc = x > 1000 ? 'end' : 'start';
+    return `<g data-t="${t.id}" style="cursor:pointer"><circle class="ring" cx="${x}" cy="${y}" r="8" fill="none" stroke="${c}" stroke-width="2"/><circle cx="${x}" cy="${y}" r="${s ? 9 : 7}" fill="${c}" stroke="${s ? '#fff' : '#0c1220'}" stroke-width="2"/><text x="${lx}" y="${y-10}" text-anchor="${anc}" fill="${s ? '#fff' : '#c9d3e6'}" font-size="13" font-weight="600" paint-order="stroke" stroke="#0c1220" stroke-width="4">${V[t.venue].name}</text></g>`;
+  }).join('');
+  if($('#pins').__h !== pins){ $('#pins').innerHTML = pins; $('#pins').__h = pins; }
+  let trips = '', people = '';
+  const spread = {};
+  for(const p of ppl){
+    let x, y, tag = '';
+    if(p.trip){
+      const [ax, ay] = posOf(p.trip.from), [bx, by] = posOf(p.trip.to), q = clamp((now - p.trip.start)/p.trip.dur, 0, 1);
+      const mx = (ax + bx)/2, my = Math.min(ay, by) - 60;
+      x = (1-q)**2*ax + 2*(1-q)*q*mx + q*q*bx; y = (1-q)**2*ay + 2*(1-q)*q*my + q*q*by;
+      trips += `<path d="M${ax},${ay} Q${mx},${my} ${bx},${by}" fill="none" stroke="${p.color}" stroke-width="1.6" stroke-dasharray="5 5" opacity=".7"/>`;
+      if(p.trip.part) tag = `<text x="${x+16}" y="${y+4}" fill="${p.color}" font-size="11" font-family="IBM Plex Mono" paint-order="stroke" stroke="#0c1220" stroke-width="3">✈ ${p.trip.part}</text>`;
+    } else {
+      const t = tickets.find(z => z.id === p.job);
+      if(t && p.at !== t.venue){
+        const [ax, ay] = posOf(p.loc), [bx, by] = posOf(V[t.venue]);
+        trips += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${p.color}" stroke-width="1" stroke-dasharray="2 6" opacity=".55"/>`;
+      }
+      [x, y] = posOf(p.loc);
+      const k = Math.round(x) + ',' + Math.round(y); spread[k] = (spread[k] || 0) + 1;
+      x += (spread[k] - 1)*24 - 6; y += 22;
+    }
+    people += `<g><circle cx="${x}" cy="${y}" r="12" fill="${p.color}" stroke="#0c1220" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono" fill="#0c1220">${p.ini}</text>${tag}</g>`;
+  }
+  $('#trips').innerHTML = trips; $('#people').innerHTML = people;
+}
+let toastT = 0;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+
+/* ---------- sound ---------- */
+let AC = null;
+function ac(){ if(!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} } else if(AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, type, dur, g, when = 0, f2){
+  if(!AC || !soundOn) return;
+  const t = AC.currentTime + when, o = AC.createOscillator(), a = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(g, t + .006); a.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(a); a.connect(AC.destination); o.start(t); o.stop(t + dur + .02);
+}
+function sfx(k){
+  if(!AC || !soundOn) return;
+  if(k === 'new'){ tone(880, 'sine', .08, .07); tone(1175, 'sine', .08, .07, .09); }
+  else if(k === 'go') tone(520, 'triangle', .09, .12);
+  else if(k === 'ping'){ tone(1320, 'sine', .1, .1); tone(1320, 'sine', .1, .1, .14); }
+  else if(k === 'key') tone(1800, 'square', .015, .03);
+  else if(k === 'ring'){ for(let i = 0; i < 2; i++){ tone(440, 'sine', .25, .08, i*.4); tone(480, 'sine', .25, .08, i*.4); } }
+  else if(k === 'fly') tone(300, 'sawtooth', .5, .05, 0, 900);
+  else if(k === 'done') [660, 880, 1320].forEach((f,i) => tone(f, 'sine', .14, .12, i*.07));
+  else if(k === 'bad') tone(190, 'sawtooth', .4, .07, 0, 110);
+  else if(k === 'special') [523, 659, 784, 1047].forEach((f,i) => tone(f, 'triangle', .12, .1, i*.05));
+}
+function setSound(on){ soundOn = on; try { localStorage.setItem('voc-sound', on ? 'on' : 'off'); } catch(e) {} $('#soundBtn').textContent = on ? 'Sound on' : 'Sound off'; ac(); }
+
+/* ---------- input ---------- */
+const onPress = (el, fn) => { el.addEventListener('pointerdown', e => { if(e.button === 0) fn(e); }); el.addEventListener('click', e => { if(e.detail === 0) fn(e); }); };
+onPress($('#tlist'), e => {
+  const o = e.target.closest('[data-open]'); if(o){ openSession(tickets.find(t => t.id === +o.dataset.open)); return; }
+  const b = e.target.closest('[data-t]'); if(!b) return;
+  const t = tickets.find(x => x.id === +b.dataset.t);
+  if(t && t.stage === 'diag') return openSession(t);
+  selT = +b.dataset.t === selT ? null : +b.dataset.t; qLast = tLast = '';
+});
+onPress($('#map'), e => { const g = e.target.closest('[data-t]'); if(!g) return; const t = tickets.find(x => x.id === +g.dataset.t); if(t && t.stage === 'diag') return openSession(t); selT = +g.dataset.t; qLast = tLast = ''; });
+onPress($('#team'), e => {
+  const b = e.target.closest('button[data-a]'); if(!b || b.disabled) return;
+  qLast = tLast = '';
+  const p = P(b.dataset.p);
+  if(b.dataset.a === 'sp') special(p);
+  else if(b.dataset.a === 'session') openSession(tickets.find(t => t.id === p.job));
+  else assign(p, tickets.find(x => x.id === selT));
+});
+let focusP = 0;
+addEventListener('keydown', e => {
+  if(!$('#startOv').hidden){ if(e.key === 'Enter'){ e.preventDefault(); start(); } return; }
+  if(!$('#endOv').hidden) return;
+  if(session){
+    if(e.key === 'Escape'){ closeSession(); return; }
+    if(document.activeElement === $('#cmdIn')) return;
+    const n = /^Digit([1-4])$/.exec(e.code);
+    if(n){ const b = document.querySelectorAll('#qOpts [data-opt]')[+n[1]-1]; if(b && !b.disabled) b.click(); }
+    return;
+  }
+  if(e.key === 'p' || e.key === 'P'){ togglePause(); return; }
+  if(!running || paused) return;
+  const n = /^Digit([1-5])$/.exec(e.code);
+  if(n){
+    e.preventDefault(); focusP = +n[1] - 1; const p = ppl[focusP], mine = tickets.find(t => t.id === p.job);
+    if(mine && mine.stage === 'diag') openSession(mine); else assign(p, tickets.find(x => x.id === selT));
+    qLast = tLast = ''; return;
+  }
+  if(e.key === 'q' || e.key === 'Q'){ special(ppl[focusP]); return; }
+  if(e.key === 'Enter'){ const t = tickets.find(x => x.stage === 'diag'); if(t) openSession(t); return; }
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    const list = [...tickets].filter(t => !t.who).sort((a,b) => a.p - b.p || timeLeft(a) - timeLeft(b));
+    if(!list.length) return;
+    const i = list.findIndex(t => t.id === selT);
+    selT = list[(i + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length].id; qLast = tLast = ''; lastList = -1;
+  }
+});
+function togglePause(){ if(!running) return; paused = !paused; $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause'; toast(paused ? 'Paused' : 'Back to it'); }
+$('#pauseBtn').addEventListener('click', togglePause);
+$('#soundBtn').addEventListener('click', () => setSound(!soundOn));
+document.addEventListener('visibilitychange', () => { if(document.hidden && running && !paused) togglePause(); });
+function start(){ ac(); reset(); running = true; paused = false; ended = false; $('#startOv').hidden = true; $('#endOv').hidden = true; $('#pauseBtn').textContent = 'Pause'; toast('Monday 8 AM. Phones are on.'); }
+$('#startBtn').addEventListener('click', start);
+$('#againBtn').addEventListener('click', start);
+
+/* ---------- boot ---------- */
+$('#roster').innerHTML = TEAM.map(p => `<div><span class="av" style="background:${p.color};width:34px;height:34px;font-size:12px">${p.ini}</span><b>${p.name}${p.lead ? ' ★' : ''}</b><span style="color:var(--sub)">${p.home.name}</span><span style="color:var(--sub)">★ ${CATS[p.pri].name}</span><span style="color:#cbb6ff">${p.sp.name}: ${p.sp.desc}</span></div>`).join('');
+$('#soundBtn').textContent = soundOn ? 'Sound on' : 'Sound off';
+buildMap(); reset();
+function fit(){ $('#stage').style.setProperty('--k', Math.min(innerWidth/1920, innerHeight/1080)); }
+addEventListener('resize', fit); fit();
+let last = performance.now();
+function frame(ts){
+  const dt = Math.min(.1, (ts - last)/1000); last = ts;
+  if(running && !paused) update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+$('#startBtn').focus();
+})();
+</script>
+</body>
+</html>
