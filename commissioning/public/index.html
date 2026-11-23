@@ -912,6 +912,12 @@ td.nic-off{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(12
 .wk-row .wk-cores{width:76px;padding:3px 6px}
 .wk-eq{color:var(--ink-soft)}.wk-eq b{color:var(--ink)}
 .wk-note{font-size:.7rem;color:var(--ink-soft);margin-top:6px}
+.rtv-bar{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.rtv-bar button{font:600 .78rem var(--mono,monospace);padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.rtv-bar button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink,var(--accent))}
+.rtv-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.8rem;color:var(--ink-soft);margin-bottom:8px}
+.rtv-act{display:flex;gap:8px}
+.rtv-pre{max-height:520px;overflow:auto;white-space:pre;font-size:.74rem;margin:0}
 #mxCardSel.need{border-color:var(--err);box-shadow:0 0 0 1px var(--err)}
 .net-warn{margin:0 0 12px}
 .net-warn .pj-link{font-size:.78rem}
@@ -1796,7 +1802,7 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div id="psSideList" hidden></div>
     <div class="rail-foot">
-      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.52<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
+      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.53<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
     </div>
   </nav>
 
@@ -2569,6 +2575,13 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div class="sc-sum" id="rtSummary"></div>
     <div class="sc-table-wrap rt-wrap"><table class="rt-table" id="rtTable"></table></div>
+  </section>
+
+  <section class="sc-card">
+    <div class="sc-head"><span class="sc-tag">dc_routes.json per server</span><span class="sc-sub">each server's own file &middot; its inputs, outputs, Matrox card and addresses</span></div>
+    <div class="rtv-bar" id="rtvBar"></div>
+    <div class="rtv-meta"><span id="rtvMeta"></span><span class="rtv-act"><button type="button" class="pill-link" id="rtvCopy">Copy</button><button type="button" class="pill-link" id="rtvDl">Download</button></span></div>
+    <pre class="install-log rtv-pre" id="rtvPre">Pick a server above to see its dc_routes.json.</pre>
   </section>
 
   <section class="sc-card">
@@ -5480,7 +5493,14 @@ function renderSystemFields(){
     wrap.appendChild(label);
 
     let input;
-    if (f.type === 'select' || f.type === 'bool') {
+    const dnx = f.key === 'bit_rate' && state.system.video_codec === 'VC3' ? dnxhdRates(state.system.video_standard) : null;
+    if (dnx && dnx.length) {
+      // VC3 = DNxHD: only the bit rates DNxHD defines for this resolution and frame rate
+      input = document.createElement('select');
+      dnx.forEach(r => { const opt = document.createElement('option'); opt.value = String(r.mbps); opt.textContent = r.mbps + ' Mbps · ' + r.name; input.appendChild(opt); });
+      if (!dnx.some(r => String(r.mbps) === String(state.system.bit_rate))) state.system.bit_rate = String(dnx[dnx.length - 1].mbps);
+      note.textContent = ' DNxHD rates for ' + state.system.video_standard;
+    } else if (f.type === 'select' || f.type === 'bool') {
       input = document.createElement('select');
       (f.type === 'bool' ? ['true','false'] : f.opts).forEach(o => {
         const opt = document.createElement('option');
@@ -5492,8 +5512,15 @@ function renderSystemFields(){
       input.type = 'number';
     }
     input.value = state.system[f.key];
+    if (f.key === 'bit_rate' && state.system.video_codec === 'VC3' && !(dnx && dnx.length)) {
+      note.textContent = ' VC3 (DNxHD) has no rates for ' + state.system.video_standard + ' — pick another codec or standard';
+      note.style.color = 'var(--err)';
+    }
     input.addEventListener('input', () => {
+      const prevStd = state.system.video_standard;
       state.system[f.key] = input.value;
+      if (f.key === 'video_codec' || (f.key === 'video_standard' && state.system.video_codec === 'VC3')) { renderSystemFields(); }
+      if (f.key === 'video_standard') xfFollowStandard(prevStd, input.value);
       if (f.key === 'video_codec') updateJpegxsNotice();
       if (f.key === 'input_format' || f.key === 'output_format' || f.key === 'time_source') syncGlobalTimeSource();
       renderPerServer();
@@ -5507,6 +5534,28 @@ function renderSystemFields(){
   renderWorkerCalc();
   syncGlobalTimeSource();
   if (typeof updateJpegxsNotice === 'function') updateJpegxsNotice();
+}
+/* DNxHD (VC-3) bit rates, Mbps, per DreamCatcher video standard (Avid DNxHD family table).
+   Rates with an "x" variant also come as 10-bit (DNxHD 220x etc.) at the same Mbps. */
+var DNXHD_RATES = {
+  '1080p5994': [[90, 'DNxHD 90 (8-bit, proxy)'], [290, 'DNxHD 290 (8-bit)'], [440, 'DNxHD 440 / 440x (8 or 10-bit)']],
+  '1080p50':   [[75, 'DNxHD 75 (8-bit, proxy)'], [240, 'DNxHD 240 (8-bit)'], [365, 'DNxHD 365 / 365x (8 or 10-bit)']],
+  '1080i5994': [[145, 'DNxHD 145 (8-bit)'], [220, 'DNxHD 220 / 220x (8 or 10-bit)']],
+  '1080i50':   [[120, 'DNxHD 120 (8-bit)'], [185, 'DNxHD 185 / 185x (8 or 10-bit)']],
+  '720p5994':  [[145, 'DNxHD 145 (8-bit)'], [220, 'DNxHD 220 / 220x (8 or 10-bit)']],
+  '720p50':    [[120, 'DNxHD 120 (8-bit)'], [185, 'DNxHD 185 / 185x (8 or 10-bit)']]
+};
+function dnxhdRates(std){ return (DNXHD_RATES[std] || []).map(r => ({ mbps: r[0], name: r[1] })); }
+/* export formats that follow the system standard keep a frame rate from the same family:
+   switching to a 50 Hz standard turns 5994 into 5000 (and 2997 into 2500), and back */
+function xfFollowStandard(prev, next){
+  const fam = s => /50$/.test(String(s || '')) ? '50' : (/5994$/.test(String(s || '')) ? '5994' : '');
+  const a = fam(prev), b = fam(next);
+  if (!a || !b || a === b || !state.exportFormats || !Array.isArray(state.exportFormats.formats)) return;
+  const map = b === '50' ? { '5994': '5000', '6000': '5000', '2997': '2500', '3000': '2500', '2398': '2500' } : { '5000': '5994', '2500': '2997' };
+  let n = 0;
+  state.exportFormats.formats.forEach(f => { if (!f.vstd && map[f.fps]) { f.fps = map[f.fps]; n++; } });
+  if (n && typeof syncXf === 'function') syncXf();
 }
 /* Worker calculator: max workers = CPU cores − 16 (cores depend on the server hardware).
    Cores are remembered per hardware type; the number field above can still be typed in by hand. */
@@ -6787,6 +6836,17 @@ function onXfEdit(e){
     f.prof = t.checked;
     t.closest('.xf-prof').querySelectorAll('input[type="text"],select').forEach(x => { x.disabled = !t.checked; });
   } else if (t.dataset.f) f[t.dataset.f] = t.type === 'number' ? t.value : t.value;
+  // e.g. 1080i 50 → 1920x1080i at 5000 (not left on 5994)
+  if (t.dataset.f === 'vstd' && f.vstd) {
+    const m = String(f.vstd).match(/^(\d+)([pi])(\d+)$/);
+    if (m) {
+      const W = { '2160': '3840x2160', '1080': '1920x1080', '720': '1280x720', '540': '960x540', '360': '640x360' }[m[1]];
+      const rate = m[3] === '50' ? '5000' : m[3];
+      if (W && XF_RES.indexOf(W + m[2]) >= 0) f.res = W + m[2];
+      if (XF_FPS.some(x => x[0] === rate)) f.fps = rate;
+      if (typeof syncXf === 'function') syncXf();
+    }
+  }
   renderPreview();
 }
 document.getElementById('xfList').addEventListener('input', onXfEdit);
@@ -10380,6 +10440,34 @@ function routesText(){
   const t = readConnectorTemplate();
   return t.length ? buildDcRoutesJsonForServer(t, readLiveAddressesByKey()) : '(no connectors yet)';
 }
+/* DC routes page: look at any server's own dc_routes.json */
+let rtvSrv = '';
+function paintRoutesView(){
+  const bar = document.getElementById('rtvBar'); if (!bar) return;
+  const names = srvList();
+  if (!names.includes(rtvSrv)) rtvSrv = mxCurSrv || names[0] || '';
+  bar.innerHTML = names.length ? names.map(n => '<button type="button" data-rtv="' + esc(n) + '" class="' + (n === rtvSrv ? 'on' : '') + '">' + esc(n) + '</button>').join('')
+    : '<span class="rtv-meta">No Matrox servers yet.</span>';
+  const pre = document.getElementById('rtvPre');
+  if (!rtvSrv) { pre.textContent = 'No Matrox servers yet.'; document.getElementById('rtvMeta').textContent = ''; return; }
+  const sh = shapeFor(rtvSrv);
+  const text = withServer(rtvSrv, () => { const t = readConnectorTemplate(); return t.length ? buildDcRoutesJsonForServer(t, addrFor(rtvSrv)) : '(no connectors yet)'; });
+  pre.textContent = text;
+  const filled = countAddr(addrFor(rtvSrv));
+  document.getElementById('rtvMeta').textContent = rtvSrv + ' · ' + (sh.card || '').toUpperCase() + ' card · ' + sh.nin + ' in / ' + sh.nout + ' out · ' + filled + ' addresses filled';
+}
+document.getElementById('rtvBar').addEventListener('click', e => { const b = e.target.closest('[data-rtv]'); if (b) { rtvSrv = b.dataset.rtv; paintRoutesView(); } });
+document.getElementById('rtvCopy').addEventListener('click', () => {
+  const b = document.getElementById('rtvCopy');
+  navigator.clipboard.writeText(document.getElementById('rtvPre').textContent).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 1200); });
+});
+document.getElementById('rtvDl').addEventListener('click', () => {
+  if (!rtvSrv) return;
+  const name = downloadBlob(document.getElementById('rtvPre').textContent, 'dc_routes.json', 'application/json');
+  if (window.dcToast) window.dcToast('Downloaded ' + name + ' for ' + rtvSrv);
+});
+// refresh it whenever the DC routes page is opened
+document.querySelectorAll('[data-page="mx-routes"].rail-item').forEach(b => b.addEventListener('click', () => setTimeout(paintRoutesView, 0)));
 mx212Ready = true;
 /* ---- Preview card: the rear plate, big, across the middle of the screen ---- */
 (function(){
