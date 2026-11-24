@@ -74,11 +74,19 @@ export default {
       const { results } = await env.DB.prepare(
         "SELECT t.*, (SELECT MAX(r.date) FROM releases r WHERE r.slug = t.slug) AS last_release FROM tools t WHERE t.enabled = 1 ORDER BY t.sort, t.name"
       ).all();
+      // who built each tool, and how many feature requests are still open for it
+      let names = {}, open = {};
+      try {
+        (await env.DB.prepare("SELECT email, name FROM users").all()).results.forEach((u) => { names[u.email] = u.name; });
+        (await env.DB.prepare("SELECT slug, COUNT(*) AS n FROM feature_requests WHERE status IN ('New', 'Planned') GROUP BY slug").all()).results.forEach((r) => { open[r.slug] = r.n; });
+      } catch {}
       const tools = results.map((t) => ({
         ...t,
         file_needed: !!t.file_needed,
         local_only: !!t.local_only,
         downloads: t.downloads ? JSON.parse(t.downloads) : null,
+        owner_name: t.owner ? (names[t.owner] || t.owner.split("@")[0]) : null,
+        open_requests: open[t.slug] || 0,
         url: t.url || (t.local_only ? `/local/${t.slug}.html` : env.TOOL_URL.replace("{slug}", t.slug)),
       }));
       return json({ tools });
@@ -92,7 +100,7 @@ export default {
       if (me?.role !== "admin") return json({ error: "Admins only" }, 403);
       const body = await request.json();
       const allowed = ["name", "category", "description", "version", "updated", "icon",
-                       "file_needed", "local_only", "sort", "enabled", "url", "downloads"];
+                       "file_needed", "local_only", "sort", "enabled", "url", "downloads", "owner"];
       const sets = [], vals = [];
       for (const k of allowed) if (k in body) { sets.push(`${k} = ?${vals.length + 1}`); vals.push(body[k]); }
       if (!sets.length) return json({ error: "Nothing to update" }, 400);
@@ -252,6 +260,64 @@ export default {
       const row = await env.DB.prepare("SELECT key FROM docs WHERE id = ?1").bind(dm[1]).first();
       if (row && env.DOCS) await env.DOCS.delete(row.key);
       await env.DB.prepare("DELETE FROM docs WHERE id = ?1").bind(dm[1]).run();
+      return json({ ok: true });
+    }
+
+    // ---------- Feature requests: anyone can ask; the tool's owner works the list ----------
+    const FR_STATUSES = ["New", "Planned", "Done", "Declined"];
+    const frShape = (r, names) => ({ ...r, votes: JSON.parse(r.votes || "[]"), requester_name: names[r.requester] || r.requester.split("@")[0] });
+    const frNames = async () => { const m = {}; try { (await env.DB.prepare("SELECT email, name FROM users").all()).results.forEach((u) => { m[u.email] = u.name; }); } catch {} return m; };
+    if (url.pathname === "/api/requests" && request.method === "GET") {
+      const slug = url.searchParams.get("slug"), mine = url.searchParams.get("mine") === "1";
+      let q, b = [];
+      if (slug) { q = "SELECT * FROM feature_requests WHERE slug = ?1 ORDER BY created DESC LIMIT 300"; b = [slug]; }
+      else if (mine) { q = "SELECT f.*, t.name AS tool_name FROM feature_requests f JOIN tools t ON t.slug = f.slug WHERE lower(t.owner) = ?1 ORDER BY f.created DESC LIMIT 500"; b = [email]; }
+      else return json({ error: "Pass slug or mine=1" }, 400);
+      const { results } = await env.DB.prepare(q).bind(...b).all().catch(() => ({ results: [] }));
+      const names = await frNames();
+      return json({ requests: results.map((r) => frShape(r, names)) });
+    }
+    if (url.pathname === "/api/requests" && request.method === "POST") {
+      const b = await request.json().catch(() => ({}));
+      const slug = String(b.slug || ""), title = String(b.title || "").trim().slice(0, 140), details = String(b.details || "").trim().slice(0, 4000);
+      if (!title) return json({ error: "Give the request a short title" }, 400);
+      const tool = await env.DB.prepare("SELECT slug, owner FROM tools WHERE slug = ?1").bind(slug).first();
+      if (!tool) return json({ error: "Unknown tool" }, 404);
+      const id = [...crypto.getRandomValues(new Uint8Array(8))].map((x) => x.toString(16).padStart(2, "0")).join("");
+      await env.DB.prepare("INSERT INTO feature_requests (id, slug, title, details, requester, created, status, votes) VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'), 'New', ?6)")
+        .bind(id, slug, title, details, email, JSON.stringify([email])).run();
+      return json({ ok: true, id });
+    }
+    const frm = url.pathname.match(/^\/api\/requests\/([a-f0-9]{16})(\/vote)?$/);
+    if (frm && frm[2] && request.method === "POST") {   // "me too": toggle your vote
+      const r = await env.DB.prepare("SELECT votes FROM feature_requests WHERE id = ?1").bind(frm[1]).first();
+      if (!r) return json({ error: "Not found" }, 404);
+      let v = JSON.parse(r.votes || "[]");
+      v = v.includes(email) ? v.filter((x) => x !== email) : v.concat(email);
+      await env.DB.prepare("UPDATE feature_requests SET votes = ?1 WHERE id = ?2").bind(JSON.stringify(v), frm[1]).run();
+      return json({ ok: true, votes: v });
+    }
+    if (frm && !frm[2] && request.method === "PATCH") {   // only the tool's owner (or an admin) changes status / replies
+      const r = await env.DB.prepare("SELECT f.requester, t.owner FROM feature_requests f JOIN tools t ON t.slug = f.slug WHERE f.id = ?1").bind(frm[1]).first();
+      if (!r) return json({ error: "Not found" }, 404);
+      const me = await env.DB.prepare("SELECT role FROM users WHERE email = ?1").bind(email).first();
+      if (String(r.owner || "").toLowerCase() !== email && !(me && me.role === "admin")) return json({ error: "Only the tool's owner can update this" }, 403);
+      const b = await request.json().catch(() => ({}));
+      if ("status" in b && !FR_STATUSES.includes(b.status)) return json({ error: "Unknown status" }, 400);
+      const sets = [], vals = [];
+      if ("status" in b) { sets.push(`status = ?${vals.length + 1}`); vals.push(b.status); }
+      if ("owner_note" in b) { sets.push(`owner_note = ?${vals.length + 1}`); vals.push(String(b.owner_note || "").slice(0, 2000)); }
+      if (!sets.length) return json({ error: "Nothing to update" }, 400);
+      vals.push(email); sets.push(`updated_by = ?${vals.length}`, "updated = datetime('now')");
+      vals.push(frm[1]);
+      await env.DB.prepare(`UPDATE feature_requests SET ${sets.join(", ")} WHERE id = ?${vals.length}`).bind(...vals).run();
+      return json({ ok: true });
+    }
+    if (frm && !frm[2] && request.method === "DELETE") {   // requester can withdraw a request that's still New
+      const r = await env.DB.prepare("SELECT requester, status FROM feature_requests WHERE id = ?1").bind(frm[1]).first();
+      if (!r) return json({ error: "Not found" }, 404);
+      if (r.requester !== email || r.status !== "New") return json({ error: "You can only withdraw your own request while it's New" }, 403);
+      await env.DB.prepare("DELETE FROM feature_requests WHERE id = ?1").bind(frm[1]).run();
       return json({ ok: true });
     }
 
