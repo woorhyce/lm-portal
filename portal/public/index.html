@@ -125,7 +125,14 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 td .lnk,.doc-up .lnk{background:none;border:0;color:var(--ink-soft);font:600 12px var(--sans);cursor:pointer;padding:2px 6px}
 td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
 .cat .by{color:var(--muted);letter-spacing:0;text-transform:none;font-family:var(--sans)}
-.req-link{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin:-6px 0 12px;background:none;border:0;padding:0;color:var(--muted);font:600 12px var(--sans);cursor:pointer}
+.stage{display:inline-block;margin-left:8px;vertical-align:2px;font:700 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:5px;border:1.5px solid currentColor}
+.stage.beta{color:var(--caution-ink,#b7791f);background:var(--caution-soft,transparent)}
+.stage.soon{color:var(--muted);background:var(--rail-bg)}
+.soon-btn{background:var(--rail-bg)!important;color:var(--muted)!important;cursor:default}
+.req-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-6px 0 12px}
+.req-row .by{font-size:12px;color:var(--muted)}
+.req-row .by b{color:var(--text);font-weight:600}
+.req-link{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin:0;background:none;border:0;padding:0;color:var(--muted);font:600 12px var(--sans);cursor:pointer}
 .req-link svg{width:14px;height:14px}
 .req-link:hover{color:var(--accent-ink,var(--accent))}
 .req-n{font:600 10px var(--mono);padding:1px 6px;border-radius:99px;background:var(--accent-soft);color:var(--accent-ink,var(--accent))}
@@ -290,7 +297,7 @@ const SAMPLE = [
  {slug:'mediabank',name:'Media Bank Integration',category:'Integrations',description:'MediaBank and DreamCatcher integration tools.',version:'latest',icon:'link',url:'#'},
  {slug:'roster',name:'VueWeb Roster Management',category:'Integrations',description:'Build and manage vueWeb rosters.',version:'latest',icon:'users',url:'#'},
  {slug:'scheduler',name:'Scheduler Builder',category:'Operations',description:'Build DreamCatcher schedules.',version:'latest',icon:'calendar',url:'#'},
- {slug:'design-studio',name:'LM Design Studio',category:'Design',description:'Live-Media design studio.',version:'latest',icon:'palette',url:'#'},
+ {slug:'design-studio',name:'LM Design Studio',category:'Design',description:'Live-Media design studio.',version:'latest',icon:'palette',url:'#',stage:'soon',creator:'Abigail Kerwin'},
  {slug:'highlights',name:'Highlight Factory Tools',category:'Production',description:'Highlight Factory setup and helpers.',version:'latest',icon:'film',url:'#'}
 ];
 let tools = [], cat = 'All tools';
@@ -315,15 +322,15 @@ function render(){
   $('grid').innerHTML = list.length ? list.map(t => `
     <article class="card">
       <div class="head"><div class="ico">${svg(t.icon)}</div>
-        <div><div class="name">${esc(t.name)}</div><div class="cat">${esc(t.category)}${t.owner_name ? `<span class="by"> · by ${esc(t.owner_name)}</span>` : ''}</div></div></div>
+        <div><div class="name">${esc(t.name)}${t.stage === 'beta' ? '<span class="stage beta">Beta</span>' : t.stage === 'soon' ? '<span class="stage soon">Coming soon</span>' : ''}</div><div class="cat">${esc(t.category)}</div></div></div>
       ${(t.file_needed||t.local_only)?`<div class="tags">${t.file_needed?'<span class="tag file">FILE NEEDED</span>':''}${t.local_only?'<span class="tag local">RUNS ON SITE LAN</span>':''}</div>`:''}
       <p class="desc">${esc(t.description)}</p>
-      <button type="button" class="req-link" data-req="${esc(t.slug)}">${svg('bulb')}Request a feature${t.open_requests ? `<span class="req-n">${t.open_requests} open</span>` : ''}</button>
+      <div class="req-row"><button type="button" class="req-link" data-req="${esc(t.slug)}">${svg('bulb')}Request a feature${t.open_requests ? `<span class="req-n">${t.open_requests} open</span>` : ''}</button>${(t.creator || t.owner_name) ? `<span class="by">Created by: <b>${esc(t.creator || t.owner_name)}</b></span>` : ''}</div>
       ${t.downloads ? `<div class="dls">${t.downloads.map(d => `<a class="dl" href="${esc(d.url)}" download>${svg('download')}${esc(d.label)}</a>`).join('')}</div>` : ''}
       <div class="foot"><div class="vd"><span class="ver">${/^\d/.test(t.version)?'v'+esc(t.version):'Latest'}</span>
         </div>
         <button class="notes-btn" data-notes="${esc(t.slug)}" style="margin-left:auto">Release notes${(t.last_release||t.updated) ? `<span class="nb-date">${fmtShort(t.last_release||t.updated)}</span>` : ''}</button>
-        ${t.downloads ? '' : `<a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a>`}</div>
+        ${t.downloads ? '' : t.stage === 'soon' ? `<span class="open soon-btn" style="margin-left:0" aria-disabled="true">Coming soon</span>` : `<a class="open" style="margin-left:0" href="${esc(t.url)}" ${t.local_only?'download':''}>${t.local_only?'Download':'Open'}</a>`}</div>
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
 $('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; showView('tools'); render(); } });
@@ -716,7 +723,7 @@ function setTab(tab){
   const t = tools.find(x => x.slug === dlgSlug); if (!t) return;
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
   $('dlg').classList.toggle('wide', tab === 'guide' || tab === 'requests');
-  $('dlg-sub').textContent = tab === 'guide' ? 'How it works' : tab === 'requests' ? 'Feature requests' + (t.owner_name ? ' · goes to ' + t.owner_name : '') : 'Release notes';
+  $('dlg-sub').textContent = tab === 'guide' ? 'How it works' : tab === 'requests' ? 'Feature requests' + ((t.creator || t.owner_name) ? ' · created by ' + (t.creator || t.owner_name) : '') : 'Release notes';
   $('dlg').scrollTop = 0;
   tab === 'guide' ? showGuide(t) : tab === 'requests' ? showRequests(t) : showNotes(t);
 }
