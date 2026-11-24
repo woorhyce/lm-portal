@@ -905,12 +905,18 @@ button.builtin-row:focus-visible{outline:2px solid var(--focus);outline-offset:2
 .nic-tg:disabled{cursor:default;opacity:.7}
 td.nic-off{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(127,127,127,.08) 6px 12px)}
 .nic-offl{font:600 .66rem var(--mono,monospace);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
-.wk-calc{margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px;background:var(--bg)}
+.wk-pop{position:relative;display:inline-block;margin-top:6px}
+.wk-chip{font:600 .7rem var(--sans);padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);cursor:pointer}
+.wk-chip::before{content:"⚙ ";}
+.wk-pop:hover .wk-chip,.wk-pop.pinned .wk-chip{color:var(--ink);border-color:var(--accent)}
+.wk-calc{display:none;position:absolute;left:0;top:100%;z-index:40;min-width:380px;margin-top:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 10px 28px rgba(0,0,0,.18)}
+.wk-pop::after{content:"";position:absolute;left:0;right:0;top:100%;height:8px}
+.wk-pop:hover .wk-calc,.wk-pop:focus-within .wk-calc,.wk-pop.pinned .wk-calc{display:block;margin-top:6px}
 .wk-h{font-size:.72rem;font-weight:600;margin-bottom:6px}.wk-h span{font-weight:400;color:var(--ink-soft);margin-left:6px}
 .wk-row{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:.78rem}
 .wk-t{min-width:92px;font-family:var(--mono,monospace);font-size:.74rem}
 .wk-row .wk-cores{width:76px;padding:3px 6px}
-.wk-eq{color:var(--ink-soft)}.wk-eq b{color:var(--ink)}
+.wk-eq{color:var(--ink-soft);white-space:nowrap}.wk-eq b{color:var(--ink)}
 .wk-note{font-size:.7rem;color:var(--ink-soft);margin-top:6px}
 .rtv-bar{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .rtv-bar button{font:600 .78rem var(--mono,monospace);padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
@@ -1811,7 +1817,7 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div id="psSideList" hidden></div>
     <div class="rail-foot">
-      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.55<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
+      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.56<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
     </div>
   </nav>
 
@@ -5606,7 +5612,17 @@ function renderSystemFields(){
       renderPreview();
     });
     wrap.appendChild(input);
-    if (f.key === 'force_worker_pool') { const calc = document.createElement('div'); calc.className = 'wk-calc'; calc.id = 'wkCalc'; wrap.appendChild(calc); }
+    if (f.key === 'force_worker_pool') {
+      // worker calculator: hover (or click / focus) the chip to open it
+      const pop = document.createElement('div'); pop.className = 'wk-pop';
+      pop.innerHTML = '<button type="button" class="wk-chip" aria-haspopup="true" aria-expanded="false">Worker calculator</button>';
+      const calc = document.createElement('div'); calc.className = 'wk-calc'; calc.id = 'wkCalc'; calc.setAttribute('role', 'dialog');
+      pop.appendChild(calc); wrap.appendChild(pop);
+      const chip = pop.querySelector('.wk-chip');
+      chip.addEventListener('click', () => { const open = !pop.classList.contains('pinned'); pop.classList.toggle('pinned', open); chip.setAttribute('aria-expanded', String(open)); });
+      document.addEventListener('mousedown', e => { if (!pop.contains(e.target)) { pop.classList.remove('pinned'); chip.setAttribute('aria-expanded', 'false'); } });
+      pop.addEventListener('keydown', e => { if (e.key === 'Escape') { pop.classList.remove('pinned'); chip.focus(); } });
+    }
     systemFieldsEl.appendChild(wrap);
     systemFieldCtl[f.key] = { input, wrap, note };
   });
