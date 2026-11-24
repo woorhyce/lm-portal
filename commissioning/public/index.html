@@ -1802,7 +1802,7 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div id="psSideList" hidden></div>
     <div class="rail-foot">
-      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.53<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
+      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.54<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
     </div>
   </nav>
 
@@ -6073,6 +6073,16 @@ function buildInstallScript(server){
     lines.push('echo "logical_standard now set in these lines:"');
     lines.push('grep -n "^logical_standard" "${INI_FILE}" || true');
     lines.push('');
+    // frame rate follows the video standard: 1080i50 / 1080p50 / 720p50 → 5000, the 59.94 standards → 5994
+    const vstd = String(sysVal(server, 'video_standard') || '');
+    const vrate = /50$/.test(vstd) ? '5000' : (/5994$/.test(vstd) ? '5994' : '');
+    if (vrate) {
+      lines.push('echo "Cascading the frame rate (' + vrate + ', from ' + vstd + ') to every frame rate line..."');
+      lines.push("awk -v value=\"" + vrate + "\" '{ sub(/\\r$/, \"\") } /^frame[ _]?rate[ \\t]*=/ { k = $0; sub(/[ \\t]*=.*/, \"\", k); print k\" = \"value; next } { print }' \"${INI_FILE}\" > \"${INI_FILE}.tmp\" && cat \"${INI_FILE}.tmp\" > \"${INI_FILE}\" && rm -f \"${INI_FILE}.tmp\"");
+      lines.push('echo "frame rate now set in these lines:"');
+      lines.push('grep -nE "^frame[ _]?rate[[:space:]]*=" "${INI_FILE}" || true');
+      lines.push('');
+    }
     lines.push('echo "Verifying [System] settings..."');
     const verifyPairs = SYSTEM_FIELDS.map(f => [f.key, sysVal(server, f.key)]).concat([['remotes', remotesVal]]);
     verifyPairs.forEach(([key, val]) => {
