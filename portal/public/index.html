@@ -124,6 +124,29 @@ table.rma .ref{font:600 12px var(--mono);white-space:nowrap}
 .doc-up label.chk input{width:auto}
 td .lnk,.doc-up .lnk{background:none;border:0;color:var(--ink-soft);font:600 12px var(--sans);cursor:pointer;padding:2px 6px}
 td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
+.cat .by{color:var(--muted);letter-spacing:0;text-transform:none;font-family:var(--sans)}
+.req-link{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin:-6px 0 12px;background:none;border:0;padding:0;color:var(--muted);font:600 12px var(--sans);cursor:pointer}
+.req-link svg{width:14px;height:14px}
+.req-link:hover{color:var(--accent-ink,var(--accent))}
+.req-n{font:600 10px var(--mono);padding:1px 6px;border-radius:99px;background:var(--accent-soft);color:var(--accent-ink,var(--accent))}
+.fr-form{display:grid;gap:8px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.fr-form input,.fr-form textarea{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:13px var(--sans)}
+.fr-form textarea{min-height:70px;resize:vertical}
+.fr-row{display:flex;align-items:center;gap:10px}
+.fr-list{display:flex;flex-direction:column}
+.fr{padding:14px 20px;border-bottom:1px solid var(--line-soft,var(--line));display:grid;grid-template-columns:auto 1fr;gap:12px}
+#reqList .fr{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.fr-vote{align-self:start;display:flex;flex-direction:column;align-items:center;min-width:46px;padding:6px 4px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer;font:600 15px var(--sans);color:var(--ink)}
+.fr-vote small{font:600 9px var(--mono);letter-spacing:.06em;color:var(--muted)}
+.fr-vote.on{border-color:var(--accent);background:var(--accent-soft)}
+.fr h4{margin:0 0 2px;font-size:14px}
+.fr .meta{font-size:12px;color:var(--muted)}
+.fr p{margin:6px 0 0;white-space:pre-wrap;font-size:13px;line-height:1.45}
+.fr .reply{margin-top:8px;padding:8px 10px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 6px 6px 0;font-size:12.5px}
+.fr .own{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.fr .own select,.fr .own input{padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:12px var(--sans)}
+.fr .own input{flex:1;min-width:180px}
+.st.Planned{background:var(--accent-soft);color:var(--accent-ink)} .st.Declined{background:var(--rail-bg);color:var(--muted)}
 .st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
 .st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
 .st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
@@ -157,7 +180,7 @@ td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
     <h3>LIBRARY</h3>
     <div id="cats"></div>
     <h3 class="recent">INBOX</h3>
-    <div id="inbox"><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button><button data-view="logs">Log uploads<span class="n" id="logCount" title="New, not looked at yet"></span></button><button data-view="docs">Manuals &amp; release notes<span class="n" id="docCount"></span></button></div>
+    <div id="inbox"><button data-view="reqs" id="reqInboxBtn" hidden>Feature requests<span class="n" id="reqCount" title="New requests for your tools"></span></button><button data-view="rma" data-mine="0">RMA requests<span class="n" id="rmaCount" title="Not responded to yet"></span></button><button data-view="rma" data-mine="1">Assigned to me<span class="n" id="rmaMineCount" title="Open and assigned to you"></span></button><button data-view="logs">Log uploads<span class="n" id="logCount" title="New, not looked at yet"></span></button><button data-view="docs">Manuals &amp; release notes<span class="n" id="docCount"></span></button></div>
     <h3 class="recent">RECENTLY UPDATED</h3>
     <div id="recent"></div>
   </nav>
@@ -174,6 +197,10 @@ td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
       <div class="rma-filters" id="rmaFilters"></div>
       <div class="rma-wrap"><table class="rma"><thead><tr><th>Ref</th><th>Received</th><th>Company</th><th>Contact</th><th>Type</th><th>Units</th><th>Assigned</th><th>Status</th></tr></thead><tbody id="rmaRows"></tbody></table></div>
       <p class="rma-public">Customer form: <a id="rmaLink" target="_blank" rel="noopener"></a> <button class="notes-btn" id="rmaCopy">Copy link</button></p>
+    </div>
+    <div id="reqView" hidden>
+      <div class="rma-filters" id="reqFilters"></div>
+      <div id="reqList" class="fr-list"></div>
     </div>
     <div id="docsView" hidden>
       <form class="doc-up" id="docUp">
@@ -232,6 +259,7 @@ td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-tab="notes">Release notes</button>
     <button class="tab" role="tab" data-tab="guide">How it works</button>
+    <button class="tab" role="tab" data-tab="requests">Feature requests</button>
   </div>
   <div id="dlg-body"></div>
 </dialog>
@@ -249,6 +277,7 @@ const ICONS = {
   film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
   palette:'<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.9-.7-1.3-.7-2.2 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.7-4-8.6-9-8.6z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/>',
   download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
   box:'<rect x="4" y="4" width="16" height="16" rx="2"/>'
 };
 const SAMPLE = [
@@ -286,9 +315,10 @@ function render(){
   $('grid').innerHTML = list.length ? list.map(t => `
     <article class="card">
       <div class="head"><div class="ico">${svg(t.icon)}</div>
-        <div><div class="name">${esc(t.name)}</div><div class="cat">${esc(t.category)}</div></div></div>
+        <div><div class="name">${esc(t.name)}</div><div class="cat">${esc(t.category)}${t.owner_name ? `<span class="by"> · by ${esc(t.owner_name)}</span>` : ''}</div></div></div>
       ${(t.file_needed||t.local_only)?`<div class="tags">${t.file_needed?'<span class="tag file">FILE NEEDED</span>':''}${t.local_only?'<span class="tag local">RUNS ON SITE LAN</span>':''}</div>`:''}
       <p class="desc">${esc(t.description)}</p>
+      <button type="button" class="req-link" data-req="${esc(t.slug)}">${svg('bulb')}Request a feature${t.open_requests ? `<span class="req-n">${t.open_requests} open</span>` : ''}</button>
       ${t.downloads ? `<div class="dls">${t.downloads.map(d => `<a class="dl" href="${esc(d.url)}" download>${svg('download')}${esc(d.label)}</a>`).join('')}</div>` : ''}
       <div class="foot"><div class="vd"><span class="ver">${/^\d/.test(t.version)?'v'+esc(t.version):'Latest'}</span>
         </div>
@@ -297,7 +327,7 @@ function render(){
     </article>`).join('') : `<p class="empty">No tools match “${esc(q)}”. Clear the search or pick another category.</p>`;
 }
 $('cats').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ cat = b.dataset.cat; showView('tools'); render(); } });
-$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } if (e.target.closest('[data-view=logs]')) showView('logs'); if (e.target.closest('[data-view=docs]')) showView('docs'); });
+$('inbox').addEventListener('click', e => { const b = e.target.closest('[data-view=rma]'); if (b) { rmaFilter = b.dataset.mine === '1' ? 'Mine' : 'Open'; showView('rma'); } if (e.target.closest('[data-view=logs]')) showView('logs'); if (e.target.closest('[data-view=reqs]')) showView('reqs'); if (e.target.closest('[data-view=docs]')) showView('docs'); });
 
 /* ---------- RMA inbox ---------- */
 const RMA_FORM_URL = (location.hostname.endsWith('.workers.dev') ? 'https://lm-rma.' + location.hostname.split('.').slice(1).join('.') : 'https://dcrma.' + location.hostname) + '/';
@@ -307,7 +337,7 @@ const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
 const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
 function showView(v){
   view = v;
-  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs'; $('docsView').hidden = v !== 'docs';
+  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs'; $('docsView').hidden = v !== 'docs'; $('reqView').hidden = v !== 'reqs'; $('reqInboxBtn').classList.toggle('on', v === 'reqs'); if (v === 'reqs') { $('title').textContent = 'Feature requests for your tools'; loadMyRequests(); }
   document.querySelectorAll('#inbox [data-view=rma]').forEach(b => b.classList.toggle('on', v === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', v === 'tools' && b.dataset.cat === cat));
   if (v === 'rma') { $('title').textContent = 'RMA requests'; loadRma(); }
@@ -567,6 +597,74 @@ $('docUp').addEventListener('submit', async e => {
     $('docMsg').textContent = 'Uploaded'; form.reset(); form.product.value = fd.get('product'); syncAll(form); loadDocs();
   } catch (err) { $('docMsg').style.color = 'var(--err)'; $('docMsg').textContent = err.message; }
 });
+/* ---------- Feature requests ---------- */
+const FR_STATUSES = ['New','Planned','Done','Declined'];
+function frItem(r, t, owner){
+  const voted = (r.votes || []).includes(me), mine = r.requester === me;
+  return `<div class="fr" data-fr="${esc(r.id)}">
+    <button type="button" class="fr-vote${voted ? ' on' : ''}" title="${voted ? 'Remove your vote' : 'Me too: add your vote'}">▲${(r.votes || []).length}<small>${voted ? 'VOTED' : 'ME TOO'}</small></button>
+    <div><h4>${esc(r.title)} <span class="st ${esc(r.status)}">${esc(r.status)}</span>${r.tool_name ? ` <span class="flag due">${esc(r.tool_name)}</span>` : ''}</h4>
+      <div class="meta">${esc(r.requester === me ? 'You' : r.requester_name)} · ${fmtWhen(r.created)}${mine && r.status === 'New' ? ' · <button type="button" class="lnk fr-del" style="background:none;border:0;color:var(--muted);cursor:pointer;font:inherit;text-decoration:underline">withdraw</button>' : ''}</div>
+      ${r.details ? `<p>${esc(r.details)}</p>` : ''}
+      ${r.owner_note ? `<div class="reply"><b>${esc(t && t.owner_name || 'Owner')}:</b> ${esc(r.owner_note)}</div>` : ''}
+      ${owner ? `<div class="own"><select class="fr-st">${FR_STATUSES.map(s => `<option ${s === r.status ? 'selected' : ''}>${s}</option>`).join('')}</select><input class="fr-note" placeholder="Reply to the requester (optional)" value="${esc(r.owner_note || '')}"><button type="button" class="notes-btn fr-save">Save</button><span class="saved"></span></div>` : ''}
+    </div></div>`;
+}
+let frCache = [];
+async function frAction(e, reload){
+  const box = e.target.closest('[data-fr]'); if (!box) return;
+  const id = box.dataset.fr;
+  if (e.target.closest('.fr-vote')) { await fetch('/api/requests/' + id + '/vote', {method:'POST'}); return reload(); }
+  if (e.target.closest('.fr-del')) { if (!confirm('Withdraw this request?')) return; await fetch('/api/requests/' + id, {method:'DELETE'}); return reload(); }
+  if (e.target.closest('.fr-save')) {
+    const r = await fetch('/api/requests/' + id, {method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({status: box.querySelector('.fr-st').value, owner_note: box.querySelector('.fr-note').value})});
+    const s = box.querySelector('.saved'); s.textContent = r.ok ? 'Saved' : ((await r.json()).error || 'Save failed'); if (r.ok) setTimeout(reload, 500);
+  }
+}
+async function showRequests(t){
+  const owner = me && t.owner && t.owner.toLowerCase() === me;
+  $('dlg-body').innerHTML = `<form class="fr-form" id="frForm">
+      <input name="title" maxlength="140" placeholder="What should ${esc(t.name)} do? (short title)" required>
+      <textarea name="details" placeholder="Details: what you're trying to do, where it gets in the way, an example…"></textarea>
+      <div class="fr-row"><button class="open" type="submit" style="margin-left:0;border:0;cursor:pointer">Send request${t.owner_name ? ' to ' + esc(t.owner_name) : ''}</button><span class="saved" id="frMsg"></span></div>
+    </form><div class="fr-list" id="frList"><div class="fr"><p>Loading…</p></div></div>`;
+  const load = async () => {
+    try { const r = await fetch('/api/requests?slug=' + encodeURIComponent(t.slug), {cache:'no-store'}); frCache = r.ok ? (await r.json()).requests : []; } catch { frCache = []; }
+    if (dlgSlug !== t.slug) return;
+    frCache.sort((a, b) => (FR_STATUSES.indexOf(a.status) > 1) - (FR_STATUSES.indexOf(b.status) > 1) || (b.votes.length - a.votes.length) || b.created.localeCompare(a.created));
+    $('frList').innerHTML = frCache.length ? frCache.map(r => frItem(r, t, owner)).join('') : '<div class="fr" style="display:block"><p style="color:var(--muted)">No requests yet. Be the first.</p></div>';
+    t.open_requests = frCache.filter(r => r.status === 'New' || r.status === 'Planned').length;
+  };
+  $('frForm').addEventListener('submit', async e => {
+    e.preventDefault(); const f = e.target;
+    const r = await fetch('/api/requests', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({slug: t.slug, title: f.title.value, details: f.details.value})});
+    if (r.ok) { f.reset(); $('frMsg').textContent = 'Sent' + (t.owner_name ? ' to ' + t.owner_name : ''); load(); render(); }
+    else { $('frMsg').style.color = 'var(--err)'; $('frMsg').textContent = (await r.json()).error || 'Could not send'; }
+  });
+  $('frList').addEventListener('click', e => frAction(e, load));
+  load();
+}
+let myReqs = [], reqFilter = 'Open';
+async function loadMyRequests(){
+  try { const r = await fetch('/api/requests?mine=1', {cache:'no-store'}); myReqs = r.ok ? (await r.json()).requests : []; } catch { myReqs = []; }
+  paintReqInbox(); renderMyRequests();
+}
+function paintReqInbox(){
+  const mineTools = me ? tools.filter(t => t.owner && t.owner.toLowerCase() === me) : [];
+  $('reqInboxBtn').hidden = !mineTools.length;
+  const n = myReqs.filter(r => r.status === 'New').length;
+  $('reqCount').textContent = n || ''; $('reqCount').className = 'n' + (n ? ' hot' : '');
+}
+function renderMyRequests(){
+  if (view !== 'reqs') return;
+  $('reqFilters').innerHTML = ['Open','New','All'].map(f => `<button class="${f===reqFilter?'on':''}" data-f="${f}">${f}</button>`).join('');
+  const list = myReqs.filter(r => reqFilter === 'All' ? true : reqFilter === 'New' ? r.status === 'New' : (r.status === 'New' || r.status === 'Planned'))
+    .sort((a, b) => b.votes.length - a.votes.length || b.created.localeCompare(a.created));
+  $('count').textContent = list.length + (list.length === 1 ? ' request' : ' requests');
+  $('reqList').innerHTML = list.length ? list.map(r => frItem(r, tools.find(t => t.slug === r.slug), true)).join('') : '<p class="empty">No ' + (reqFilter === 'All' ? '' : reqFilter.toLowerCase() + ' ') + 'requests for your tools.</p>';
+}
+$('reqFilters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { reqFilter = b.dataset.f; renderMyRequests(); } });
+$('reqList').addEventListener('click', e => frAction(e, loadMyRequests));
 const SAMPLE_LOGS = [
   {ref:'LOG-20261117-8X2P', created:'2026-11-17 19:12:00', status:'New', company:'Sample Arena', name:'Alex Lee', email:'alee@example.com', site:'DC-7', rma_ref:'', description:'Playout froze for about a second at 7:42 PM during the second period.', total_bytes: 734003200,
    files:[{name:'dc7-logs-2026-11-17.tar.gz', size:734003200, i:0, done:true}]}
@@ -617,10 +715,10 @@ async function showGuide(t){
 function setTab(tab){
   const t = tools.find(x => x.slug === dlgSlug); if (!t) return;
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
-  $('dlg').classList.toggle('wide', tab === 'guide');
-  $('dlg-sub').textContent = tab === 'guide' ? 'How it works' : 'Release notes';
+  $('dlg').classList.toggle('wide', tab === 'guide' || tab === 'requests');
+  $('dlg-sub').textContent = tab === 'guide' ? 'How it works' : tab === 'requests' ? 'Feature requests' + (t.owner_name ? ' · goes to ' + t.owner_name : '') : 'Release notes';
   $('dlg').scrollTop = 0;
-  tab === 'guide' ? showGuide(t) : showNotes(t);
+  tab === 'guide' ? showGuide(t) : tab === 'requests' ? showRequests(t) : showNotes(t);
 }
 function openNotes(slug, tab = 'notes'){
   const t = tools.find(x => x.slug === slug); if (!t) return;
@@ -631,7 +729,7 @@ function openNotes(slug, tab = 'notes'){
   setTab(tab);
 }
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => setTab(b.dataset.tab));
-$('grid').addEventListener('click', e => { const b = e.target.closest('[data-notes]'); if (b) openNotes(b.dataset.notes); });
+$('grid').addEventListener('click', e => { const b = e.target.closest('[data-notes]'); if (b) openNotes(b.dataset.notes); const r = e.target.closest('[data-req]'); if (r) openNotes(r.dataset.req, 'requests'); });
 $('dlg-close').onclick = () => $('dlg').close();
 $('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
 
@@ -649,12 +747,13 @@ new MutationObserver(() => {
   try {
     const r = await fetch('/api/tools'); if (!r.ok) throw 0;
     tools = (await r.json()).tools;
-    fetch('/api/me').then(r=>r.json()).then(u => { me = u.email; $('who').textContent = u.name || u.email; if (u.theme) setTheme(u.theme); renderRma(); }).catch(()=>{});
+    fetch('/api/me').then(r=>r.json()).then(u => { me = u.email; $('who').textContent = u.name || u.email; if (u.theme) setTheme(u.theme); renderRma(); loadMyRequests(); }).catch(()=>{});
   } catch { tools = SAMPLE; $('banner').hidden = false; }
   render();
   loadRma();
   loadLogs();
   loadDocs();
+  setTimeout(loadMyRequests, 400);
 })();
 </script>
 </body>
