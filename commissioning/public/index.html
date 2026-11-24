@@ -918,6 +918,15 @@ td.nic-off{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(12
 .rtv-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.8rem;color:var(--ink-soft);margin-bottom:8px}
 .rtv-act{display:flex;gap:8px}
 .rtv-pre{max-height:520px;overflow:auto;white-space:pre;font-size:.74rem;margin:0}
+.tz-pick{position:relative}
+.tz-pick input{width:100%}
+.tz-menu{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;max-height:320px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.18);padding:4px}
+.tz-menu .tz-h{font:600 .62rem var(--mono,monospace);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px 4px}
+.tz-menu button{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--ink);font:inherit;font-size:.84rem}
+.tz-menu button.on,.tz-menu button:hover{background:var(--accent-soft)}
+.tz-menu button em{font-style:normal;font:500 .74rem var(--mono,monospace);color:var(--ink-soft);white-space:nowrap}
+.tz-menu .tz-none{padding:10px;font-size:.82rem;color:var(--ink-soft)}
+.tz-now{font:500 .74rem var(--mono,monospace);color:var(--ink-soft);margin-top:6px}
 #mxCardSel.need{border-color:var(--err);box-shadow:0 0 0 1px var(--err)}
 .net-warn{margin:0 0 12px}
 .net-warn .pj-link{font-size:.78rem}
@@ -1802,7 +1811,7 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
     </div>
     <div id="psSideList" hidden></div>
     <div class="rail-foot">
-      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.54<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
+      <div class="rail-ver">Live Media &middot; DreamCatcher Commissioning 2.55<br>Each tool builds its own .efp<br>Runs in this browser tab &mdash; files never leave your machine</div>
     </div>
   </nav>
 
@@ -2048,14 +2057,14 @@ body.mode-sa #saveCfgBtn,body.mode-sa #loadCfgBtn,body.mode-sa .sb-group[data-to
           <span class="section-sub">also relinks /etc/localtime</span>
         </div>
         <div class="card-body">
-          <div class="field" style="max-width:280px;">
+          <div class="field" style="max-width:460px;">
             <label><span class="key">timezone</span></label>
-            <select id="timezoneSelect">
-              <option value="America/Chicago">Chicago</option>
-              <option value="America/New_York" selected>New York</option>
-              <option value="America/Denver">Denver</option>
-              <option value="America/Los_Angeles">Los Angeles</option>
-            </select>
+            <div class="tz-pick">
+              <input type="text" id="tzSearch" placeholder="Search a city, region, abbreviation (CST) or offset (UTC-6)" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="tzMenu">
+              <div class="tz-menu" id="tzMenu" role="listbox" hidden></div>
+            </div>
+            <div class="tz-now" id="tzNow"></div>
+            <select id="timezoneSelect" hidden><option value="America/New_York" selected>America/New_York</option></select>
           </div>
         </div>
       </div>
@@ -3676,10 +3685,80 @@ SYSTEM_FIELDS.forEach(f => state.system[f.key] = f.def);
 RENDER_DELAY_FIELDS.forEach(f => state.renderDelay[f.key] = f.def);
 IFACE_DEFS.forEach(f => state.ifaces[f.key] = { enabled: f.defaultEnabled, base: f.defaultBase, gateway: f.defaultGateway || '' });
 
-document.getElementById('timezoneSelect').addEventListener('change', e => {
-  state.timezone = e.target.value;
-  renderPreview();
-});
+/* Timezone: every IANA zone (what /usr/share/zoneinfo has), searchable by city, region, abbreviation or UTC offset */
+var TZ_COMMON = ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu',
+  'America/Toronto', 'America/Vancouver', 'America/Halifax', 'America/Mexico_City', 'America/Sao_Paulo', 'America/Argentina/Buenos_Aires',
+  'Europe/London', 'Europe/Dublin', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Rome', 'Europe/Amsterdam', 'Europe/Stockholm', 'Europe/Athens', 'Europe/Istanbul', 'Europe/Moscow',
+  'Africa/Johannesburg', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Hong_Kong', 'Asia/Shanghai', 'Asia/Tokyo', 'Asia/Seoul',
+  'Australia/Perth', 'Australia/Brisbane', 'Australia/Sydney', 'Australia/Melbourne', 'Pacific/Auckland', 'UTC'];
+var TZ_ALL = (function(){
+  var all = [];
+  try { if (Intl.supportedValuesOf) all = Intl.supportedValuesOf('timeZone'); } catch (e) {}
+  TZ_COMMON.forEach(function(z){ if (all.indexOf(z) < 0) all.push(z); });
+  return all;
+})();
+var tzInfo = {};
+function tzMeta(z){
+  if (tzInfo[z]) return tzInfo[z];
+  var off = '', abbr = '';
+  try { off = new Intl.DateTimeFormat('en-US', { timeZone: z, timeZoneName: 'shortOffset' }).formatToParts(new Date()).find(function(p){ return p.type === 'timeZoneName'; }).value; } catch (e) {}
+  try { abbr = new Intl.DateTimeFormat('en-US', { timeZone: z, timeZoneName: 'short' }).formatToParts(new Date()).find(function(p){ return p.type === 'timeZoneName'; }).value; } catch (e) {}
+  off = (off || '').replace('GMT', 'UTC'); if (off === 'UTC') off = 'UTC+0';
+  if (/^GMT/.test(abbr)) abbr = '';
+  var parts = z.split('/'), city = parts[parts.length - 1].replace(/_/g, ' '), region = parts.length > 1 ? parts[0] : '';
+  return (tzInfo[z] = { z: z, city: city, region: region, off: off, abbr: abbr,
+    hay: (z + ' ' + city + ' ' + region + ' ' + off + ' ' + off.replace('UTC', 'GMT') + ' ' + abbr).toLowerCase() });
+}
+(function(){
+  var input = document.getElementById('tzSearch'), menu = document.getElementById('tzMenu'), sel = document.getElementById('timezoneSelect');
+  sel.innerHTML = TZ_ALL.map(function(z){ return '<option value="' + z + '">' + z + '</option>'; }).join('');
+  var items = [], on = -1;
+  function label(m){ return m.city + (m.region ? ' · ' + m.region : ''); }
+  function showCurrent(){
+    var m = tzMeta(state.timezone || 'America/New_York');
+    if (document.activeElement !== input) input.value = m.z;
+    document.getElementById('tzNow').textContent = m.z + '  ·  ' + m.off + (m.abbr ? ' (' + m.abbr + ')' : '');
+  }
+  function draw(q){
+    q = String(q || '').trim().toLowerCase().replace(/^utc\s*\+?\s*/, 'utc+').replace(/^utc\+-/, 'utc-');
+    var head = '';
+    if (!q) { items = TZ_COMMON.map(tzMeta); head = '<div class="tz-h">Common</div>'; }
+    else {
+      var words = q.split(/\s+/);
+      items = TZ_ALL.map(tzMeta).filter(function(m){ return words.every(function(w){ return m.hay.indexOf(w) >= 0; }); })
+        .sort(function(a, b){ var ac = TZ_COMMON.indexOf(a.z) >= 0 ? 0 : 1, bc = TZ_COMMON.indexOf(b.z) >= 0 ? 0 : 1; return ac - bc || a.z.localeCompare(b.z); })
+        .slice(0, 60);
+    }
+    on = items.length ? 0 : -1;
+    menu.innerHTML = head + (items.length ? items.map(function(m, i){
+      return '<button type="button" role="option" data-i="' + i + '" class="' + (i === on ? 'on' : '') + '"><span>' + label(m) + '<br><small style="color:var(--ink-soft)">' + m.z + '</small></span><em>' + m.off + (m.abbr ? ' · ' + m.abbr : '') + '</em></button>';
+    }).join('') : '<div class="tz-none">No timezone matches. Try a city (Chicago), a region (Europe) or an offset (UTC-6).</div>');
+    menu.hidden = false; input.setAttribute('aria-expanded', 'true');
+  }
+  function close(){ menu.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+  function pick(i){
+    var m = items[i]; if (!m) return;
+    state.timezone = m.z; sel.value = m.z; input.value = m.z; close(); showCurrent();
+    renderPreview();
+    if (window.dcProjects) window.dcProjects.save();
+  }
+  input.addEventListener('focus', function(){ input.select(); draw(''); });
+  input.addEventListener('input', function(){ draw(input.value); });
+  input.addEventListener('keydown', function(e){
+    if (menu.hidden) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); on = Math.max(0, Math.min(items.length - 1, on + (e.key === 'ArrowDown' ? 1 : -1)));
+      menu.querySelectorAll('button').forEach(function(b, i){ b.classList.toggle('on', i === on); if (i === on) b.scrollIntoView({ block: 'nearest' }); });
+    } else if (e.key === 'Enter') { e.preventDefault(); pick(on); }
+    else if (e.key === 'Escape') { close(); showCurrent(); input.blur(); }
+  });
+  menu.addEventListener('mousedown', function(e){ e.preventDefault(); var b = e.target.closest('button[data-i]'); if (b) pick(+b.dataset.i); });
+  input.addEventListener('blur', function(){ setTimeout(function(){ close(); showCurrent(); }, 120); });
+  // a saved project loads its timezone through the hidden select
+  sel.addEventListener('change', function(){ state.timezone = sel.value; showCurrent(); renderPreview(); });
+  window.tzShowCurrent = showCurrent;
+  showCurrent();
+})();
 
 /* ---------------------------------------------------------
    Bulk deployment: cascading hostnames + interface IPs
@@ -6573,6 +6652,7 @@ function applyConfig(cfg){
   if (cfg.timezone) {
     state.timezone = cfg.timezone;
     document.getElementById('timezoneSelect').value = cfg.timezone;
+    if (window.tzShowCurrent) window.tzShowCurrent();
   }
 
   // interfaces (unknown/missing ones fall back to defaults)
