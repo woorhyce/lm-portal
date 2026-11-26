@@ -154,6 +154,23 @@ td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
 .fr .own select,.fr .own input{padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:12px var(--sans)}
 .fr .own input{flex:1;min-width:180px}
 .st.Planned{background:var(--accent-soft);color:var(--accent-ink)} .st.Declined{background:var(--rail-bg);color:var(--muted)}
+.road{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:0 0 16px;overflow:hidden}
+.road-head{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;background:none;border:0;cursor:pointer;color:var(--text);text-align:left}
+.road-t{font-weight:700;font-size:15px}
+.road-sub{font-size:12px;color:var(--muted)}
+.road-link{margin-left:auto;font-size:12px;color:var(--muted);text-decoration:none}
+.road-link:hover{color:var(--accent-ink,var(--accent))}
+.road-chev{width:16px;height:16px;color:var(--muted);transition:transform .15s}
+.road.closed .road-chev{transform:rotate(-90deg)} .road.closed .road-body{display:none}
+.road-body{border-top:1px solid var(--line);padding:6px 16px 12px}
+.road-group{font:600 .62rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.road-ev{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line-soft,var(--line));font-size:13px}
+.road-ev:last-child{border-bottom:0}
+.road-ev .d{font:600 12px var(--mono);color:var(--text);white-space:nowrap}
+.road-ev .l{font-size:12px;color:var(--muted);text-align:right}
+.road-ev.now .d{color:var(--accent-ink,var(--accent))}
+.road-empty{font-size:13px;color:var(--muted);padding:8px 0}
+@media (max-width:700px){.road-ev{grid-template-columns:1fr}.road-ev .l{text-align:left}}
 .st{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--rail-bg);color:var(--ink-soft)}
 .st.New{background:var(--accent-soft);color:var(--accent-ink)} .st.Shipped{background:var(--good-soft);color:var(--good-txt)}
 .st.Waiting{background:var(--caution-soft);color:var(--caution-ink)}
@@ -199,6 +216,14 @@ td .lnk:hover,.doc-up .lnk:hover{color:var(--err)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Customer portal<span aria-hidden="true">↗</span></a>
       <input class="search" id="q" type="search" placeholder="Search tools" aria-label="Search tools">
     </div>
+    <section class="road" id="road" hidden>
+      <button type="button" class="road-head" id="roadHead" aria-expanded="true">
+        <span class="road-t">On the road</span><span class="road-sub" id="roadSub"></span>
+        <a class="road-link" href="https://outlook.office.com/calendar/" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open in Outlook ↗</a>
+        <svg class="road-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="road-body" id="roadBody"></div>
+    </section>
     <div class="grid" id="grid"></div>
     <div id="rmaView" hidden>
       <div class="rma-filters" id="rmaFilters"></div>
@@ -344,7 +369,7 @@ const STATUSES = ['New','In progress','Waiting on customer','Shipped','Closed'];
 const isOpen = r => r.status !== 'Closed' && r.status !== 'Shipped';
 function showView(v){
   view = v;
-  $('grid').hidden = v !== 'tools'; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs'; $('docsView').hidden = v !== 'docs'; $('reqView').hidden = v !== 'reqs'; $('reqInboxBtn').classList.toggle('on', v === 'reqs'); if (v === 'reqs') { $('title').textContent = 'Feature requests for your tools'; loadMyRequests(); }
+  $('grid').hidden = v !== 'tools'; if ($('road')) $('road').hidden = v !== 'tools' || !roadLoaded; $('q').hidden = v !== 'tools'; $('rmaView').hidden = v !== 'rma'; $('logsView').hidden = v !== 'logs'; $('docsView').hidden = v !== 'docs'; $('reqView').hidden = v !== 'reqs'; $('reqInboxBtn').classList.toggle('on', v === 'reqs'); if (v === 'reqs') { $('title').textContent = 'Feature requests for your tools'; loadMyRequests(); }
   document.querySelectorAll('#inbox [data-view=rma]').forEach(b => b.classList.toggle('on', v === 'rma' && (b.dataset.mine === '1') === (rmaFilter === 'Mine')));
   document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('on', v === 'tools' && b.dataset.cat === cat));
   if (v === 'rma') { $('title').textContent = 'RMA requests'; loadRma(); }
@@ -672,6 +697,34 @@ function renderMyRequests(){
 }
 $('reqFilters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { reqFilter = b.dataset.f; renderMyRequests(); } });
 $('reqList').addEventListener('click', e => frAction(e, loadMyRequests));
+/* ---------- On the road: the team's Outlook travel calendar ---------- */
+let roadLoaded = false;
+function fmtD(d){ return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}); }
+function fmtRange(e){
+  if (e.start === e.end) return fmtD(e.start) + (e.time && !e.allDay ? ' ' + e.time : '');
+  const a = new Date(e.start + 'T12:00:00'), b = new Date(e.end + 'T12:00:00');
+  const sameMonth = a.getMonth() === b.getMonth();
+  return a.toLocaleDateString('en-US', {month:'short', day:'numeric'}) + ' – ' + (sameMonth ? b.getDate() : b.toLocaleDateString('en-US', {month:'short', day:'numeric'}));
+}
+async function loadRoad(){
+  let d;
+  try { const r = await fetch('/api/calendar?days=21', {cache:'no-store'}); if (!r.ok) return; d = await r.json(); } catch { return; }
+  if (d.note === 'CAL_ICS_URL not set') return;          // not set up: keep the panel hidden
+  roadLoaded = true; $('road').hidden = view !== 'tools';
+  try { $('road').classList.toggle('closed', localStorage.getItem('lm-road-closed') === '1'); } catch {}
+  const ev = d.events || [], today = d.today;
+  if (d.error) { $('roadSub').textContent = 'Couldn\'t read the calendar'; $('roadBody').innerHTML = '<p class="road-empty">' + esc(d.error) + '</p>'; return; }
+  const now = ev.filter(e => e.start <= today && e.end >= today), next = ev.filter(e => e.start > today);
+  $('roadSub').textContent = now.length ? now.length + ' out today' : 'No one out today';
+  const row = (e, isNow) => `<div class="road-ev${isNow ? ' now' : ''}"><span class="d">${esc(fmtRange(e))}</span><span>${esc(e.title)}</span><span class="l">${esc(e.location || '')}</span></div>`;
+  $('roadBody').innerHTML = (now.length ? '<div class="road-group">Today</div>' + now.map(e => row(e, true)).join('') : '')
+    + '<div class="road-group">Next 3 weeks</div>' + (next.length ? next.map(e => row(e, false)).join('') : '<p class="road-empty">Nothing on the calendar.</p>');
+}
+$('roadHead').addEventListener('click', () => {
+  const closed = !$('road').classList.contains('closed');
+  $('road').classList.toggle('closed', closed); $('roadHead').setAttribute('aria-expanded', String(!closed));
+  try { localStorage.setItem('lm-road-closed', closed ? '1' : '0'); } catch {}
+});
 const SAMPLE_LOGS = [
   {ref:'LOG-20261117-8X2P', created:'2026-11-17 19:12:00', status:'New', company:'Sample Arena', name:'Alex Lee', email:'alee@example.com', site:'DC-7', rma_ref:'', description:'Playout froze for about a second at 7:42 PM during the second period.', total_bytes: 734003200,
    files:[{name:'dc7-logs-2026-11-17.tar.gz', size:734003200, i:0, done:true}]}
@@ -757,6 +810,7 @@ new MutationObserver(() => {
     fetch('/api/me').then(r=>r.json()).then(u => { me = u.email; $('who').textContent = u.name || u.email; if (u.theme) setTheme(u.theme); renderRma(); loadMyRequests(); }).catch(()=>{});
   } catch { tools = SAMPLE; $('banner').hidden = false; }
   render();
+  loadRoad();
   loadRma();
   loadLogs();
   loadDocs();
