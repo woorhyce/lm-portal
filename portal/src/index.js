@@ -31,6 +31,56 @@ async function touchUser(env, email) {
   return env.DB.prepare("SELECT email, name, role FROM users WHERE email = ?1").bind(email).first();
 }
 
+
+// ---------- Team travel calendar (Outlook "Dreams Travel", published as ICS) ----------
+// CAL_ICS_URL is a Worker secret: the calendar's ICS link works like a password, so it never goes in GitHub.
+function icsUnfold(text) { return text.replace(/\r\n/g, "\n").replace(/\n[ \t]/g, ""); }
+function icsDate(v, params) {
+  // all-day: 20261124 ; timed: 20261124T150000Z or 20261124T090000 (TZID local; treated as that wall-clock time)
+  const m = String(v || "").match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/);
+  if (!m) return null;
+  const allDay = !m[4] || /VALUE=DATE(?!-)/.test(params || "");
+  return { date: `${m[1]}-${m[2]}-${m[3]}`, time: m[4] ? `${m[4]}:${m[5]}` : null, utc: !!m[7], allDay };
+}
+function icsText(v) { return String(v || "").replace(/\\n/gi, " ").replace(/\\([,;\\])/g, "$1").trim(); }
+function parseIcs(text) {
+  const out = [];
+  for (const block of icsUnfold(text).split("BEGIN:VEVENT").slice(1)) {
+    const body = block.split("END:VEVENT")[0], ev = {};
+    for (const line of body.split("\n")) {
+      const i = line.indexOf(":"); if (i < 0) continue;
+      const [name, ...params] = line.slice(0, i).split(";");
+      ev[name.toUpperCase()] = { v: line.slice(i + 1), p: params.join(";") };
+    }
+    if (!ev.DTSTART || (ev.STATUS && /CANCELLED/i.test(ev.STATUS.v))) continue;
+    const start = icsDate(ev.DTSTART.v, ev.DTSTART.p), end = ev.DTEND ? icsDate(ev.DTEND.v, ev.DTEND.p) : start;
+    if (!start) continue;
+    // ICS all-day end dates are exclusive: show the last real day
+    let last = end ? end.date : start.date;
+    if (start.allDay && end && end.date > start.date) { const d = new Date(end.date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); last = d.toISOString().slice(0, 10); }
+    out.push({ title: icsText(ev.SUMMARY && ev.SUMMARY.v) || "(no title)", location: icsText(ev.LOCATION && ev.LOCATION.v),
+      start: start.date, end: last, allDay: start.allDay, time: start.time, recurring: !!ev.RRULE });
+  }
+  return out;
+}
+async function teamCalendar(env, url) {
+  if (!env.CAL_ICS_URL) return { events: [], note: "CAL_ICS_URL not set" };
+  const cache = caches.default, key = new Request("https://cache.lm-portal/team-calendar");
+  let res = await cache.match(key);
+  if (!res) {
+    const r = await fetch(env.CAL_ICS_URL, { headers: { "user-agent": "lm-portal" } });
+    if (!r.ok) return { events: [], error: "Calendar returned " + r.status };
+    res = new Response(await r.text(), { headers: { "cache-control": "max-age=300" } });   // refresh every 5 minutes
+    await cache.put(key, res.clone());
+  }
+  const all = parseIcs(await res.text());
+  const today = new Date().toISOString().slice(0, 10);
+  const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "21", 10)));
+  const until = new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
+  const events = all.filter((e) => e.end >= today && e.start <= until).sort((a, b) => a.start.localeCompare(b.start) || a.title.localeCompare(b.title));
+  return { events, today, until };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -319,6 +369,10 @@ export default {
       if (r.requester !== email || r.status !== "New") return json({ error: "You can only withdraw your own request while it's New" }, 403);
       await env.DB.prepare("DELETE FROM feature_requests WHERE id = ?1").bind(frm[1]).run();
       return json({ ok: true });
+    }
+
+    if (url.pathname === "/api/calendar" && request.method === "GET") {
+      try { return json(await teamCalendar(env, url)); } catch (e) { return json({ events: [], error: String(e.message || e).slice(0, 200) }); }
     }
 
     if (url.pathname.startsWith("/api/")) return json({ error: "Not found" }, 404);
