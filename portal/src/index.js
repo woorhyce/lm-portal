@@ -75,10 +75,13 @@ async function teamCalendar(env, url) {
   }
   const all = parseIcs(await res.text());
   const today = new Date().toISOString().slice(0, 10);
+  const fromQ = url.searchParams.get("from");
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(fromQ || "") ? fromQ : today;
   const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "21", 10)));
-  const until = new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
-  const events = all.filter((e) => e.end >= today && e.start <= until).sort((a, b) => a.start.localeCompare(b.start) || a.title.localeCompare(b.title));
-  return { events, today, until };
+  const d = new Date(from + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + days - 1);
+  const until = d.toISOString().slice(0, 10);
+  const events = all.filter((e) => e.end >= from && e.start <= until).sort((a, b) => a.start.localeCompare(b.start) || a.title.localeCompare(b.title));
+  return { events, today, from, until };
 }
 
 export default {
